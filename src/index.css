@@ -1,9 +1,52 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap');
+/* @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap');
 @import "tailwindcss";
 
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+}
+
+@layer base {
+  body {
+    @apply font-sans antialiased;
+  }
+} */
+
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap");
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+
+  /* Map Tailwind color utilities → your CSS variables */
+  --color-border: var(--border);
+  --color-borderLight: var(--borderLight);
+  --color-surface: var(--surface);
+  --color-surfaceElevated: var(--surfaceElevated);
+  --color-bg: var(--bg);
+  --color-background: var(--bg);
+  --color-text: var(--text);
+  --color-textSec: var(--textSec);
+  --color-textMuted: var(--textMuted);
+  --color-accent: var(--accent);
+  --color-accentLight: var(--accentLight);
+  --color-accentText: var(--accentText);
+  --color-success: var(--success);
+  --color-successLight: var(--successLight);
+  --color-warning: var(--warning);
+  --color-warningLight: var(--warningLight);
+  --color-danger: var(--danger);
+  --color-dangerLight: var(--dangerLight);
+  --color-sidebarBg: var(--sidebarBg);
+  --color-sidebarText: var(--sidebarText);
+  --color-sidebarActive: var(--sidebarActive);
+  --color-sidebarActiveBg: var(--sidebarActiveBg);
+  --color-chartGrid: var(--chartGrid);
+  --color-tooltipBg: var(--tooltipBg);
+  --color-sidebarBorder: var(--sidebarBorder);
+  --color-sidebarHeading: var(--sidebarHeading);
+  --color-sidebarHover: var(--sidebarHover);
 }
 
 @layer base {
