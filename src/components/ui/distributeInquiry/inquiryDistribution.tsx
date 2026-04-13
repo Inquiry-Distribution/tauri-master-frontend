@@ -366,6 +366,9 @@ export function InquiryDistributor({
   defaultPersons = DUMMY_PERSONS,
   onShare,
   month = "April 2026",
+  form,
+  createInquiry,
+  loading,
 }: any) {
   const [query, setQuery] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
@@ -392,13 +395,29 @@ export function InquiryDistributor({
     );
   }, [query]);
 
-  const onConfirm = () => {
+  const onConfirm = async () => {
     if (!selectedPerson) return;
-    Swal.fire({
-      icon: "success",
-      title: "Inquiry distributed successfully",
-    });
-    setModalPerson(null);
+
+    try {
+      await createInquiry({
+        description: form.description,
+        mobile: form.mobile,
+        inquiryTime: form.inquiryTime,
+        assignedTo: selectedPerson.id,
+      });
+
+      Swal.fire({
+        icon: "success",
+        title: "Inquiry distributed successfully",
+      });
+
+      setModalPerson(null);
+    } catch (err) {
+      Swal.fire({
+        icon: "error",
+        title: "Failed to submit inquiry",
+      });
+    }
   };
 
   return (
