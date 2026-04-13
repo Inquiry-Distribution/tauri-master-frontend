@@ -13,7 +13,7 @@ import {
 import { useTheme } from "@/src/contexts";
 import { useLayout } from "@/src/hooks/useLayout";
 import { cn } from "@/src/utils/utils";
-import { useAuth } from "@/src/hooks/useAuth";
+import { useAuth } from "@/src/contexts/authContext";
 
 const menuItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
@@ -29,8 +29,8 @@ export default function Sidebar() {
   const { logout } = useAuth();
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     navigate("/login");
   };
 

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTheme } from "@/src/contexts/index.tsx";
-import { useAuth } from "@/src/hooks/useAuth.tsx";
+import { useAuth } from "@/src/contexts/authContext";
 import {
   Mail,
   Lock,
@@ -28,7 +28,16 @@ export default function RegisterPage() {
     setIsLoading(true);
     // Simulate registration
     setTimeout(() => {
-      login(email);
+      login({
+        access_token: "123456",
+        refresh_token: "789012",
+        user: {
+          id: "123",
+          name: "Priyanshu",
+          email: "priyanshu@example.com",
+          role: "Superuser",
+        },
+      });
       setIsLoading(false);
       navigate("/dashboard");
     }, 1500);

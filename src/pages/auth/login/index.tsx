@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTheme } from "@/src/contexts/index.tsx";
-import { useAuth } from "@/src/hooks/useAuth.tsx";
+import { useAuth } from "@/src/contexts/authContext.tsx";
 import {
   Mail,
   Lock,
@@ -12,6 +12,7 @@ import {
   BarChart3,
 } from "lucide-react";
 import { motion } from "motion/react";
+import { api } from "@/src/api/axios";
 // import { cn } from '../../lib/utils.ts'  ;
 
 export default function LoginPage() {
@@ -19,18 +20,35 @@ export default function LoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleLogin = async () => {
+    const res = await api.post("/auth/login", {
+      email,
+      password,
+    });
+
+    const { token, refreshToken, user } = res.data.data;
+
+    login({
+      access_token: token,
+      refresh_token: refreshToken,
+      user,
+    });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    // Simulate login
-    setTimeout(() => {
-      login(email);
+
+    try {
+      await handleLogin(); // ✅ wait
+      navigate("/");
+    } finally {
       setIsLoading(false);
-      navigate("/dashboard");
-    }, 1500);
+    }
   };
 
   return (
@@ -125,6 +143,8 @@ export default function LoginPage() {
                   type={showPassword ? "text" : "password"}
                   required
                   placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   className="w-full pl-12 pr-12 py-3 rounded-xl border outline-none transition-all focus:ring-2 focus:ring-blue-500/20"
                   style={{
                     backgroundColor: tokens.bg,
