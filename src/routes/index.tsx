@@ -10,9 +10,24 @@ import DevicesPage from "../pages/devices";
 import AIReportsPage from "../pages/ai-reports";
 import NotFound from "../components/layout/NotFound";
 import CreateInquiry from "../pages/inquiries/create";
+import LoginPage from "../pages/auth/login";
+import RegisterPage from "../pages/auth/register";
+import ForgotPasswordPage from "../pages/auth/forgot-password";
 
 export default function AppRoutes() {
   return useRoutes([
+    {
+      path: "/login",
+      element: <LoginPage />,
+    },
+    {
+      path: "/register",
+      element: <RegisterPage />,
+    },
+    {
+      path: "/forgot-password",
+      element: <ForgotPasswordPage />,
+    },
     {
       element: <ProtectedRoute allowedRoles={["Admin"]} />,
       children: [

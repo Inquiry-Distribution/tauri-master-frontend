@@ -1,5 +1,5 @@
 import React from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
   FileText,
@@ -13,6 +13,7 @@ import {
 import { useTheme } from "@/src/contexts";
 import { useLayout } from "@/src/hooks/useLayout";
 import { cn } from "@/src/utils/utils";
+import { useAuth } from "@/src/hooks/useAuth";
 
 const menuItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
@@ -25,6 +26,13 @@ const menuItems = [
 export default function Sidebar() {
   const { tokens } = useTheme();
   const { sidebarOpen, setSidebarOpen, isMobile } = useLayout();
+  const { logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
+  };
 
   return (
     <aside
@@ -57,6 +65,8 @@ export default function Sidebar() {
         </div>
         {isMobile && (
           <button
+            type="button"
+            title="Close Sidebar"
             onClick={() => setSidebarOpen(false)}
             className="p-2 rounded-lg hover:bg-opacity-10"
             style={{ color: tokens.textSec }}
@@ -124,7 +134,11 @@ export default function Sidebar() {
         className="p-4 border-t overflow-hidden"
         style={{ borderColor: tokens.sidebarBorder }}
       >
-        <button className="flex items-center gap-3 px-3 py-2.5 w-full rounded-lg hover:bg-red-500/10 text-red-500 transition-colors duration-200 group relative">
+        <button
+          type="button"
+          onClick={handleLogout}
+          className="flex items-center gap-3 px-3 py-2.5 w-full rounded-lg hover:bg-red-500/10 text-red-500 transition-colors duration-200 group relative"
+        >
           <LogOut size={20} className="shrink-0" />
           <span
             className={cn(

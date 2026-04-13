@@ -1,19 +1,19 @@
-import React from 'react';
-import { Navigate, Outlet } from 'react-router-dom';
+import React from "react";
+import { Navigate, Outlet } from "react-router-dom";
+import { useAuth } from "@/src/hooks/useAuth";
 
 interface ProtectedRouteProps {
   allowedRoles?: string[];
 }
 
 export default function ProtectedRoute({ allowedRoles }: ProtectedRouteProps) {
-  // Mock authentication for now
-  const user = { role: 'Admin', isAuthenticated: true };
+  const { user, isAuthenticated } = useAuth();
 
-  if (!user.isAuthenticated) {
+  if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
 
-  if (allowedRoles && !allowedRoles.includes(user.role)) {
+  if (allowedRoles && user && !allowedRoles.includes(user.role)) {
     return <Navigate to="/" replace />;
   }
 
