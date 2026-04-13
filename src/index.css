@@ -27,6 +27,7 @@
   --color-bg: var(--bg);
   --color-background: var(--bg);
   --color-text: var(--text);
+  --color-textOpp: var(--textOpp);
   --color-textSec: var(--textSec);
   --color-textMuted: var(--textMuted);
   --color-accent: var(--accent);

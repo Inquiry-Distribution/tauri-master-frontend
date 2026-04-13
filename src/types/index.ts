@@ -1,4 +1,8 @@
-export type InquiryStatus = 'unassigned' | 'assigned' | 'in-progress' | 'closed';
+export type InquiryStatus =
+  | "unassigned"
+  | "assigned"
+  | "in-progress"
+  | "closed";
 
 export interface Inquiry {
   id: string;
@@ -22,7 +26,7 @@ export interface SalesPerson {
   name: string;
   email: string;
   phone: string;
-  status: 'active' | 'inactive' | 'blocked';
+  status: "active" | "inactive" | "blocked";
   performance: number; // 0-100
   totalInquiries: number;
   closedInquiries: number;
@@ -40,7 +44,7 @@ export interface Device {
   deviceName: string;
   os: string;
   lastSeen: string;
-  status: 'active' | 'blocked';
+  status: "active" | "blocked";
   location: {
     lat: number;
     lng: number;
@@ -54,6 +58,7 @@ export interface ThemeTokens {
   border: string;
   borderLight: string;
   text: string;
+  textOpp: string;
   textSec: string;
   textMuted: string;
   accent: string;

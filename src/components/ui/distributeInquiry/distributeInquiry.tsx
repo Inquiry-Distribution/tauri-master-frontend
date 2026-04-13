@@ -1,3 +1,4 @@
+import { useTheme } from "@/src/contexts";
 import { useState, useMemo } from "react";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
@@ -157,96 +158,99 @@ const Avatar = ({
   person,
   selected,
   onClick,
-  t,
 }: {
   person: SalesPerson;
   selected: boolean;
   onClick: () => void;
-  t: ThemeTokens;
-}) => (
-  <button
-    onClick={onClick}
-    title={`${person.name}\n${person.role}\n${person.email}`}
-    style={{
-      display: "flex",
-      flexDirection: "column",
-      alignItems: "center",
-      gap: 6,
-      background: "none",
-      border: "none",
-      cursor: "pointer",
-      padding: "6px 4px",
-      borderRadius: 12,
-      transition: "transform 0.15s ease",
-    }}
-    onMouseEnter={(e) => (e.currentTarget.style.transform = "translateY(-2px)")}
-    onMouseLeave={(e) => (e.currentTarget.style.transform = "translateY(0)")}
-  >
-    {/* Avatar circle */}
-    <div
+}) => {
+  const { tokens } = useTheme();
+  return (
+    <button
+      onClick={onClick}
+      title={`${person.name}\n${person.role}\n${person.email}`}
       style={{
-        width: 56,
-        height: 56,
-        borderRadius: "50%",
-        background: selected
-          ? `linear-gradient(135deg, ${person.avatarColor}cc, ${person.avatarColor})`
-          : `${person.avatarColor}22`,
-        border: selected
-          ? `2.5px solid ${person.avatarColor}`
-          : `2px solid ${t.border}`,
         display: "flex",
+        flexDirection: "column",
         alignItems: "center",
-        justifyContent: "center",
-        fontSize: 18,
-        fontWeight: 700,
-        color: selected ? "#fff" : person.avatarColor,
-        boxShadow: selected ? `0 0 0 3px ${person.avatarColor}33` : "none",
-        transition: "all 0.2s ease",
-        position: "relative",
+        gap: 6,
+        background: "none",
+        border: "none",
+        cursor: "pointer",
+        padding: "6px 4px",
+        borderRadius: 12,
+        transition: "transform 0.15s ease",
       }}
+      onMouseEnter={(e) =>
+        (e.currentTarget.style.transform = "translateY(-2px)")
+      }
+      onMouseLeave={(e) => (e.currentTarget.style.transform = "translateY(0)")}
     >
-      {person.initials}
-      {/* checkmark badge */}
-      {selected && (
-        <span
-          style={{
-            position: "absolute",
-            bottom: -2,
-            right: -2,
-            width: 18,
-            height: 18,
-            borderRadius: "50%",
-            background: person.avatarColor,
-            border: `2px solid ${t.surface}`,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontSize: 9,
-            color: "#fff",
-          }}
-        >
-          ✓
-        </span>
-      )}
-    </div>
-    {/* Name label */}
-    <span
-      style={{
-        fontSize: 10,
-        fontWeight: selected ? 600 : 400,
-        color: selected ? t.text : t.textMuted,
-        maxWidth: 60,
-        textAlign: "center",
-        lineHeight: 1.2,
-        overflow: "hidden",
-        textOverflow: "ellipsis",
-        whiteSpace: "nowrap",
-      }}
-    >
-      {person.name.split(" ")[0]}
-    </span>
-  </button>
-);
+      {/* Avatar circle */}
+      <div
+        style={{
+          width: 56,
+          height: 56,
+          borderRadius: "50%",
+          background: selected
+            ? `linear-gradient(135deg, ${person.avatarColor}cc, ${person.avatarColor})`
+            : `${person.avatarColor}22`,
+          border: selected
+            ? `2.5px solid ${person.avatarColor}`
+            : `2px solid ${tokens.border}`,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontSize: 18,
+          fontWeight: 700,
+          color: selected ? "#fff" : person.avatarColor,
+          boxShadow: selected ? `0 0 0 3px ${person.avatarColor}33` : "none",
+          transition: "all 0.2s ease",
+          position: "relative",
+        }}
+      >
+        {person.initials}
+        {/* checkmark badge */}
+        {selected && (
+          <span
+            style={{
+              position: "absolute",
+              bottom: -2,
+              right: -2,
+              width: 18,
+              height: 18,
+              borderRadius: "50%",
+              background: person.avatarColor,
+              border: `2px solid ${tokens.surface}`,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: 9,
+              color: "#fff",
+            }}
+          >
+            ✓
+          </span>
+        )}
+      </div>
+      {/* Name label */}
+      <span
+        style={{
+          fontSize: 10,
+          fontWeight: selected ? 600 : 400,
+          color: selected ? tokens.text : tokens.textMuted,
+          maxWidth: 60,
+          textAlign: "center",
+          lineHeight: 1.2,
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+          whiteSpace: "nowrap",
+        }}
+      >
+        {person.name.split(" ")[0]}
+      </span>
+    </button>
+  );
+};
 
 // ── Main Component ─────────────────────────────────────────────────────────────
 export function DistributeInquiry({
@@ -461,7 +465,6 @@ export function DistributeInquiry({
               person={person}
               selected={selected.has(person.id)}
               onClick={() => toggleSelect(person.id)}
-              t={t}
             />
           ))}
         </div>
