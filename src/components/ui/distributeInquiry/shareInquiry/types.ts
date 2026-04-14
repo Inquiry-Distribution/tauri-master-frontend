@@ -1,4 +1,18 @@
-export interface SalesPerson {
+// export interface SalesPerson {
+//   id: string;
+//   name: string;
+//   email: string;
+//   mobile: string;
+//   role: string;
+//   initials: string;
+//   avatarColor: string;
+// }
+
+import { SalesPerson } from "@/src/types/users";
+
+export type WorkloadStatus = "Available" | "Busy" | "Overloaded";
+
+export type UISalesPerson = {
   id: string;
   name: string;
   email: string;
@@ -6,9 +20,7 @@ export interface SalesPerson {
   role: string;
   initials: string;
   avatarColor: string;
-}
-
-export type WorkloadStatus = "Available" | "Busy" | "Overloaded";
+};
 
 export interface PersonWorkload {
   status: WorkloadStatus;
@@ -23,8 +35,8 @@ export interface PersonWorkload {
 }
 
 export interface ShareInquiryModalProps {
-  person: SalesPerson;
+  person: UISalesPerson;
   workload?: PersonWorkload;
   onClose: () => void;
-  onConfirm: (person: SalesPerson) => void;
+  onConfirm: (person: UISalesPerson) => void;
 }

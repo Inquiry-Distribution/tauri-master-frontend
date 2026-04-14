@@ -7,10 +7,18 @@ import React, { useState } from "react";
 
 const InquiryForm = () => {
   const { createInquiry, loading, error } = useCreateInquiry();
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<{
+    description: string;
+    mobile: string;
+    inquiryTime: string;
+    // salesPersonId: string;
+    images: File[];
+  }>({
     description: "",
     mobile: "",
     inquiryTime: "",
+    // salesPersonId: "",
+    images: [],
   });
 
   const handleChange = (e: any) => {
@@ -20,21 +28,45 @@ const InquiryForm = () => {
     }));
   };
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  // const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  //   e.preventDefault();
 
-    const formData = new FormData(e.currentTarget);
+  //   const formData = new FormData(e.currentTarget);
 
-    await createInquiry({
-      description: formData.get("description"),
-      mobile: formData.get("mobile"),
-      inquiryTime: formData.get("inquiryTime"),
-    });
+  //   await createInquiry({
+  //     description: formData.get("description"),
+  //     mobile: formData.get("mobile"),
+  //     inquiryTime: formData.get("inquiryTime"),
+  //     images: formData.getAll("images") as File[],
+  //   });
+  // };
+  const handleSubmit = async (salesPersonIdFromDistributor: string) => {
+    // e.preventDefault();
+
+    const formData = new FormData();
+
+    formData.append("description", form.description);
+    formData.append("mobile", form.mobile);
+    formData.append("inquiryTime", form.inquiryTime);
+    formData.append("salesPersonId", salesPersonIdFromDistributor);
+
+    // ✅ append files correctly
+    if (form.images && form.images.length > 0) {
+      form.images.forEach((file) => {
+        formData.append("images", file); // important: same key "images"
+      });
+    }
+
+    await createInquiry(formData);
   };
   return (
-    <form>
+    <form encType="multipart/form-data">
       <div className="space-y-4 ">
-        <FileInput label="Upload Inquiry" inputName="inquiry" />
+        <FileInput
+          label="Upload Inquiry"
+          inputName="images"
+          onChange={(files) => setForm((prev) => ({ ...prev, images: files }))}
+        />
         <TextArea
           label="Inquiry Description"
           inputName="description"
@@ -64,7 +96,7 @@ const InquiryForm = () => {
           error={error}
           onSubmit={handleSubmit}
           form={form}
-          createInquiry={createInquiry}
+          createInquiry={handleSubmit}
         />
       </div>
     </form>

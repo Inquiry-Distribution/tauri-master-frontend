@@ -1,8 +1,13 @@
 import { ThemeContext } from "@/src/contexts";
-import { useState, useMemo, useContext } from "react";
+import { useSalesPerson } from "@/src/hooks/salesPerson/useSalesPerson";
+import { useState, useMemo, useContext, useEffect } from "react";
 import { Modal } from "../modal";
 import ShareInquiry from "./shareInquiry/shareInquiry";
 import Swal from "sweetalert2";
+import { SalesPerson } from "@/src/types/users";
+import { UISalesPerson } from "./shareInquiry/types";
+import SectionLoader from "../loader/sectionLoader";
+import CommonLoader from "../loader/loader";
 
 // keep your types + dummy data + helpers SAME
 // ── Types ──────────────────────────────────────────────────────────────────────
@@ -34,15 +39,7 @@ interface ThemeTokens {
   sidebarHeading: string;
   sidebarHover: string;
 }
-interface SalesPerson {
-  id: string;
-  name: string;
-  email: string;
-  mobile: string;
-  role: string;
-  initials: string;
-  avatarColor: string;
-}
+
 interface SalesSummaryRow {
   id: string;
   label: string;
@@ -57,81 +54,94 @@ interface InquiryDistributorProps {
   onShare?: (person: SalesPerson) => void;
   month?: string;
 }
-// ── Dummy Data ─────────────────────────────────────────────────────────────────
-const DUMMY_PERSONS: SalesPerson[] = [
-  {
-    id: "1",
-    name: "Arjun Mehta",
-    email: "arjun@acme.in",
-    mobile: "9876543210",
-    role: "Senior Sales",
-    initials: "AM",
-    avatarColor: "#4F7DF3",
-  },
-  {
-    id: "2",
-    name: "Priya Sharma",
-    email: "priya@acme.in",
-    mobile: "9765432109",
-    role: "Sales Lead",
-    initials: "PS",
-    avatarColor: "#34D399",
-  },
-  {
-    id: "3",
-    name: "Rohan Das",
-    email: "rohan@acme.in",
-    mobile: "9654321098",
-    role: "Sales Exec",
-    initials: "RD",
-    avatarColor: "#FB923C",
-  },
-  {
-    id: "4",
-    name: "Sneha Kapoor",
-    email: "sneha@acme.in",
-    mobile: "9543210987",
-    role: "Sales Exec",
-    initials: "SK",
-    avatarColor: "#F87171",
-  },
-  {
-    id: "5",
-    name: "Vikram Nair",
-    email: "vikram@acme.in",
-    mobile: "9432109876",
-    role: "Sales Lead",
-    initials: "VN",
-    avatarColor: "#A78BFA",
-  },
-  {
-    id: "6",
-    name: "Nisha Tiwari",
-    email: "nisha@acme.in",
-    mobile: "9321098765",
-    role: "Sr. Sales",
-    initials: "NT",
-    avatarColor: "#F472B6",
-  },
-  {
-    id: "7",
-    name: "Karan Joshi",
-    email: "karan@acme.in",
-    mobile: "9210987654",
-    role: "Sales Exec",
-    initials: "KJ",
-    avatarColor: "#38BDF8",
-  },
-  {
-    id: "8",
-    name: "Meera Pillai",
-    email: "meera@acme.in",
-    mobile: "9109876543",
-    role: "Sales Lead",
-    initials: "MP",
-    avatarColor: "#FBBF24",
-  },
+
+const COLORS = [
+  "#4F7DF3",
+  "#34D399",
+  "#FB923C",
+  "#F87171",
+  "#A78BFA",
+  "#F472B6",
+  "#38BDF8",
+  "#FBBF24",
 ];
+
+const getAvatarColor = (index: number) => COLORS[index % COLORS.length];
+// ── Dummy Data ─────────────────────────────────────────────────────────────────
+// const DUMMY_PERSONS: SalesPerson[] = [
+//   {
+//     id: "1",
+//     name: "Arjun Mehta",
+//     email: "arjun@acme.in",
+//     mobile: "9876543210",
+//     role: "Senior Sales",
+//     initials: "AM",
+//     avatarColor: "#4F7DF3",
+//   },
+//   {
+//     id: "2",
+//     name: "Priya Sharma",
+//     email: "priya@acme.in",
+//     mobile: "9765432109",
+//     role: "Sales Lead",
+//     initials: "PS",
+//     avatarColor: "#34D399",
+//   },
+//   {
+//     id: "3",
+//     name: "Rohan Das",
+//     email: "rohan@acme.in",
+//     mobile: "9654321098",
+//     role: "Sales Exec",
+//     initials: "RD",
+//     avatarColor: "#FB923C",
+//   },
+//   {
+//     id: "4",
+//     name: "Sneha Kapoor",
+//     email: "sneha@acme.in",
+//     mobile: "9543210987",
+//     role: "Sales Exec",
+//     initials: "SK",
+//     avatarColor: "#F87171",
+//   },
+//   {
+//     id: "5",
+//     name: "Vikram Nair",
+//     email: "vikram@acme.in",
+//     mobile: "9432109876",
+//     role: "Sales Lead",
+//     initials: "VN",
+//     avatarColor: "#A78BFA",
+//   },
+//   {
+//     id: "6",
+//     name: "Nisha Tiwari",
+//     email: "nisha@acme.in",
+//     mobile: "9321098765",
+//     role: "Sr. Sales",
+//     initials: "NT",
+//     avatarColor: "#F472B6",
+//   },
+//   {
+//     id: "7",
+//     name: "Karan Joshi",
+//     email: "karan@acme.in",
+//     mobile: "9210987654",
+//     role: "Sales Exec",
+//     initials: "KJ",
+//     avatarColor: "#38BDF8",
+//   },
+//   {
+//     id: "8",
+//     name: "Meera Pillai",
+//     email: "meera@acme.in",
+//     mobile: "9109876543",
+//     role: "Sales Lead",
+//     initials: "MP",
+//     avatarColor: "#FBBF24",
+//   },
+// ];
 // Seeded per-person summary rows so each person shows different numbers
 function generateRows(personId: string): SalesSummaryRow[] {
   const seed = parseInt(personId, 10);
@@ -214,6 +224,7 @@ function formatVal(val: number, format: string): string {
       return val.toLocaleString("en-IN");
   }
 }
+
 function Avatar({ person, selected, onClick, t }: any) {
   return (
     <button
@@ -363,18 +374,20 @@ function SummaryPanel({ person, t, month }: any) {
 }
 
 export function InquiryDistributor({
-  defaultPersons = DUMMY_PERSONS,
+  defaultPersons = [],
   onShare,
   month = "April 2026",
   form,
+
   createInquiry,
   loading,
 }: any) {
+  const { getAllSalesPerson, loading: salesLoading, error } = useSalesPerson();
   const [query, setQuery] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
-  const [persons, setPersons] = useState(defaultPersons);
+  const [persons, setPersons] = useState<UISalesPerson[]>(defaultPersons);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [modalPerson, setModalPerson] = useState<SalesPerson | null>(null);
+  const [modalPerson, setModalPerson] = useState<UISalesPerson | null>(null);
 
   // on the Share Inquiry button:
 
@@ -384,27 +397,69 @@ export function InquiryDistributor({
 
   const selectedPerson = persons.find((p: any) => p.id === selectedId) ?? null;
 
+  useEffect(() => {
+    const fetchSalesPersons = async () => {
+      try {
+        const res = await getAllSalesPerson();
+
+        // const mapped = res.data.data.map((p: any, index: number) => ({
+        //   id: p.id,
+        //   name: p.name,
+        //   email: p.email,
+        //   mobile: p.phone || "",
+        //   role: p.assignedArea || "Sales",
+        //   initials: p.name
+        //     ?.split(" ")
+        //     .map((n: string) => n[0])
+        //     .join("")
+        //     .toUpperCase()
+        //     .slice(0, 2),
+        //   avatarColor: getAvatarColor(index),
+        // }));
+
+        const mapToUI = (data: SalesPerson[]): UISalesPerson[] => {
+          return data.map((p, index) => ({
+            id: p.id,
+            name: p.name,
+            email: p.email,
+            mobile: p.phone || "",
+            role: p.assignedArea || "Sales",
+            initials: p.name
+              ?.split(" ")
+              .map((n) => n[0])
+              .join("")
+              .toUpperCase()
+              .slice(0, 2),
+            avatarColor: getAvatarColor(index),
+          }));
+        };
+
+        setPersons(mapToUI(res.data));
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    setTimeout(() => {
+      fetchSalesPersons();
+    }, 400);
+  }, []);
   const searchResults = useMemo(() => {
     if (!query.trim()) return [];
     const q = query.toLowerCase();
-    return DUMMY_PERSONS.filter(
-      (p) =>
+
+    return persons.filter(
+      (p: any) =>
         p.name.toLowerCase().includes(q) ||
         p.email.toLowerCase().includes(q) ||
         p.mobile.includes(q),
     );
-  }, [query]);
+  }, [query, persons]);
 
   const onConfirm = async () => {
     if (!selectedPerson) return;
 
     try {
-      await createInquiry({
-        description: form.description,
-        mobile: form.mobile,
-        inquiryTime: form.inquiryTime,
-        assignedTo: selectedPerson.id,
-      });
+      await createInquiry(selectedPerson.id);
 
       Swal.fire({
         icon: "success",
@@ -413,6 +468,7 @@ export function InquiryDistributor({
 
       setModalPerson(null);
     } catch (err) {
+      console.error(err);
       Swal.fire({
         icon: "error",
         title: "Failed to submit inquiry",
@@ -442,7 +498,7 @@ export function InquiryDistributor({
           {/* dropdown */}
           {showDropdown && searchResults.length > 0 && (
             <div className="absolute w-full mt-1 bg-white border rounded-xl shadow-lg z-50">
-              {searchResults.map((p) => (
+              {searchResults.map((p: any) => (
                 <div
                   key={p.id}
                   onMouseDown={() => {
@@ -473,27 +529,35 @@ export function InquiryDistributor({
           )}
         </div>
       </div>
+      {salesLoading ? (
+        // <CommonLoader size={48} overlay={true} fullScreen={false} />
+        <SectionLoader />
+      ) : (
+        <>
+          {/* Card */}
+          <div className="border border-border rounded-xl bg-surface overflow-hidden">
+            <div className="p-4 flex flex-wrap gap-1">
+              {persons.map((person: any) => (
+                <Avatar
+                  key={person.id}
+                  person={person}
+                  selected={selectedId === person.id}
+                  onClick={() =>
+                    setSelectedId((prev) =>
+                      prev === person.id ? null : person.id,
+                    )
+                  }
+                  t={tokens}
+                />
+              ))}
+            </div>
 
-      {/* Card */}
-      <div className="border border-border rounded-xl bg-surface overflow-hidden">
-        <div className="p-4 flex flex-wrap gap-1">
-          {persons.map((person: any) => (
-            <Avatar
-              key={person.id}
-              person={person}
-              selected={selectedId === person.id}
-              onClick={() =>
-                setSelectedId((prev) => (prev === person.id ? null : person.id))
-              }
-              t={tokens}
-            />
-          ))}
-        </div>
-
-        {selectedPerson && (
-          <SummaryPanel person={selectedPerson} t={tokens} month={month} />
-        )}
-      </div>
+            {selectedPerson && (
+              <SummaryPanel person={selectedPerson} t={tokens} month={month} />
+            )}
+          </div>
+        </>
+      )}
 
       {/* Button */}
       <div className="flex justify-end mt-3">
