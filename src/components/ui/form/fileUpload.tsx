@@ -71,10 +71,34 @@ const FileInput = ({
     e.target.value = "";
   };
 
-  const handleFiles = (selected: File[]) => {
-    setFiles((prev) => {
-      const valid: UploadedFile[] = [];
+  // const handleFiles = (selected: File[]) => {
+  //   setFiles((prev) => {
+  //     const valid: UploadedFile[] = [];
 
+  //     for (const file of selected) {
+  //       const typeOk = acceptTypes.some((ext) =>
+  //         file.name.toLowerCase().endsWith(ext.replace("*", "")),
+  //       );
+
+  //       if (
+  //         file.size <= maxBytes &&
+  //         typeOk &&
+  //         prev.length + valid.length < limit
+  //       ) {
+  //         valid.push({ file, url: URL.createObjectURL(file) });
+  //       }
+  //     }
+
+  //     const updated = [...prev, ...valid];
+  //     onChange?.(updated.map((f) => f.file));
+  //     return updated;
+  //   });
+  // };
+
+  const handleFiles = (selected: File[]) => {
+    const valid: UploadedFile[] = [];
+
+    setFiles((prev) => {
       for (const file of selected) {
         const typeOk = acceptTypes.some((ext) =>
           file.name.toLowerCase().endsWith(ext.replace("*", "")),
@@ -90,11 +114,14 @@ const FileInput = ({
       }
 
       const updated = [...prev, ...valid];
-      onChange?.(updated.map((f) => f.file));
+
       return updated;
     });
   };
 
+  useEffect(() => {
+    onChange?.(files.map((f) => f.file));
+  }, [files]);
   const removeFile = (index: number) => {
     URL.revokeObjectURL(files[index].url);
     const updated = files.filter((_, i) => i !== index);
@@ -195,7 +222,7 @@ const FileInput = ({
                 src={f.url}
                 alt={f.file.name}
                 className="w-full h-full object-cover"
-                onError={() => console.log("Image failed:", f.file.name)}
+                onError={() => console.error("Image failed:", f.file.name)}
               />
 
               {/* Hover overlay */}

@@ -5,4 +5,5 @@ export type CreateInquiryPayload = {
   mobile: string;
   inquiryTime: string;
   salesPersonId: string;
+  images: File;
 };

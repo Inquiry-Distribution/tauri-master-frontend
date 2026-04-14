@@ -378,6 +378,7 @@ export function InquiryDistributor({
   onShare,
   month = "April 2026",
   form,
+
   createInquiry,
   loading,
 }: any) {
@@ -458,12 +459,7 @@ export function InquiryDistributor({
     if (!selectedPerson) return;
 
     try {
-      await createInquiry({
-        description: form.description,
-        mobile: form.mobile,
-        inquiryTime: form.inquiryTime,
-        salesPersonId: selectedPerson.id,
-      });
+      await createInquiry(selectedPerson.id);
 
       Swal.fire({
         icon: "success",
@@ -472,6 +468,7 @@ export function InquiryDistributor({
 
       setModalPerson(null);
     } catch (err) {
+      console.error(err);
       Swal.fire({
         icon: "error",
         title: "Failed to submit inquiry",

@@ -1,10 +1,11 @@
 // src/mappers/inquiry.mapper.ts
 
-export const mapInquiryFormToPayload = (formValues: any) => {
+export const mapInquiryFormToPayload = (formValues: FormData) => {
   return {
-    description: formValues.description,
-    mobile: formValues.mobile,
-    inquiryTime: formValues.inquiryTime,
-    salesPersonId: formValues.salesPersonId,
+    description: formValues.get("description"),
+    mobile: formValues.get("mobile"),
+    inquiryTime: formValues.get("inquiryTime"),
+    salesPersonId: formValues.get("salesPersonId"),
+    images: formValues.getAll("images"), // ✅ correct
   };
 };
