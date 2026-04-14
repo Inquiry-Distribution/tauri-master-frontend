@@ -11,6 +11,7 @@ const InquiryForm = () => {
     description: "",
     mobile: "",
     inquiryTime: "",
+    salesPersonId: "",
   });
 
   const handleChange = (e: any) => {

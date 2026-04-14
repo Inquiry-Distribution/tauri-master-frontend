@@ -5,7 +5,7 @@ import type { CreateInquiryPayload } from "@/src/types/inquiry";
 
 export const InquiryService = {
   createInquiry: async (payload: CreateInquiryPayload) => {
-    const { data } = await api.post("/inquiries", payload);
+    const { data } = await api.post("/inquiries/share", payload);
     return data;
   },
 };

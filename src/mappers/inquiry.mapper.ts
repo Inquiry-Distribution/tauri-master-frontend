@@ -2,8 +2,9 @@
 
 export const mapInquiryFormToPayload = (formValues: any) => {
   return {
-    description: formValues.inquirydescription,
+    description: formValues.description,
     mobile: formValues.mobile,
-    inquiryTime: formValues.time,
+    inquiryTime: formValues.inquiryTime,
+    salesPersonId: formValues.salesPersonId,
   };
 };
