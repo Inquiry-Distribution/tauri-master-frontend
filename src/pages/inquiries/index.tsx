@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useTheme } from "../../contexts";
 import {
   Search,
@@ -11,12 +11,14 @@ import {
   Clock,
 } from "lucide-react";
 import { cn } from "../../utils/utils";
-import { Inquiry } from "../../types";
+// import { Inquiry } from "../../types";
 import { TableColumn } from "@/src/components/ui/table/types";
 import DynamicTable from "@/src/components/ui/table/dynamicTable";
 import { useNavigate } from "react-router-dom";
 import Tabs from "@/src/components/ui/tabs";
-import { columns, data } from "./data";
+import { columns, tabFilters } from "./data";
+import { useGetInquiries } from "@/src/hooks/inquiry/useGetAllInquiry";
+import { Inquiry } from "@/src/types/inquiry";
 
 // type InquiryRow = {
 //   id: number;
@@ -163,6 +165,31 @@ export default function InquiriesPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const navigate = useNavigate();
 
+  const [activeTab, setActiveTab] = useState("all");
+
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [status, setStatus] = useState<string>("all");
+  const [search, setSearch] = useState("");
+
+  const { data, loading, error, getInquiries } = useGetInquiries();
+  useEffect(() => {
+    const selected = tabFilters.find((t) => t.key === activeTab);
+
+    const query =
+      `page=${page}&limit=${limit}` +
+      (selected?.status ? `&status=${selected.status}` : "") +
+      (searchTerm ? `&search=${searchTerm}` : "");
+
+    getInquiries(query);
+  }, [activeTab, page, limit, searchTerm]);
+
+  const handlePageChange = (newPage: number) => {
+    getInquiries(`page=${newPage}&limit=${limit}`);
+  };
+
+  const inquiries = data?.inquiries || [];
+  const totalPages = Math.ceil((data?.total || 0) / (data?.limit || 10));
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -223,7 +250,7 @@ export default function InquiriesPage() {
         </button>
       </div>
 
-      <Tabs
+      {/* <Tabs
         variant="solid"
         tabs={[
           {
@@ -291,6 +318,34 @@ export default function InquiriesPage() {
             ),
           },
         ]}
+      /> */}
+
+      <Tabs
+        variant="solid"
+        onChange={(key) => {
+          setActiveTab(key);
+          setPage(1); // reset pagination on tab change
+        }}
+        tabs={tabFilters.map((tab) => ({
+          key: tab.key,
+          label: tab.label,
+          content: (
+            <DynamicTable
+              columns={columns}
+              data={data?.inquiries || []}
+              currentPage={page}
+              rowsPerPage={limit}
+              searchable={false}
+              totalPages={Math.ceil((data?.total || 0) / limit)}
+              onPageChange={(p) => setPage(p)}
+              onRowsPerPageChange={(r) => {
+                setLimit(r);
+                setPage(1);
+              }}
+              loading={loading}
+            />
+          ),
+        }))}
       />
 
       {/* <div

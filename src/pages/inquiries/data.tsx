@@ -3,68 +3,51 @@ import { Button } from "@/src/components/ui/button";
 
 import { TableColumn } from "@/src/components/ui/table/types";
 import { useTheme } from "@/src/contexts";
-
-type Inquiry = {
-  id: string;
-  customer: string;
-  product: string;
-  date: string;
-  priority: "low" | "normal" | "high" | "urgent";
-  status: "assigned" | "unassigned" | "closed";
-  assignee?: {
-    name: string;
-    initials: string;
-  };
-};
+import { Inquiry } from "@/src/types/inquiry";
+import { getPriorityStyleMap, getStatusStyleMap } from "./create/inquiryStyles";
 
 export const columns: TableColumn<Inquiry>[] = [
   {
     key: "id",
     label: "INQ ID",
+    render: (row) => (
+      <span className="text-xs text-(--textMuted)">
+        {row.id.slice(0, 8).toUpperCase()}
+      </span>
+    ),
   },
+
   {
-    key: "customer",
-    label: "Customer",
-  },
-  {
-    key: "product",
-    label: "Product",
-  },
-  {
-    key: "date",
-    label: "Date",
+    key: "description",
+    label: "Inquiry",
+    render: (row) => (
+      <div className="max-w-[260px]">
+        <p className="text-sm font-medium text-(--text) line-clamp-1">
+          {row.description || "—"}
+        </p>
+        <p className="text-xs text-(--textMuted)">
+          {row.mobile || "No contact"}
+        </p>
+      </div>
+    ),
   },
   {
     key: "priority",
     label: "Priority",
     render: (row) => {
       const { isDark } = useTheme();
-      const styles = {
-        high: {
-          backgroundColor: isDark ? "#78350f33" : "#fef3c7", // yellow-900/20 : yellow-100
-          color: isDark ? "#fcd34d" : "#b45309", // yellow-300 : yellow-700
-        },
-        urgent: {
-          backgroundColor: isDark ? "#7f1d1d33" : "#fee2e2", // red-900/20 : red-100
-          color: isDark ? "#fca5a5" : "#dc2626", // red-300 : red-600
-        },
-        normal: {
-          backgroundColor: isDark ? "#1f293733" : "#f3f4f6", // gray-800/20 : gray-100
-          color: isDark ? "#d1d5db" : "#374151", // gray-300 : gray-700
-        },
-        low: {
-          backgroundColor: isDark ? "#14532d33" : "#dcfce7", // green-900/20 : green-100
-          color: isDark ? "#86efac" : "#15803d", // green-300 : green-700
-        },
-      };
+      const styles = getPriorityStyleMap(isDark);
+
+      const variant = styles[row.priority as keyof typeof styles];
 
       return (
         <span
           style={{
-            ...styles[row.priority],
+            ...variant,
             padding: "2px 8px",
             fontSize: "12px",
             borderRadius: "6px",
+            textTransform: "capitalize",
           }}
         >
           {row.priority}
@@ -72,77 +55,54 @@ export const columns: TableColumn<Inquiry>[] = [
       );
     },
   },
+
   {
     key: "status",
     label: "Status",
     render: (row) => {
       const { isDark } = useTheme();
-      const styles = {
-        assigned: {
-          bg: isDark ? "#1e3a8a33" : "#dbeafe", // dark: blue-900/20, light: blue-100
-          color: isDark ? "#93c5fd" : "#1d4ed8", // dark: blue-300, light: blue-700
-        },
-        unassigned: {
-          bg: isDark ? "#7f1d1d33" : "#fee2e2", // dark: red-900/20, light: red-100
-          color: isDark ? "#fca5a5" : "#dc2626", // dark: red-300, light: red-600
-        },
-        closed: {
-          bg: isDark ? "#14532d33" : "#dcfce7", // dark: green-900/20, light: green-100
-          color: isDark ? "#86efac" : "#15803d", // dark: green-300, light: green-700
-        },
-      };
+      const styles = getStatusStyleMap(isDark);
 
-      // const styles = {
-      //   assigned: {
-      //     bg: tokens.info + "20",   // light tint
-      //     text: tokens.info,
-      //   },
-      //   unassigned: {
-      //     bg: tokens.error + "20",
-      //     text: tokens.error,
-      //   },
-      //   closed: {
-      //     bg: tokens.success + "20",
-      //     text: tokens.success,
-      //   },
-      // };
-
-      const variant = styles[row.status] || styles.assigned;
+      const variant = styles[row.status as keyof typeof styles];
 
       return (
         <span
-          className="px-2 py-1 text-xs rounded font-medium"
+          className="px-2 py-1 text-xs rounded font-medium capitalize"
           style={{
             backgroundColor: variant.bg,
             color: variant.color,
           }}
         >
-          {row.status}
+          {row.status.replace("_", " ")}
         </span>
       );
     },
   },
+
   {
-    key: "assignee",
+    key: "assignedTo",
     label: "Assignee",
     render: (row) =>
-      row.assignee ? (
+      row.assignedTo ? (
         <div className="flex items-center gap-2">
-          <Avatar
-            name={row.assignee.name}
-            size="sm"
-            variant="solid"
-            orientation="horizontal"
-          />
-          {/* <div className="w-7 h-7 rounded-full bg-blue-500 text-white flex items-center justify-center text-xs">
-            {row.assignee.initials}
-          </div>
-          <span>{row.assignee.name}</span> */}
+          <Avatar name={row.assignedTo.name} size="sm" variant="solid" />
+          {/* <span className="text-sm text-(--text)">{row.assignedTo.name}</span> */}
         </div>
       ) : (
-        <span className="text-gray-400">—</span>
+        <span className="text-xs text-(--textMuted)">Unassigned</span>
       ),
   },
+
+  {
+    key: "createdAt",
+    label: "Date",
+    render: (row) => (
+      <span className="text-xs text-(--textMuted)">
+        {new Date(row.createdAt).toLocaleDateString()}
+      </span>
+    ),
+  },
+
   {
     key: "actions",
     label: "Action",
@@ -155,73 +115,80 @@ export const columns: TableColumn<Inquiry>[] = [
   },
 ];
 
-export const data: Inquiry[] = [
-  {
-    id: "INQ-001",
-    customer: "Rajesh Kumar",
-    product: "Industrial Pump",
-    date: "2025-04-01",
-    priority: "high",
-    status: "assigned",
-    assignee: { name: "Arjun", initials: "AS" },
-  },
-  {
-    id: "INQ-002",
-    customer: "Anita Singh",
-    product: "Control Panel",
-    date: "2025-04-02",
-    priority: "urgent",
-    status: "unassigned",
-  },
-  {
-    id: "INQ-003",
-    customer: "Mohan Das",
-    product: "Conveyor Belt",
-    date: "2025-04-02",
-    priority: "normal",
-    status: "assigned",
-    assignee: { name: "Priya", initials: "PM" },
-  },
-  {
-    id: "INQ-004",
-    customer: "Sunita Rao",
-    product: "Air Compressor",
-    date: "2025-04-03",
-    priority: "high",
-    status: "unassigned",
-  },
-  {
-    id: "INQ-005",
-    customer: "Deepak Joshi",
-    product: "Hydraulic Press",
-    date: "2025-04-03",
-    priority: "normal",
-    status: "closed",
-    assignee: { name: "Rohan", initials: "RG" },
-  },
-  {
-    id: "INQ-006",
-    customer: "Kavita Desai",
-    product: "Electric Motor",
-    date: "2025-04-04",
-    priority: "urgent",
-    status: "unassigned",
-  },
-  {
-    id: "INQ-007",
-    customer: "Suresh Iyer",
-    product: "Valve Assembly",
-    date: "2025-04-04",
-    priority: "normal",
-    status: "assigned",
-    assignee: { name: "Sneha", initials: "SP" },
-  },
-  {
-    id: "INQ-008",
-    customer: "Meera Pillai",
-    product: "Crane System",
-    date: "2025-04-05",
-    priority: "high",
-    status: "unassigned",
-  },
+export const tabFilters = [
+  { key: "all", label: "All", status: "" },
+  { key: "assigned", label: "Assigned", status: "assigned" },
+  { key: "unassigned", label: "Unassigned", status: "unassigned" },
+  { key: "in_progress", label: "In Progress", status: "in_progress" },
+  { key: "closed", label: "Closed", status: "closed" },
 ];
+// export const data: Inquiry[] = [
+//   {
+//     id: "INQ-001",
+//     customer: "Rajesh Kumar",
+//     product: "Industrial Pump",
+//     date: "2025-04-01",
+//     priority: "high",
+//     status: "assigned",
+//     assignee: { name: "Arjun", initials: "AS" },
+//   },
+//   {
+//     id: "INQ-002",
+//     customer: "Anita Singh",
+//     product: "Control Panel",
+//     date: "2025-04-02",
+//     priority: "urgent",
+//     status: "unassigned",
+//   },
+//   {
+//     id: "INQ-003",
+//     customer: "Mohan Das",
+//     product: "Conveyor Belt",
+//     date: "2025-04-02",
+//     priority: "normal",
+//     status: "assigned",
+//     assignee: { name: "Priya", initials: "PM" },
+//   },
+//   {
+//     id: "INQ-004",
+//     customer: "Sunita Rao",
+//     product: "Air Compressor",
+//     date: "2025-04-03",
+//     priority: "high",
+//     status: "unassigned",
+//   },
+//   {
+//     id: "INQ-005",
+//     customer: "Deepak Joshi",
+//     product: "Hydraulic Press",
+//     date: "2025-04-03",
+//     priority: "normal",
+//     status: "closed",
+//     assignee: { name: "Rohan", initials: "RG" },
+//   },
+//   {
+//     id: "INQ-006",
+//     customer: "Kavita Desai",
+//     product: "Electric Motor",
+//     date: "2025-04-04",
+//     priority: "urgent",
+//     status: "unassigned",
+//   },
+//   {
+//     id: "INQ-007",
+//     customer: "Suresh Iyer",
+//     product: "Valve Assembly",
+//     date: "2025-04-04",
+//     priority: "normal",
+//     status: "assigned",
+//     assignee: { name: "Sneha", initials: "SP" },
+//   },
+//   {
+//     id: "INQ-008",
+//     customer: "Meera Pillai",
+//     product: "Crane System",
+//     date: "2025-04-05",
+//     priority: "high",
+//     status: "unassigned",
+//   },
+// ];
