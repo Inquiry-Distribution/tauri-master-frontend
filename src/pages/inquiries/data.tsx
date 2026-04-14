@@ -5,6 +5,7 @@ import { TableColumn } from "@/src/components/ui/table/types";
 import { useTheme } from "@/src/contexts";
 import { Inquiry } from "@/src/types/inquiry";
 import { getPriorityStyleMap, getStatusStyleMap } from "./create/inquiryStyles";
+import { Link, useNavigate } from "react-router-dom";
 
 export const columns: TableColumn<Inquiry>[] = [
   {
@@ -21,14 +22,17 @@ export const columns: TableColumn<Inquiry>[] = [
     key: "description",
     label: "Inquiry",
     render: (row) => (
-      <div className="max-w-[260px]">
+      <Link
+        className="max-w-[260px] cursor-pointer"
+        to={`/inquiries/${row.id}`}
+      >
         <p className="text-sm font-medium text-(--text) line-clamp-1">
           {row.description || "—"}
         </p>
         <p className="text-xs text-(--textMuted)">
           {row.mobile || "No contact"}
         </p>
-      </div>
+      </Link>
     ),
   },
   {

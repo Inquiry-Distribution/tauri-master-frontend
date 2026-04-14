@@ -8,6 +8,11 @@ export const InquiryService = {
     const { data } = await api.get(`/inquiries?${query}`);
     return data;
   },
+
+  getInquiryById: async (id: string) => {
+    const { data } = await api.get(`/inquiries/${id}`);
+    return data;
+  },
   createInquiry: async (payload: FormData) => {
     const { data } = await api.post("/inquiries/share", payload, {
       headers: {
