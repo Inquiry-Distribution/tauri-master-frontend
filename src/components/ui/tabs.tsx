@@ -7,7 +7,7 @@ export type TabItem = {
   key: string;
   label: string;
   icon?: ReactNode;
-  content: ReactNode;
+  content?: ReactNode;
 };
 
 type TabsVariant = "card" | "pill" | "underline" | "solid" | "timeline";
