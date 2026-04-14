@@ -3,12 +3,15 @@ import { Bell, Search, Sun, Moon, User, Menu, X } from "lucide-react";
 import { useTheme } from "@/src/contexts/index";
 import { useLayout } from "@/src/hooks/useLayout";
 import NotificationBox from "./NotificationBox";
+import { useAuth } from "@/src/contexts/authContext";
 
 export default function Header() {
   const { tokens, isDark, toggleTheme } = useTheme();
   const { toggleSidebar, sidebarOpen } = useLayout();
   const [showNotifications, setShowNotifications] = useState(false);
   const notificationRef = useRef<HTMLDivElement>(null);
+
+  const { user } = useAuth();
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -72,6 +75,7 @@ export default function Header() {
 
         <div className="relative" ref={notificationRef}>
           <button
+            title="Notifications"
             onClick={() => setShowNotifications(!showNotifications)}
             className="p-2 rounded-lg relative transition-colors duration-200 hover:bg-opacity-10"
             style={{
@@ -99,17 +103,17 @@ export default function Header() {
         <div className="flex items-center gap-3 pl-1 md:pl-2">
           <div className="text-right hidden md:block">
             <p className="text-sm font-bold" style={{ color: tokens.text }}>
-              Priyanshu
+              {user?.name || "Guest"}
             </p>
             <p
               className="text-[10px] font-medium uppercase tracking-wider"
               style={{ color: tokens.textMuted }}
             >
-              Superuser
+              {user?.role || "—"}
             </p>
           </div>
           <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white font-bold shadow-md shrink-0">
-            P
+            {user?.name?.charAt(0).toUpperCase() || "G"}
           </div>
         </div>
       </div>

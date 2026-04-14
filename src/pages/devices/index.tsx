@@ -1,131 +1,129 @@
-import React from 'react';
-import { useTheme } from '../../contexts';
-import { Smartphone, MapPin, Shield, ShieldOff, Clock, User } from 'lucide-react';
-import { Device } from '../../types';
-import { cn } from '../../utils/utils';
+import { useState } from "react";
+import { useTheme } from "../../contexts";
+import {
+  Smartphone,
+  MapPin,
+  Shield,
+  ShieldOff,
+  User,
+  Clock,
+} from "lucide-react";
+import { Device } from "../../types";
+import { Card } from "@/src/components/ui/card";
+import { Button } from "@/src/components/ui/button";
+import DynamicTable from "@/src/components/ui/table/dynamicTable";
+import { TableColumn } from "@/src/components/ui/table/types";
+import { cn } from "../../utils/utils";
+import { buildColumns, INITIAL_DEVICES } from "./data";
+import { LiveLocationsCard } from "./deviceComponents";
 
-const mockDevices: Device[] = [
-  {
-    id: 'dev-1',
-    salesPersonId: '1',
-    deviceName: 'Samsung Galaxy S21',
-    os: 'Android 13',
-    lastSeen: '2024-03-20T10:45:00Z',
-    status: 'active',
-    location: { lat: 40.7128, lng: -74.0060 }
-  },
-  {
-    id: 'dev-2',
-    salesPersonId: '2',
-    deviceName: 'iPhone 14 Pro',
-    os: 'iOS 16.5',
-    lastSeen: '2024-03-20T10:30:00Z',
-    status: 'active',
-    location: { lat: 34.0522, lng: -118.2437 }
-  },
-  {
-    id: 'dev-3',
-    salesPersonId: '3',
-    deviceName: 'Google Pixel 7',
-    os: 'Android 14',
-    lastSeen: '2024-03-19T18:20:00Z',
-    status: 'blocked',
-    location: { lat: 41.8781, lng: -87.6298 }
-  },
-];
+// ── Mock data ───────────────────────────────────────────────────────────────
+
+// ── Page ────────────────────────────────────────────────────────────────────
 
 export default function DevicesPage() {
   const { tokens } = useTheme();
 
+  // Devices state
+  const [devices, setDevices] = useState<Device[]>(INITIAL_DEVICES);
+
+  // Table state
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [sortKey, setSortKey] = useState<keyof Device | undefined>();
+  const [sortDir, setSortDir] = useState<"asc" | "desc" | null>(null);
+
+  // Toggle block/unblock
+  const handleToggle = (id: string) =>
+    setDevices((prev) =>
+      prev.map((d) =>
+        d.id === id
+          ? { ...d, status: d.status === "active" ? "blocked" : "active" }
+          : d,
+      ),
+    );
+
+  // Filter + sort
+  const filtered = devices
+    .filter((d) =>
+      [d.deviceName, d.os, d.id, d.salesPersonId, d.status]
+        .join(" ")
+        .toLowerCase()
+        .includes(search.toLowerCase()),
+    )
+    .sort((a, b) => {
+      if (!sortKey || !sortDir) return 0;
+      const av = String(a[sortKey] ?? "");
+      const bv = String(b[sortKey] ?? "");
+      return sortDir === "asc" ? av.localeCompare(bv) : bv.localeCompare(av);
+    });
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / rowsPerPage));
+  const paginated = filtered.slice(
+    (page - 1) * rowsPerPage,
+    page * rowsPerPage,
+  );
+
+  const columns = buildColumns(handleToggle);
+
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold tracking-tight" style={{ color: tokens.text }}>Device Monitoring</h1>
-        <p className="text-sm" style={{ color: tokens.textSec }}>Track all active devices and manage access permissions.</p>
+        <h1
+          className="text-2xl font-bold tracking-tight"
+          style={{ color: tokens.text }}
+        >
+          Device Monitoring
+        </h1>
+        <p className="text-sm" style={{ color: tokens.textSec }}>
+          Track all active devices and manage access permissions.
+        </p>
       </div>
 
+      {/* Main layout */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-6">
-          <div className="rounded-2xl border overflow-hidden" style={{ backgroundColor: tokens.surface, borderColor: tokens.border }}>
-            <div className="p-6 border-b" style={{ borderColor: tokens.border }}>
-              <h3 className="font-bold" style={{ color: tokens.text }}>Active Devices</h3>
+        {/* Devices table */}
+        <div className="lg:col-span-2">
+          <Card className="!p-0 overflow-hidden">
+            <div className="px-6 py-4 border-b border-(--border)">
+              <h3 className="font-bold text-(--text)">Active Devices</h3>
             </div>
-            <div className="divide-y" style={{ divideColor: tokens.border }}>
-              {mockDevices.map((device) => (
-                <div key={device.id} className="p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-opacity-50 transition-colors" style={{ backgroundColor: device.status === 'blocked' ? tokens.dangerLight + '10' : 'transparent' }}>
-                  <div className="flex items-center gap-4">
-                    <div className={cn(
-                      "w-12 h-12 rounded-xl flex items-center justify-center",
-                      device.status === 'active' ? "bg-blue-100 text-blue-600 dark:bg-blue-900/30" : "bg-red-100 text-red-600 dark:bg-red-900/30"
-                    )}>
-                      <Smartphone size={24} />
-                    </div>
-                    <div>
-                      <h4 className="font-bold" style={{ color: tokens.text }}>{device.deviceName}</h4>
-                      <p className="text-xs" style={{ color: tokens.textSec }}>{device.os} • ID: {device.id}</p>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-wrap items-center gap-6">
-                    <div className="flex items-center gap-2">
-                      <User size={16} className="text-gray-400" />
-                      <div className="text-xs">
-                        <p className="font-bold" style={{ color: tokens.text }}>Agent {device.salesPersonId}</p>
-                        <p style={{ color: tokens.textMuted }}>Assigned User</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Clock size={16} className="text-gray-400" />
-                      <div className="text-xs">
-                        <p className="font-bold" style={{ color: tokens.text }}>{new Date(device.lastSeen).toLocaleTimeString()}</p>
-                        <p style={{ color: tokens.textMuted }}>Last Seen</p>
-                      </div>
-                    </div>
-                    <button className={cn(
-                      "flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-xs transition-all",
-                      device.status === 'active' ? "text-red-500 bg-red-500/10 hover:bg-red-500/20" : "text-green-500 bg-green-500/10 hover:bg-green-500/20"
-                    )}>
-                      {device.status === 'active' ? (
-                        <><ShieldOff size={14} /> Block Device</>
-                      ) : (
-                        <><Shield size={14} /> Unblock Device</>
-                      )}
-                    </button>
-                  </div>
-                </div>
-              ))}
+            <div className="p-4">
+              <DynamicTable<Device>
+                columns={columns}
+                data={paginated}
+                currentPage={page}
+                rowsPerPage={rowsPerPage}
+                totalPages={totalPages}
+                onPageChange={setPage}
+                onRowsPerPageChange={(n) => {
+                  setRowsPerPage(n);
+                  setPage(1);
+                }}
+                searchTerm={search}
+                onSearchChange={(v) => {
+                  setSearch(v);
+                  setPage(1);
+                }}
+                searchPlaceholder="Search devices…"
+                rowKey={(d) => d.id}
+                sortKey={sortKey}
+                sortDirection={sortDir}
+                onSortChange={(k, dir) => {
+                  setSortKey(k as keyof Device);
+                  setSortDir(dir);
+                }}
+                showSerialNumber={false}
+                emptyMessage="No devices found."
+              />
             </div>
-          </div>
+          </Card>
         </div>
 
-        <div className="space-y-6">
-          <div className="rounded-2xl border p-6" style={{ backgroundColor: tokens.surface, borderColor: tokens.border }}>
-            <h3 className="font-bold mb-4 flex items-center gap-2" style={{ color: tokens.text }}>
-              <MapPin size={18} className="text-red-500" />
-              Live Locations
-            </h3>
-            <div className="aspect-square rounded-xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center border" style={{ borderColor: tokens.border }}>
-              <div className="text-center p-6">
-                <MapPin size={48} className="mx-auto mb-4 opacity-20" />
-                <p className="text-sm font-medium" style={{ color: tokens.textSec }}>Interactive Map View</p>
-                <p className="text-xs mt-1" style={{ color: tokens.textMuted }}>Click to expand and view all device locations in real-time.</p>
-              </div>
-            </div>
-            <div className="mt-6 space-y-4">
-              {mockDevices.map((device) => (
-                <div key={device.id} className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                    <span className="text-xs font-medium" style={{ color: tokens.text }}>Agent {device.salesPersonId}</span>
-                  </div>
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-800" style={{ color: tokens.textMuted }}>
-                    {device.location.lat.toFixed(2)}, {device.location.lng.toFixed(2)}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
+        {/* Sidebar */}
+        <LiveLocationsCard devices={devices} />
       </div>
     </div>
   );

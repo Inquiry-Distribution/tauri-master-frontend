@@ -1,0 +1,531 @@
+import { ThemeContext } from "@/src/contexts";
+import { useState, useMemo, useContext } from "react";
+import { Modal } from "../modal";
+import ShareInquiry from "./shareInquiry/shareInquiry";
+import Swal from "sweetalert2";
+
+// keep your types + dummy data + helpers SAME
+// ── Types ──────────────────────────────────────────────────────────────────────
+interface ThemeTokens {
+  bg: string;
+  surface: string;
+  surfaceElevated: string;
+  border: string;
+  borderLight: string;
+  text: string;
+  textSec: string;
+  textMuted: string;
+  accent: string;
+  accentLight: string;
+  accentText: string;
+  success: string;
+  successLight: string;
+  warning: string;
+  warningLight: string;
+  danger: string;
+  dangerLight: string;
+  sidebarBg: string;
+  sidebarText: string;
+  sidebarActive: string;
+  sidebarActiveBg: string;
+  chartGrid: string;
+  tooltipBg: string;
+  sidebarBorder: string;
+  sidebarHeading: string;
+  sidebarHover: string;
+}
+interface SalesPerson {
+  id: string;
+  name: string;
+  email: string;
+  mobile: string;
+  role: string;
+  initials: string;
+  avatarColor: string;
+}
+interface SalesSummaryRow {
+  id: string;
+  label: string;
+  thisMonth: number;
+  lastMonth: number;
+  delta: number;
+  format: "currency" | "number" | "percent";
+}
+interface InquiryDistributorProps {
+  t: ThemeTokens;
+  defaultPersons?: SalesPerson[];
+  onShare?: (person: SalesPerson) => void;
+  month?: string;
+}
+// ── Dummy Data ─────────────────────────────────────────────────────────────────
+const DUMMY_PERSONS: SalesPerson[] = [
+  {
+    id: "1",
+    name: "Arjun Mehta",
+    email: "arjun@acme.in",
+    mobile: "9876543210",
+    role: "Senior Sales",
+    initials: "AM",
+    avatarColor: "#4F7DF3",
+  },
+  {
+    id: "2",
+    name: "Priya Sharma",
+    email: "priya@acme.in",
+    mobile: "9765432109",
+    role: "Sales Lead",
+    initials: "PS",
+    avatarColor: "#34D399",
+  },
+  {
+    id: "3",
+    name: "Rohan Das",
+    email: "rohan@acme.in",
+    mobile: "9654321098",
+    role: "Sales Exec",
+    initials: "RD",
+    avatarColor: "#FB923C",
+  },
+  {
+    id: "4",
+    name: "Sneha Kapoor",
+    email: "sneha@acme.in",
+    mobile: "9543210987",
+    role: "Sales Exec",
+    initials: "SK",
+    avatarColor: "#F87171",
+  },
+  {
+    id: "5",
+    name: "Vikram Nair",
+    email: "vikram@acme.in",
+    mobile: "9432109876",
+    role: "Sales Lead",
+    initials: "VN",
+    avatarColor: "#A78BFA",
+  },
+  {
+    id: "6",
+    name: "Nisha Tiwari",
+    email: "nisha@acme.in",
+    mobile: "9321098765",
+    role: "Sr. Sales",
+    initials: "NT",
+    avatarColor: "#F472B6",
+  },
+  {
+    id: "7",
+    name: "Karan Joshi",
+    email: "karan@acme.in",
+    mobile: "9210987654",
+    role: "Sales Exec",
+    initials: "KJ",
+    avatarColor: "#38BDF8",
+  },
+  {
+    id: "8",
+    name: "Meera Pillai",
+    email: "meera@acme.in",
+    mobile: "9109876543",
+    role: "Sales Lead",
+    initials: "MP",
+    avatarColor: "#FBBF24",
+  },
+];
+// Seeded per-person summary rows so each person shows different numbers
+function generateRows(personId: string): SalesSummaryRow[] {
+  const seed = parseInt(personId, 10);
+  const rand = (base: number, variance: number) =>
+    Math.round(base + ((seed * 7) % variance) - variance / 2);
+  return [
+    {
+      id: "1",
+      label: "Total Inquiries Assigned",
+      thisMonth: rand(48, 20),
+      lastMonth: rand(41, 18),
+      delta: rand(15, 20),
+      format: "number",
+    },
+    {
+      id: "2",
+      label: "Inquiries Closed (Won)",
+      thisMonth: rand(18, 10),
+      lastMonth: rand(14, 8),
+      delta: rand(22, 30),
+      format: "number",
+    },
+    {
+      id: "3",
+      label: "Inquiries Lost",
+      thisMonth: rand(5, 6),
+      lastMonth: rand(8, 6),
+      delta: rand(-20, 30),
+      format: "number",
+    },
+    {
+      id: "4",
+      label: "Revenue Generated",
+      thisMonth: rand(1420000, 400000),
+      lastMonth: rand(1180000, 300000),
+      delta: rand(18, 15),
+      format: "currency",
+    },
+    {
+      id: "5",
+      label: "Avg. Deal Size",
+      thisMonth: rand(78000, 20000),
+      lastMonth: rand(84000, 15000),
+      delta: rand(-5, 12),
+      format: "currency",
+    },
+    {
+      id: "6",
+      label: "Conversion Rate",
+      thisMonth: rand(37, 12),
+      lastMonth: rand(34, 10),
+      delta: rand(3, 8),
+      format: "percent",
+    },
+    {
+      id: "7",
+      label: "Follow-up Calls Made",
+      thisMonth: rand(134, 40),
+      lastMonth: rand(119, 35),
+      delta: rand(12, 15),
+      format: "number",
+    },
+    {
+      id: "8",
+      label: "Pending Inquiries",
+      thisMonth: rand(25, 10),
+      lastMonth: rand(19, 8),
+      delta: rand(25, 20),
+      format: "number",
+    },
+  ];
+} // ── Helpers ────────────────────────────────────────────────────────────────────
+function formatVal(val: number, format: string): string {
+  switch (format) {
+    case "currency":
+      return `₹${val.toLocaleString("en-IN")}`;
+    case "percent":
+      return `${val}%`;
+    default:
+      return val.toLocaleString("en-IN");
+  }
+}
+function Avatar({ person, selected, onClick, t }: any) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex flex-col items-center gap-1.5 p-1.5 rounded-xl transition-transform hover:-translate-y-[2px]"
+      title={`${person.name} · ${person.role}\n${person.email}`}
+    >
+      <div
+        className="relative w-18 h-18 rounded-full flex items-center justify-center font-bold text-[20px] transition-all"
+        style={{
+          background: selected
+            ? `linear-gradient(135deg, ${person.avatarColor}cc, ${person.avatarColor})`
+            : `${person.avatarColor}20`,
+          border: selected
+            ? `2.5px solid ${person.avatarColor}`
+            : `2px solid ${t.border}`,
+          color: selected ? "#fff" : person.avatarColor,
+          boxShadow: selected ? `0 0 0 3px ${person.avatarColor}33` : "none",
+        }}
+      >
+        {person.initials}
+
+        {selected && (
+          <span
+            className="absolute -bottom-[2px] -right-[2px] w-4 h-4 rounded-full flex items-center justify-center text-[9px] text-white"
+            style={{
+              background: person.avatarColor,
+              border: `2px solid ${t.surface}`,
+            }}
+          >
+            ✓
+          </span>
+        )}
+      </div>
+
+      <span
+        className={`text-[10px] max-w-[62px] truncate text-center ${
+          selected ? "font-semibold" : "font-normal"
+        }`}
+        style={{ color: selected ? t.text : t.textMuted }}
+      >
+        {person.name.split(" ")[0]}
+      </span>
+    </button>
+  );
+}
+
+function DeltaBadge({ delta, t }: any) {
+  const up = delta >= 0;
+
+  return (
+    <span
+      className="inline-flex items-center gap-1 text-[10.5px] font-semibold px-2 py-[2px] rounded-full"
+      style={{
+        background: up ? t.successLight : t.dangerLight,
+        color: up ? t.success : t.danger,
+      }}
+    >
+      {up ? "▲" : "▼"} {Math.abs(delta).toFixed(1)}%
+    </span>
+  );
+}
+
+function SummaryPanel({ person, t, month }: any) {
+  const rows = useMemo(() => generateRows(person.id), [person.id]);
+
+  return (
+    <div className="border-t border-border animate-[slideDown_0.2s_ease]">
+      {/* header */}
+      <div
+        className="flex items-center gap-2.5 px-4 py-2.5 border-b border-border"
+        style={{ background: t.surfaceElevated }}
+      >
+        <div
+          className="w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-bold"
+          style={{
+            background: `${person.avatarColor}20`,
+            border: `1.5px solid ${person.avatarColor}`,
+            color: person.avatarColor,
+          }}
+        >
+          {person.initials}
+        </div>
+
+        <span className="text-[13px] font-semibold" style={{ color: t.text }}>
+          {person.name}
+        </span>
+
+        <span className="text-xs" style={{ color: t.textMuted }}>
+          · {person.role}
+        </span>
+
+        <span
+          className="ml-auto text-[11px] font-semibold px-2.5 py-[2px] rounded-full"
+          style={{
+            background: t.accentLight,
+            color: t.accentText,
+          }}
+        >
+          {month}
+        </span>
+      </div>
+
+      {/* table header */}
+      <div className="grid grid-cols-[1fr_130px_130px_90px] px-4 py-1.5 text-[10.5px] font-bold uppercase tracking-wide">
+        {["Metric", "This Month", "Last Month", "Change"].map((col, i) => (
+          <span
+            key={col}
+            className={i === 0 ? "text-left" : "text-right"}
+            style={{ color: t.textMuted }}
+          >
+            {col}
+          </span>
+        ))}
+      </div>
+
+      {/* rows */}
+      {rows.map((row: any, idx: number) => (
+        <div
+          key={row.id}
+          className="grid grid-cols-[1fr_130px_130px_90px] px-4 py-2 items-center transition-colors"
+          onMouseEnter={(e) =>
+            (e.currentTarget.style.background = t.accentLight)
+          }
+          onMouseLeave={(e) =>
+            (e.currentTarget.style.background = "transparent")
+          }
+        >
+          <span className="text-sm font-medium">{row.label}</span>
+
+          <span className="text-sm font-semibold text-right">
+            {formatVal(row.thisMonth, row.format)}
+          </span>
+
+          <span className="text-sm text-right" style={{ color: t.textSec }}>
+            {formatVal(row.lastMonth, row.format)}
+          </span>
+
+          <div className="flex justify-end">
+            <DeltaBadge delta={row.delta} t={t} />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export function InquiryDistributor({
+  defaultPersons = DUMMY_PERSONS,
+  onShare,
+  month = "April 2026",
+  form,
+  createInquiry,
+  loading,
+}: any) {
+  const [query, setQuery] = useState("");
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [persons, setPersons] = useState(defaultPersons);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [modalPerson, setModalPerson] = useState<SalesPerson | null>(null);
+
+  // on the Share Inquiry button:
+
+  const ctx = useContext(ThemeContext);
+  if (!ctx) return null;
+  const { tokens } = ctx;
+
+  const selectedPerson = persons.find((p: any) => p.id === selectedId) ?? null;
+
+  const searchResults = useMemo(() => {
+    if (!query.trim()) return [];
+    const q = query.toLowerCase();
+    return DUMMY_PERSONS.filter(
+      (p) =>
+        p.name.toLowerCase().includes(q) ||
+        p.email.toLowerCase().includes(q) ||
+        p.mobile.includes(q),
+    );
+  }, [query]);
+
+  const onConfirm = async () => {
+    if (!selectedPerson) return;
+
+    try {
+      await createInquiry({
+        description: form.description,
+        mobile: form.mobile,
+        inquiryTime: form.inquiryTime,
+        assignedTo: selectedPerson.id,
+      });
+
+      Swal.fire({
+        icon: "success",
+        title: "Inquiry distributed successfully",
+      });
+
+      setModalPerson(null);
+    } catch (err) {
+      Swal.fire({
+        icon: "error",
+        title: "Failed to submit inquiry",
+      });
+    }
+  };
+
+  return (
+    <div className="font-sans">
+      {/* Search */}
+      <div className="flex items-center gap-3 mb-3.5">
+        <label className="text-sm font-semibold whitespace-nowrap">
+          Distribute Inquiry
+        </label>
+
+        <div className="relative flex-1 max-w-[380px]">
+          <input
+            value={query}
+            onChange={(e) => {
+              setQuery(e.target.value);
+              setShowDropdown(true);
+            }}
+            className="w-full pl-8 pr-3 py-2 text-sm rounded-lg border border-border outline-none"
+            placeholder="Search sales person..."
+          />
+
+          {/* dropdown */}
+          {showDropdown && searchResults.length > 0 && (
+            <div className="absolute w-full mt-1 bg-white border rounded-xl shadow-lg z-50">
+              {searchResults.map((p) => (
+                <div
+                  key={p.id}
+                  onMouseDown={() => {
+                    setSelectedId(p.id);
+                    setQuery("");
+                    setShowDropdown(false);
+                  }}
+                  className="flex items-center gap-2.5 px-3 py-2 cursor-pointer hover:bg-gray-100"
+                >
+                  <div
+                    className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold"
+                    style={{
+                      background: `${p.avatarColor}20`,
+                      border: `1.5px solid ${p.avatarColor}`,
+                      color: p.avatarColor,
+                    }}
+                  >
+                    {p.initials}
+                  </div>
+
+                  <div>
+                    <div className="text-sm font-semibold">{p.name}</div>
+                    <div className="text-xs text-gray-500">{p.email}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Card */}
+      <div className="border border-border rounded-xl bg-surface overflow-hidden">
+        <div className="p-4 flex flex-wrap gap-1">
+          {persons.map((person: any) => (
+            <Avatar
+              key={person.id}
+              person={person}
+              selected={selectedId === person.id}
+              onClick={() =>
+                setSelectedId((prev) => (prev === person.id ? null : person.id))
+              }
+              t={tokens}
+            />
+          ))}
+        </div>
+
+        {selectedPerson && (
+          <SummaryPanel person={selectedPerson} t={tokens} month={month} />
+        )}
+      </div>
+
+      {/* Button */}
+      <div className="flex justify-end mt-3">
+        <button
+          type="button"
+          onClick={() => setModalPerson(selectedPerson)}
+          disabled={!selectedPerson}
+          className={`px-5 py-2 rounded-lg text-sm font-semibold transition ${
+            selectedPerson
+              ? "bg-blue-600 text-white hover:opacity-90"
+              : "bg-gray-200 text-gray-400 cursor-not-allowed"
+          }`}
+        >
+          Share Inquiry
+        </button>
+      </div>
+
+      {modalPerson && (
+        <Modal
+          title="Share Inquiry"
+          onClose={() => setModalPerson(null)}
+          width={400}
+        >
+          <ShareInquiry
+            onClose={() => setModalPerson(null)}
+            onConfirm={() => {
+              onConfirm();
+            }}
+            person={modalPerson}
+          />
+        </Modal>
+      )}
+    </div>
+  );
+}

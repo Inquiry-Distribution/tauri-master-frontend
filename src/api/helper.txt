@@ -1,0 +1,281 @@
+// import { logoutUser } from "../utils/auth";
+import { goto } from "$app/navigation";
+import axios from "axios";
+import type { AxiosRequestConfig } from "axios";
+import { authToken, userData } from "$lib/store/auth";
+import { get } from "svelte/store";
+
+import { redirect } from "@sveltejs/kit";
+import { browser } from "$app/environment";
+import Swal from "sweetalert2";
+
+let token: string | null;
+token = get(authToken);
+const unsubscribe = authToken.subscribe((value) => {
+  token = value;
+});
+const userD = get(userData);
+
+const BASE_URL = import.meta.env.VITE_PUBLIC_API_URL || "http://127.0.0.1:3000";
+const SALES_BASE_URL =
+  import.meta.env.VITE_PUBLIC_SALES_API_URL || "http://168.231.74.17:3000";
+
+const axiosInstance = axios.create({
+  baseURL: BASE_URL,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
+
+const axiosSalesInstance = axios.create({
+  baseURL: SALES_BASE_URL,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
+
+// Generic API fetch (no auth)
+export async function apiFetch(
+  endpoint: string,
+  options: AxiosRequestConfig = {},
+) {
+  try {
+    const response = await axiosInstance.request({
+      url: endpoint,
+      ...options,
+    });
+    return response.data;
+  } catch (err: any) {
+    console.error(err);
+    if (err.response?.statusCode === 401) {
+      logout();
+      throw redirect(302, "/login");
+    }
+    const errorData = err.response?.data || {
+      message: "Unknown error occurred",
+    };
+    const error = new Error(errorData.message || "API request failed");
+    (error as any).status = err.response?.status || 500;
+    (error as any).data = errorData;
+    throw error;
+  }
+}
+
+// Authenticated API fetch with refresh token handling
+export async function authApiFetch(
+  endpoint: string,
+  options: AxiosRequestConfig = {},
+) {
+  token = get(authToken);
+
+  const isFormData = options.data instanceof FormData;
+  try {
+    const response = await axiosInstance.request({
+      url: endpoint,
+      headers: {
+        ...(token
+          ? {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": isFormData
+                ? "multipart/form-data"
+                : "application/json",
+            }
+          : {}),
+        ...(options.headers || {}),
+      },
+      data: options.data,
+      ...options,
+    });
+    return response.data;
+  } catch (err: any) {
+    const errorData = err.response?.data || {
+      message: "Unknown error occurred",
+    };
+
+    // Handle token expiration (401)
+    if (err.response?.status === 401) {
+      // Try to refresh the token
+      let refreshToken = null;
+      if (typeof localStorage !== "undefined") {
+        refreshToken = localStorage.getItem("refresh_token");
+      }
+
+      if (refreshToken) {
+        try {
+          // Call the API to refresh the token
+          const refreshResponse = await apiFetch("/auth/refresh", {
+            method: "POST",
+            data: { refresh_token: refreshToken },
+          });
+
+          // Store the new access token and continue the original request
+          localStorage.setItem("access_token", refreshResponse.access_token);
+
+          // Retry the original request with the new access token
+          token = refreshResponse.access_token;
+          const retryResponse = await axiosInstance.request({
+            url: endpoint,
+            headers: {
+              Authorization: `Bearer ${authToken}`,
+              "Content-Type": isFormData
+                ? "multipart/form-data"
+                : "application/json",
+            },
+            data: options.data,
+            ...options,
+          });
+
+          return retryResponse.data;
+        } catch (refreshError) {
+          //   logoutUser();
+          goto("/login");
+          throw refreshError;
+        }
+      } else {
+        await logout(true);
+        Swal.fire({
+          icon: "error",
+          title: "Session Expired",
+          text: "Please login again to continue.",
+
+          color: "#000000",
+          confirmButtonText: "Ok",
+          confirmButtonColor: "#FF473E",
+          customClass: {
+            popup: "custom-alert-popup",
+            title: "text-2xl font-bold",
+            confirmButton: "px-6 py-2 text-white font-semibold",
+          },
+        });
+        if (browser) goto("/login");
+        else throw redirect(302, "/login");
+      }
+    }
+
+    const error = new Error(errorData.message || "API request failed");
+    (error as any).status = err.response?.status || 500;
+    (error as any).data = errorData;
+    throw error;
+  }
+}
+
+export async function authSalesApiFetch(
+  endpoint: string,
+  options: AxiosRequestConfig = {},
+) {
+  token = get(authToken);
+
+  const isFormData = options.data instanceof FormData;
+  try {
+    const response = await axiosSalesInstance.request({
+      url: endpoint,
+      headers: {
+        ...(token
+          ? {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": isFormData
+                ? "multipart/form-data"
+                : "application/json",
+            }
+          : {}),
+        ...(options.headers || {}),
+      },
+      data: options.data,
+      ...options,
+    });
+    return response.data;
+  } catch (err: any) {
+    const errorData = err.response?.data || {
+      message: "Unknown error occurred",
+    };
+
+    // Handle token expiration (401)
+    if (err.response?.status === 401) {
+      // Try to refresh the token
+      let refreshToken = null;
+      if (typeof localStorage !== "undefined") {
+        refreshToken = localStorage.getItem("refresh_token");
+      }
+
+      if (refreshToken) {
+        try {
+          // Call the API to refresh the token
+          const refreshResponse = await apiFetch("/auth/refresh", {
+            method: "POST",
+            data: { refresh_token: refreshToken },
+          });
+
+          // Store the new access token and continue the original request
+          localStorage.setItem("access_token", refreshResponse.access_token);
+
+          // Retry the original request with the new access token
+          token = refreshResponse.access_token;
+          const retryResponse = await axiosInstance.request({
+            url: endpoint,
+            headers: {
+              Authorization: `Bearer ${authToken}`,
+              "Content-Type": isFormData
+                ? "multipart/form-data"
+                : "application/json",
+            },
+            data: options.data,
+            ...options,
+          });
+
+          return retryResponse.data;
+        } catch (refreshError) {
+          //   logoutUser();
+          goto("/login");
+          throw refreshError;
+        }
+      } else {
+        await logout(true);
+        Swal.fire({
+          icon: "error",
+          title: "Session Expired",
+          text: "Please login again to continue.",
+
+          color: "#000000",
+          confirmButtonText: "Ok",
+          confirmButtonColor: "#FF473E",
+          customClass: {
+            popup: "custom-alert-popup",
+            title: "text-2xl font-bold",
+            confirmButton: "px-6 py-2 text-white font-semibold",
+          },
+        });
+        if (browser) goto("/login");
+        else throw redirect(302, "/login");
+      }
+    }
+
+    const error = new Error(errorData.message || "API request failed");
+    (error as any).status = err.response?.status || 500;
+    (error as any).data = errorData;
+    throw error;
+  }
+}
+export async function logout(initiatedLogout: boolean = false) {
+  token = get(authToken);
+
+  if (!initiatedLogout) {
+    await axiosInstance.request({
+      url: "auth/logout",
+      method: "POST",
+      headers: {
+        ...(token
+          ? {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            }
+          : {}),
+      },
+      data: { id: userD?.uuid },
+    });
+  }
+  authToken.set(null);
+  userData.set(null);
+  localStorage.removeItem("authToken");
+  localStorage.removeItem("userData");
+  unsubscribe();
+}

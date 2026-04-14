@@ -1,5 +1,5 @@
-import { useMemo } from 'react';
-import { ThemeTokens } from '../types';
+import { useMemo } from "react";
+import { ThemeTokens } from "../types";
 
 export function useThemeTokens(dark: boolean): ThemeTokens {
   return useMemo(
@@ -15,6 +15,7 @@ export function useThemeTokens(dark: boolean): ThemeTokens {
 
       // ── Text ─────────────────────────────────────
       text: dark ? "#E2E8F0" : "#1E293B",
+      textOpp: !dark ? "#E2E8F0" : "#1E293B",
       textSec: dark ? "#94A3B8" : "#475569",
       textMuted: dark ? "#4D5868" : "#94A3B8",
 

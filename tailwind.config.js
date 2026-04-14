@@ -1,0 +1,38 @@
+// export default {
+//   content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
+//   theme: {
+//     extend: {
+//       colors: {
+//         border: "var(--border)",
+//         surface: "var(--surface)",
+//         background: "var(--bg)",
+//         bg: "var(--bg)",
+//         surfaceElevated: "var(--surfaceElevated)",
+
+//         borderLight: "var(--borderLight)",
+//         text: "var(--text)",
+//         textSec: "var(--textSec)",
+//         textMuted: "var(--textMuted)",
+//         accent: "var(--accent)",
+//         accentLight: "var(--accentLight)",
+//         accentText: "var(--accentText)",
+//         success: "var(--success)",
+//         successLight: "var(--successLight)",
+//         warning: "var(--warning)",
+//         warningLight: "var(--warningLight)",
+//         danger: "var(--danger)",
+//         dangerLight: "var(--dangerLight)",
+//         sidebarBg: "var(--sidebarBg)",
+//         sidebarText: "var(--sidebarText)",
+//         sidebarActive: "var(--sidebarActive)",
+//         sidebarActiveBg: "var(--sidebarActiveBg)",
+//         chartGrid: "var(--chartGrid)",
+//         tooltipBg: "var(--tooltipBg)",
+//         sidebarBorder: "var(--sidebarBorder)",
+//         sidebarHeading: "var(--sidebarHeading)",
+//         sidebarHover: "var(--sidebarHover)",
+//       },
+//     },
+//   },
+//   plugins: [],
+// };
