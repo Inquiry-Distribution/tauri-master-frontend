@@ -131,8 +131,14 @@ export default function InquiryDetailPage() {
           )}
         </div>
 
-        <h1 className="text-xl font-bold text-(--text) mt-1">
-          {inquiry?.title ?? inquiry?.description ?? "Untitled Inquiry"}
+        <h1 className="text-xl font-bold text-(--text) mt-1 ">
+          {inquiry?.title ? (
+            inquiry.title
+          ) : inquiry?.description ? (
+            <div className="line-clamp-1">{inquiry.description}</div>
+          ) : (
+            "Untitled Inquiry"
+          )}
         </h1>
         <p className="text-sm text-(--textMuted) mt-0.5">
           Created {formatDateTime(inquiry?.createdAt)} · Last updated{" "}
@@ -232,6 +238,7 @@ export default function InquiryDetailPage() {
                   name={inquiry?.assignedTo?.name || "—"}
                   size="md"
                   variant="solid"
+                  showName={false}
                 />
                 <div>
                   <p className="text-sm font-semibold text-(--text)">
@@ -256,6 +263,7 @@ export default function InquiryDetailPage() {
                   name={inquiry?.assignedBy?.name || "—"}
                   size="sm"
                   variant="solid"
+                  showName={false}
                 />
                 <p className="text-sm text-(--text) font-medium">
                   {inquiry?.assignedBy?.name || "—"}
