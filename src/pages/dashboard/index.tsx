@@ -1,41 +1,216 @@
-import React from 'react';
-import { useTheme } from '../../contexts';
-import { Users, FileText, CheckCircle, AlertCircle, TrendingUp, MapPin } from 'lucide-react';
-import { 
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
-  LineChart, Line, AreaChart, Area 
-} from 'recharts';
-import { cn } from '../../utils/utils';
+import React, { useEffect } from "react";
+import { useTheme } from "../../contexts";
+import {
+  Users,
+  FileText,
+  CheckCircle,
+  AlertCircle,
+  TrendingUp,
+  MapPin,
+} from "lucide-react";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  LineChart,
+  Line,
+  AreaChart,
+  Area,
+} from "recharts";
+import { cn } from "../../utils/utils";
+import { useGetDashboardSummary } from "@/src/hooks/dashboard/useGetDashBoardSummary";
+import { StatCard } from "@/src/components/ui/dashboard/statCard";
+import CommonLoader from "@/src/components/ui/loader/loader";
 
 const stats = [
-  { label: 'Total Inquiries', value: '1,284', icon: FileText, color: 'bg-blue-500', trend: '+12.5%' },
-  { label: 'Assigned', value: '1,102', icon: CheckCircle, color: 'bg-green-500', trend: '+8.2%' },
-  { label: 'Unassigned', value: '182', icon: AlertCircle, color: 'bg-amber-500', trend: '-4.1%' },
-  { label: 'Active Agents', value: '24', icon: Users, color: 'bg-purple-500', trend: '0%' },
+  {
+    label: "Total Inquiries",
+    value: "1,284",
+    icon: FileText,
+    color: "bg-blue-500",
+    trend: "+12.5%",
+  },
+  {
+    label: "Assigned",
+    value: "1,102",
+    icon: CheckCircle,
+    color: "bg-green-500",
+    trend: "+8.2%",
+  },
+  {
+    label: "Unassigned",
+    value: "182",
+    icon: AlertCircle,
+    color: "bg-amber-500",
+    trend: "-4.1%",
+  },
+  {
+    label: "Active Agents",
+    value: "24",
+    icon: Users,
+    color: "bg-purple-500",
+    trend: "0%",
+  },
 ];
 
 const chartData = [
-  { name: 'Mon', inquiries: 45, assigned: 38 },
-  { name: 'Tue', inquiries: 52, assigned: 48 },
-  { name: 'Wed', inquiries: 48, assigned: 42 },
-  { name: 'Thu', inquiries: 61, assigned: 55 },
-  { name: 'Fri', inquiries: 55, assigned: 50 },
-  { name: 'Sat', inquiries: 32, assigned: 28 },
-  { name: 'Sun', inquiries: 28, assigned: 25 },
+  { name: "Mon", inquiries: 45, assigned: 38 },
+  { name: "Tue", inquiries: 52, assigned: 48 },
+  { name: "Wed", inquiries: 48, assigned: 42 },
+  { name: "Thu", inquiries: 61, assigned: 55 },
+  { name: "Fri", inquiries: 55, assigned: 50 },
+  { name: "Sat", inquiries: 32, assigned: 28 },
+  { name: "Sun", inquiries: 28, assigned: 25 },
 ];
 
 export default function DashboardPage() {
   const { tokens } = useTheme();
+  const { data, loading, error, getDashboardSummary } =
+    useGetDashboardSummary();
+
+  useEffect(() => {
+    getDashboardSummary();
+  }, []);
+
+  const trends = ["+12.5%", "-4.1%", "+8.2%", "0%"];
+
+  const statsData = (
+    data
+      ? [
+          {
+            label: "Total Inquiries",
+            value: data.totalInquiries,
+            icon: FileText,
+            color: "bg-blue-500",
+            trend: "+12.5%",
+          },
+          {
+            label: "Unassigned",
+            value: data.unassigned,
+            icon: AlertCircle,
+            color: "bg-amber-500",
+            trend: "-4.1%",
+          },
+          {
+            label: "In Progress",
+            value: data.inProgress,
+            icon: CheckCircle,
+            color: "bg-green-500",
+            trend: "+8.2%",
+          },
+          {
+            label: "Closed",
+            value: data.closed,
+            icon: CheckCircle,
+            color: "bg-emerald-500",
+            trend: "+5.6%",
+          },
+          {
+            label: "Total Sales",
+            value: `₹${data.totalSales}`,
+            icon: TrendingUp,
+            color: "bg-indigo-500",
+            trend: "+10.3%",
+          },
+          {
+            label: "Total Devices",
+            value: data.totalDevices,
+            icon: Users,
+            color: "bg-purple-500",
+            trend: "+2.1%",
+          },
+          {
+            label: "Blocked Devices",
+            value: data.blockedDevices,
+            icon: AlertCircle,
+            color: "bg-red-500",
+            trend: "-1.2%",
+          },
+        ]
+      : [
+          // fallback dummy data
+          {
+            label: "Total Inquiries",
+            value: "1,284",
+            icon: FileText,
+            color: "bg-blue-500",
+            trend: "+12.5%",
+          },
+          {
+            label: "Unassigned",
+            value: "182",
+            icon: AlertCircle,
+            color: "bg-amber-500",
+            trend: "-4.1%",
+          },
+          {
+            label: "In Progress",
+            value: "640",
+            icon: CheckCircle,
+            color: "bg-green-500",
+            trend: "+8.2%",
+          },
+          {
+            label: "Closed",
+            value: "462",
+            icon: CheckCircle,
+            color: "bg-emerald-500",
+            trend: "+5.6%",
+          },
+          {
+            label: "Total Sales",
+            value: "₹52,000",
+            icon: TrendingUp,
+            color: "bg-indigo-500",
+            trend: "+10.3%",
+          },
+          {
+            label: "Total Devices",
+            value: "120",
+            icon: Users,
+            color: "bg-purple-500",
+            trend: "+2.1%",
+          },
+          {
+            label: "Blocked Devices",
+            value: "8",
+            icon: AlertCircle,
+            color: "bg-red-500",
+            trend: "-1.2%",
+          },
+        ]
+  ).map((item, index) => ({
+    ...item,
+    trend: trends[index],
+  }));
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight" style={{ color: tokens.text }}>Dashboard Overview</h1>
-          <p className="text-sm" style={{ color: tokens.textSec }}>Welcome back, here's what's happening today.</p>
+          <h1
+            className="text-2xl font-bold tracking-tight"
+            style={{ color: tokens.text }}
+          >
+            Dashboard Overview
+          </h1>
+          <p className="text-sm" style={{ color: tokens.textSec }}>
+            Welcome back, here's what's happening today.
+          </p>
         </div>
         <div className="flex gap-3">
-          <button className="px-4 py-2 rounded-xl font-medium text-sm transition-all" style={{ backgroundColor: tokens.surface, color: tokens.text, border: `1px solid ${tokens.border}` }}>
+          <button
+            className="px-4 py-2 rounded-xl font-medium text-sm transition-all"
+            style={{
+              backgroundColor: tokens.surface,
+              color: tokens.text,
+              border: `1px solid ${tokens.border}`,
+            }}
+          >
             Download Report
           </button>
           <button className="px-4 py-2 rounded-xl font-medium text-sm text-white bg-blue-600 hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/20">
@@ -44,8 +219,9 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat) => (
+      {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 xl:grid-cols-7"> */}
+      <div className="flex flex-wrap gap-6 w-full justify-between items-start">
+        {/* {stats.map((stat) => (
           <div 
             key={stat.label}
             className="p-6 rounded-2xl border transition-all duration-200 hover:shadow-lg"
@@ -67,17 +243,36 @@ export default function DashboardPage() {
               <h3 className="text-2xl font-bold" style={{ color: tokens.text }}>{stat.value}</h3>
             </div>
           </div>
-        ))}
+        ))} */}
+        {loading ? (
+          <CommonLoader fullScreen={true} overlay={true} />
+        ) : (
+          <>
+            {statsData.map((stat) => (
+              <StatCard key={stat.label} {...stat} />
+            ))}
+          </>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div 
+        <div
           className="lg:col-span-2 p-6 rounded-2xl border"
-          style={{ backgroundColor: tokens.surface, borderColor: tokens.border }}
+          style={{
+            backgroundColor: tokens.surface,
+            borderColor: tokens.border,
+          }}
         >
           <div className="flex items-center justify-between mb-6">
-            <h3 className="font-bold text-lg" style={{ color: tokens.text }}>Inquiry Distribution</h3>
-            <select className="bg-transparent text-sm outline-none border-none cursor-pointer" style={{ color: tokens.textSec }}>
+            <h3 className="font-bold text-lg" style={{ color: tokens.text }}>
+              Inquiry Distribution
+            </h3>
+            <select
+              name="timeRange"
+              aria-label="Select time range for inquiry distribution"
+              className="bg-transparent text-sm outline-none border-none cursor-pointer"
+              style={{ color: tokens.textSec }}
+            >
               <option>Last 7 Days</option>
               <option>Last 30 Days</option>
             </select>
@@ -87,33 +282,73 @@ export default function DashboardPage() {
               <AreaChart data={chartData}>
                 <defs>
                   <linearGradient id="colorInq" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor={tokens.accent} stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor={tokens.accent} stopOpacity={0}/>
+                    <stop
+                      offset="5%"
+                      stopColor={tokens.accent}
+                      stopOpacity={0.3}
+                    />
+                    <stop
+                      offset="95%"
+                      stopColor={tokens.accent}
+                      stopOpacity={0}
+                    />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={tokens.chartGrid} />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: tokens.textMuted, fontSize: 12 }} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fill: tokens.textMuted, fontSize: 12 }} />
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: tokens.tooltipBg, 
-                    border: 'none', 
-                    borderRadius: '12px',
-                    color: '#fff'
-                  }} 
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  vertical={false}
+                  stroke={tokens.chartGrid}
                 />
-                <Area type="monotone" dataKey="inquiries" stroke={tokens.accent} fillOpacity={1} fill="url(#colorInq)" strokeWidth={3} />
-                <Area type="monotone" dataKey="assigned" stroke={tokens.success} fillOpacity={0} strokeWidth={3} strokeDasharray="5 5" />
+                <XAxis
+                  dataKey="name"
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fill: tokens.textMuted, fontSize: 12 }}
+                />
+                <YAxis
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fill: tokens.textMuted, fontSize: 12 }}
+                />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: tokens.tooltipBg,
+                    border: "none",
+                    borderRadius: "12px",
+                    color: "#fff",
+                  }}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="inquiries"
+                  stroke={tokens.accent}
+                  fillOpacity={1}
+                  fill="url(#colorInq)"
+                  strokeWidth={3}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="assigned"
+                  stroke={tokens.success}
+                  fillOpacity={0}
+                  strokeWidth={3}
+                  strokeDasharray="5 5"
+                />
               </AreaChart>
             </ResponsiveContainer>
           </div>
         </div>
 
-        <div 
+        <div
           className="p-6 rounded-2xl border"
-          style={{ backgroundColor: tokens.surface, borderColor: tokens.border }}
+          style={{
+            backgroundColor: tokens.surface,
+            borderColor: tokens.border,
+          }}
         >
-          <h3 className="font-bold text-lg mb-6" style={{ color: tokens.text }}>Recent Activity</h3>
+          <h3 className="font-bold text-lg mb-6" style={{ color: tokens.text }}>
+            Recent Activity
+          </h3>
           <div className="space-y-6">
             {[1, 2, 3, 4, 5].map((i) => (
               <div key={i} className="flex gap-4">
@@ -121,13 +356,26 @@ export default function DashboardPage() {
                   <FileText size={18} className="text-blue-600" />
                 </div>
                 <div>
-                  <p className="text-sm font-bold" style={{ color: tokens.text }}>New Inquiry Received</p>
-                  <p className="text-xs" style={{ color: tokens.textSec }}>Customer: John Doe • 2 mins ago</p>
+                  <p
+                    className="text-sm font-bold"
+                    style={{ color: tokens.text }}
+                  >
+                    New Inquiry Received
+                  </p>
+                  <p className="text-xs" style={{ color: tokens.textSec }}>
+                    Customer: John Doe • 2 mins ago
+                  </p>
                 </div>
               </div>
             ))}
           </div>
-          <button className="w-full mt-6 py-2 text-sm font-bold rounded-xl transition-colors" style={{ backgroundColor: tokens.borderLight, color: tokens.accent }}>
+          <button
+            className="w-full mt-6 py-2 text-sm font-bold rounded-xl transition-colors"
+            style={{
+              backgroundColor: tokens.borderLight,
+              color: tokens.accent,
+            }}
+          >
             View All Activity
           </button>
         </div>
