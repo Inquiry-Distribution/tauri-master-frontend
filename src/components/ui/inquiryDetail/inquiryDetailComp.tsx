@@ -137,6 +137,7 @@ export function TimelineItem({
 /** Image thumbnail card */
 export function ImageThumb({ img }: { img: InquiryImage }) {
   const filename = img.filename.split("\\").pop() ?? img.filename;
+  const assetURL = import.meta.env.VITE_PUBLIC_ASSET_URL;
   return (
     <div className="rounded-lg overflow-hidden border border-(--border) group relative">
       <div
@@ -144,9 +145,9 @@ export function ImageThumb({ img }: { img: InquiryImage }) {
         style={{ background: "var(--surfaceElevated)" }}
       >
         {/* Show image if URL is absolute; otherwise show placeholder */}
-        {img.url.startsWith("http") ? (
+        {img.url.startsWith("uploads") ? (
           <img
-            src={img.url}
+            src={assetURL ? assetURL + img.url : img.url}
             alt={filename}
             className="w-full h-full object-cover"
           />

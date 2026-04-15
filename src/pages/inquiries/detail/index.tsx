@@ -78,7 +78,7 @@ import { useParams } from "react-router-dom";
 
 export default function InquiryDetailPage() {
   const { id } = useParams();
-  console.log(id);
+
   const { isDark } = useTheme();
   //   const inquiry = MOCK_INQUIRY; // swap with useQuery / useFetch hook
   const { data: inquiry, loading, error, getInquiryById } = useGetInquiryById();
@@ -163,8 +163,11 @@ export default function InquiryDetailPage() {
                 Attachments ({inquiry?.images?.length ?? 0})
               </SectionHeading>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                {inquiry?.images?.map((img) => (
-                  <ImageThumb key={img.id} img={img} />
+                {inquiry?.images?.map((img: Inquiry["images"][number]) => (
+                  <>
+                    {/* <pre>{JSON.stringify(img)}</pre> */}
+                    <ImageThumb key={img.id} img={img} />
+                  </>
                 ))}
               </div>
             </Card>
@@ -199,13 +202,15 @@ export default function InquiryDetailPage() {
               </p>
             ) : (
               <div className="mt-1">
-                {inquiry?.statusHistory.map((entry, i) => (
-                  <TimelineItem
-                    key={entry.id}
-                    entry={entry}
-                    isLast={i === inquiry?.statusHistory.length - 1}
-                  />
-                ))}
+                {inquiry?.statusHistory.map(
+                  (entry: Inquiry["statusHistory"][number], i: number) => (
+                    <TimelineItem
+                      key={entry.id}
+                      entry={entry}
+                      isLast={i === inquiry?.statusHistory.length - 1}
+                    />
+                  ),
+                )}
               </div>
             )}
           </Card>
