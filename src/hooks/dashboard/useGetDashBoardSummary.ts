@@ -14,7 +14,7 @@ export const useGetDashboardSummary = () => {
       setError(null);
 
       const response = await DashboardService.getSummary();
-      console.log("Dashboard Summary Response:", response);
+
       setData(response.data);
 
       return response;

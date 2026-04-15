@@ -6,17 +6,25 @@ import { useGetAllAttendance } from "@/src/hooks/attendance/useGetAllAttendance"
 import type { Attendance } from "@/src/types/attendance";
 import Tabs from "@/src/components/ui/tabs";
 import DynamicTable from "@/src/components/ui/table/dynamicTable";
-import { getAttendanceColumns } from "./data";
+import { getAttendanceColumns, getAttendancePersonColumns } from "./data";
+import { useGetAttendanceById } from "@/src/hooks/attendance/useGetAttendanceById";
+import { PersonSelector } from "@/src/components/ui/attendance/personSelector";
+import { SalesPerson } from "@/src/types/users";
 
 export default function AttendancePage() {
   const { tokens } = useTheme();
 
   const navigate = useNavigate();
 
-  const [activeTab, setActiveTab] = useState("all");
+  const [activeTab, setActiveTab] = useState("byDate");
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]); // default to today
+  const [personId, setPersonId] = useState<string | null>(null);
+  const [selectedPerson, setSelectedPerson] = useState<SalesPerson | null>(
+    null,
+  );
 
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const shouldFetch = Boolean(date || personId);
   const columns = useMemo(
     () =>
       getAttendanceColumns({
@@ -24,17 +32,49 @@ export default function AttendancePage() {
       }),
     [setSelectedUserId],
   );
+  const columns2 = useMemo(
+    () =>
+      getAttendancePersonColumns({
+        setSelectedUserId,
+        selectedPerson,
+      }),
+    [setSelectedUserId, selectedPerson],
+  );
   const { data, loading, error, getAllAttendance } = useGetAllAttendance();
+  const {
+    getAttendancePerson,
+    data: personData,
+    loading: loading2,
+  } = useGetAttendanceById();
   // Fetch once + when date changes
+  //   useEffect(() => {
+  //     const query = new URLSearchParams({
+  //       ...(date ? { date } : {}),
+  //     }).toString();
+
+  //     getAllAttendance(query);
+  //   }, [date]);
   useEffect(() => {
+    if (!shouldFetch) return;
+
     const query = new URLSearchParams({
       ...(date ? { date } : {}),
     }).toString();
 
-    getAllAttendance(query);
-  }, [date]);
+    if (personId) {
+      getAttendancePerson(personId);
+    } else {
+      getAllAttendance(query);
+    }
+  }, [date, personId]);
 
-  const attendance = data || [];
+  const attendance = useMemo(() => {
+    if (personId) {
+      return personData || [];
+    }
+
+    return data || [];
+  }, [personId, personData, data]);
   const totalPages = Math.ceil((data?.total || 0) / (data?.limit || 10));
   return (
     <div className="space-y-6">
@@ -61,56 +101,214 @@ export default function AttendancePage() {
           </button>
         </div> */}
       </div>
+      <Tabs
+        value={activeTab}
+        onChange={setActiveTab}
+        tabs={[
+          {
+            label: "By Date",
+            key: "byDate",
+            content: (
+              <>
+                <div className="flex flex-col md:flex-row gap-4">
+                  <div className="relative flex-1">
+                    <Search
+                      size={18}
+                      className="absolute left-3 top-1/2 -translate-y-1/2"
+                      style={{ color: tokens.textMuted }}
+                    />
+                    <input
+                      type="date"
+                      placeholder="Search by date..."
+                      className="w-full pl-10 pr-4 py-2.5 rounded-xl border outline-none transition-all"
+                      style={{
+                        backgroundColor: tokens.surface,
+                        borderColor: tokens.border,
+                        color: tokens.text,
+                      }}
+                      value={date}
+                      onChange={(e) => setDate(e.target.value)}
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl border font-bold text-sm transition-all"
+                    style={{
+                      backgroundColor: tokens.surface,
+                      borderColor: tokens.border,
+                      color: tokens.text,
+                    }}
+                  >
+                    <Filter size={18} />
+                    Filters
+                  </button>
+                </div>
 
-      <div className="flex flex-col md:flex-row gap-4">
-        <div className="relative flex-1">
-          <Search
-            size={18}
-            className="absolute left-3 top-1/2 -translate-y-1/2"
-            style={{ color: tokens.textMuted }}
-          />
-          <input
-            type="date"
-            placeholder="Search by date..."
-            className="w-full pl-10 pr-4 py-2.5 rounded-xl border outline-none transition-all"
-            style={{
-              backgroundColor: tokens.surface,
-              borderColor: tokens.border,
-              color: tokens.text,
-            }}
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-          />
-        </div>
-        <button
-          type="button"
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl border font-bold text-sm transition-all"
-          style={{
-            backgroundColor: tokens.surface,
-            borderColor: tokens.border,
-            color: tokens.text,
-          }}
-        >
-          <Filter size={18} />
-          Filters
-        </button>
-      </div>
+                <DynamicTable
+                  currentPage={1}
+                  rowsPerPage={10}
+                  totalPages={totalPages}
+                  columns={columns}
+                  data={attendance}
+                  loading={loading}
+                  pagination={false}
+                  searchable={false}
+                  showSerialNumber
+                  onRowClick={(row) => setPersonId(row.salespersonId)}
+                />
+              </>
+            ),
+          },
 
-      {/* Table */}
-      <DynamicTable<Attendance>
-        columns={columns}
-        data={attendance}
-        loading={loading}
-        currentPage={1}
-        rowsPerPage={10}
-        showRowsPerPage={false}
-        totalPages={totalPages}
-        searchable={false}
-        pagination={false} // 👈 IMPORTANT (no pagination)
-        striped
-        showSerialNumber
-        onRowClick={(row) => setSelectedUserId(row.salespersonId)}
+          {
+            label: "By Person",
+            key: "byPerson",
+            content: (
+              <>
+                <PersonSelector
+                  setPersonId={setPersonId}
+                  setSelectedPerson={setSelectedPerson}
+                />
+
+                <DynamicTable
+                  currentPage={1}
+                  rowsPerPage={10}
+                  totalPages={totalPages}
+                  columns={columns2}
+                  data={attendance}
+                  loading={loading2}
+                  pagination={false}
+                  searchable={false}
+                  showSerialNumber
+                  onRowClick={(row) => setPersonId(row.salespersonId)}
+                />
+              </>
+            ),
+          },
+        ]}
       />
     </div>
   );
 }
+
+// const abcdtabcs=<Tabs
+//         activeTab={activeTab}
+//         onTabChange={setActiveTab}
+//         tabs={[
+//           {
+//             label: "By Date",
+//             key: "byDate",
+//             content: (
+//               <>
+//                 <div className="flex flex-col md:flex-row gap-4">
+//                   <div className="relative flex-1">
+//                     <Search
+//                       size={18}
+//                       className="absolute left-3 top-1/2 -translate-y-1/2"
+//                       style={{ color: tokens.textMuted }}
+//                     />
+//                     <input
+//                       type="date"
+//                       placeholder="Search by date..."
+//                       className="w-full pl-10 pr-4 py-2.5 rounded-xl border outline-none transition-all"
+//                       style={{
+//                         backgroundColor: tokens.surface,
+//                         borderColor: tokens.border,
+//                         color: tokens.text,
+//                       }}
+//                       value={date}
+//                       onChange={(e) => setDate(e.target.value)}
+//                     />
+//                   </div>
+//                   <button
+//                     type="button"
+//                     className="flex items-center gap-2 px-4 py-2.5 rounded-xl border font-bold text-sm transition-all"
+//                     style={{
+//                       backgroundColor: tokens.surface,
+//                       borderColor: tokens.border,
+//                       color: tokens.text,
+//                     }}
+//                   >
+//                     <Filter size={18} />
+//                     Filters
+//                   </button>
+//                 </div>
+
+//                 {/* Table */}
+//                 <DynamicTable<Attendance>
+//                   columns={columns}
+//                   data={attendance}
+//                   loading={loading}
+//                   currentPage={1}
+//                   rowsPerPage={10}
+//                   showRowsPerPage={false}
+//                   totalPages={totalPages}
+//                   searchable={false}
+//                   pagination={false} // 👈 IMPORTANT (no pagination)
+//                   striped
+//                   showSerialNumber
+//                   onRowClick={(row) => setSelectedUserId(row.salespersonId)}
+//                 />
+//               </>
+//             ),
+//           },
+//           {
+//             label: "By Person",
+//             key: "byPerson",
+//             content:(
+//                 <>
+//                 <div className="flex flex-col md:flex-row gap-4">
+//                   <div className="relative flex-1">
+//                     <Search
+//                       size={18}
+//                       className="absolute left-3 top-1/2 -translate-y-1/2"
+//                       style={{ color: tokens.textMuted }}
+//                     />
+//                     <input
+//                       type="date"
+//                       placeholder="Search by date..."
+//                       className="w-full pl-10 pr-4 py-2.5 rounded-xl border outline-none transition-all"
+//                       style={{
+//                         backgroundColor: tokens.surface,
+//                         borderColor: tokens.border,
+//                         color: tokens.text,
+//                       }}
+//                       value={date}
+//                       onChange={(e) => setDate(e.target.value)}
+//                     />
+//                   </div>
+//                   <button
+//                     type="button"
+//                     className="flex items-center gap-2 px-4 py-2.5 rounded-xl border font-bold text-sm transition-all"
+//                     style={{
+//                       backgroundColor: tokens.surface,
+//                       borderColor: tokens.border,
+//                       color: tokens.text,
+//                     }}
+//                   >
+//                     <Filter size={18} />
+//                     Filters
+//                   </button>
+//                 </div>
+
+//                 {/* Table */}
+//                 <DynamicTable<Attendance>
+//                   columns={columns}
+//                   data={attendance}
+//                   loading={loading}
+//                   currentPage={1}
+//                   rowsPerPage={10}
+//                   showRowsPerPage={false}
+//                   totalPages={totalPages}
+//                   searchable={false}
+//                   pagination={false} // 👈 IMPORTANT (no pagination)
+//                   striped
+//                   showSerialNumber
+//                   onRowClick={(row) => setSelectedUserId(row.salespersonId)}
+//                 />
+//               </>
+//             ),
+//         }
+
+//         ]}
+//       />

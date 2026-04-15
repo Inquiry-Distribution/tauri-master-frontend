@@ -109,8 +109,8 @@ export default function SalesPersonsPage() {
                   <SalesPersonCard
                     key={person.id}
                     person={person}
-                    onViewReport={(p) => console.log("View report:", p)}
-                    onToggleStatus={(p) => console.log("Toggle status:", p)}
+                    onViewReport={(p) => {}}
+                    onToggleStatus={(p) => {}}
                   />
                 ))
               : !loading && (

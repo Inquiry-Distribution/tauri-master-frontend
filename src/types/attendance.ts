@@ -20,3 +20,21 @@ export type Attendance = {
     email: string;
   };
 };
+
+export type AttendancePerson = {
+  id: string;
+  salespersonId: string;
+  deviceId: string;
+  date: string;
+  checkInTime: string;
+  checkInLat: number | null;
+  checkInLng: number | null;
+  checkInAddress: string | null;
+  checkOutTime: string;
+  checkOutLat: number | null;
+  checkOutLng: number | null;
+  checkOutAddress: string | null;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+};
