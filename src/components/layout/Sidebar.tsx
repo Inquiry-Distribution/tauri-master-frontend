@@ -9,6 +9,7 @@ import {
   Settings,
   LogOut,
   X,
+  Calendar,
 } from "lucide-react";
 import { useTheme } from "@/src/contexts";
 import { useLayout } from "@/src/hooks/useLayout";
@@ -19,6 +20,7 @@ const menuItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
   { icon: FileText, label: "Inquiries", path: "/inquiries" },
   { icon: Users, label: "Sales Persons", path: "/sales-persons" },
+  { icon: Calendar, label: "Attendance", path: "/attendance" },
   { icon: Smartphone, label: "Devices", path: "/devices" },
   { icon: BarChart3, label: "AI Reports", path: "/ai-reports" },
 ];

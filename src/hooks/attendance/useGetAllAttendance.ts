@@ -1,0 +1,37 @@
+import { AttendanceService } from "@/src/services/attendance.service";
+import { useState, useCallback } from "react";
+
+export const useGetAllAttendance = () => {
+  const [data, setData] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const getAllAttendance = useCallback(async (query: string = "") => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const response = await AttendanceService.getAllAttendance(query);
+
+      setData(response?.data);
+
+      return response;
+    } catch (err: any) {
+      const message =
+        err?.response?.data?.message || "Failed to fetch attendance records";
+
+      setError(message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  return {
+    data,
+    loading,
+    error,
+    getAllAttendance,
+    setData, // optional if you want manual updates
+  };
+};
