@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useTheme } from "../../contexts";
 import {
   Users,
@@ -25,37 +25,40 @@ import { cn } from "../../utils/utils";
 import { useGetDashboardSummary } from "@/src/hooks/dashboard/useGetDashBoardSummary";
 import { StatCard } from "@/src/components/ui/dashboard/statCard";
 import CommonLoader from "@/src/components/ui/loader/loader";
+import { useNavigate } from "react-router-dom";
+import { BroadcastForm } from "@/src/components/ui/notification/broadcastForm";
+import { Modal } from "@/src/components/ui/modal";
 
-const stats = [
-  {
-    label: "Total Inquiries",
-    value: "1,284",
-    icon: FileText,
-    color: "bg-blue-500",
-    trend: "+12.5%",
-  },
-  {
-    label: "Assigned",
-    value: "1,102",
-    icon: CheckCircle,
-    color: "bg-green-500",
-    trend: "+8.2%",
-  },
-  {
-    label: "Unassigned",
-    value: "182",
-    icon: AlertCircle,
-    color: "bg-amber-500",
-    trend: "-4.1%",
-  },
-  {
-    label: "Active Agents",
-    value: "24",
-    icon: Users,
-    color: "bg-purple-500",
-    trend: "0%",
-  },
-];
+// const stats = [
+//   {
+//     label: "Total Inquiries",
+//     value: "1,284",
+//     icon: FileText,
+//     color: "bg-blue-500",
+//     trend: "+12.5%",
+//   },
+//   {
+//     label: "Assigned",
+//     value: "1,102",
+//     icon: CheckCircle,
+//     color: "bg-green-500",
+//     trend: "+8.2%",
+//   },
+//   {
+//     label: "Unassigned",
+//     value: "182",
+//     icon: AlertCircle,
+//     color: "bg-amber-500",
+//     trend: "-4.1%",
+//   },
+//   {
+//     label: "Active Agents",
+//     value: "24",
+//     icon: Users,
+//     color: "bg-purple-500",
+//     trend: "0%",
+//   },
+// ];
 
 const chartData = [
   { name: "Mon", inquiries: 45, assigned: 38 },
@@ -69,6 +72,8 @@ const chartData = [
 
 export default function DashboardPage() {
   const { tokens } = useTheme();
+  const navigate = useNavigate();
+  const [showBroadcastModal, setShowBroadcastModal] = useState<boolean>(false);
   const { data, loading, error, getDashboardSummary } =
     useGetDashboardSummary();
 
@@ -213,14 +218,25 @@ export default function DashboardPage() {
           >
             Download Report
           </button>
-          <button className="px-4 py-2 rounded-xl font-medium text-sm text-white bg-blue-600 hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/20">
+          <button
+            type="button"
+            onClick={() => navigate("/inquiries/create")}
+            className="px-4 py-2 rounded-xl font-medium text-sm text-white bg-blue-600 hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/20 cursor-pointer"
+          >
             Upload Inquiry
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowBroadcastModal(true)}
+            className="px-4 py-2 rounded-xl font-medium text-sm text-white bg-accent hover:bg-accentText transition-all shadow-lg shadow-blue-600/20 cursor-pointer"
+          >
+            Broadcast
           </button>
         </div>
       </div>
 
       {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 xl:grid-cols-7"> */}
-      <div className="flex flex-wrap gap-6 w-full justify-between items-start">
+      <div className="flex flex-wrap gap-6 w-full justify-center items-start">
         {/* {stats.map((stat) => (
           <div 
             key={stat.label}
@@ -380,6 +396,15 @@ export default function DashboardPage() {
           </button>
         </div>
       </div>
+      {/* Broadcast Modal */}
+      {showBroadcastModal && (
+        <Modal
+          title="Broadcast Notification"
+          onClose={() => setShowBroadcastModal(false)}
+        >
+          <BroadcastForm onClose={() => setShowBroadcastModal(false)} />
+        </Modal>
+      )}
     </div>
   );
 }
