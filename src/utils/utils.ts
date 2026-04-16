@@ -1,5 +1,6 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { InquiryReportByStatus } from "../types/dashboard";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -22,4 +23,11 @@ export function formatTime(iso: string) {
 
 export function formatDateTime(iso: string) {
   return `${formatDate(iso)}, ${formatTime(iso)}`;
+}
+
+export function transformInquiryData(data: InquiryReportByStatus[]) {
+  return data.map((item) => ({
+    name: item.status.replace("_", " ").toUpperCase(),
+    value: item._count.id,
+  }));
 }

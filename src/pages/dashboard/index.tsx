@@ -28,6 +28,8 @@ import CommonLoader from "@/src/components/ui/loader/loader";
 import { useNavigate } from "react-router-dom";
 import { BroadcastForm } from "@/src/components/ui/notification/broadcastForm";
 import { Modal } from "@/src/components/ui/modal";
+import { Card } from "@/src/components/ui/card";
+import InquiryAnalytics from "@/src/components/ui/dashboard/inquiryAnalytics";
 
 // const stats = [
 //   {
@@ -237,29 +239,6 @@ export default function DashboardPage() {
 
       {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 xl:grid-cols-7"> */}
       <div className="flex flex-wrap gap-6 w-full justify-center items-start">
-        {/* {stats.map((stat) => (
-          <div 
-            key={stat.label}
-            className="p-6 rounded-2xl border transition-all duration-200 hover:shadow-lg"
-            style={{ backgroundColor: tokens.surface, borderColor: tokens.border }}
-          >
-            <div className="flex items-start justify-between mb-4">
-              <div className={cn("p-3 rounded-xl text-white shadow-lg", stat.color)}>
-                <stat.icon size={24} />
-              </div>
-              <span className={cn(
-                "text-xs font-bold px-2 py-1 rounded-lg",
-                stat.trend.startsWith('+') ? "text-green-500 bg-green-500/10" : "text-red-500 bg-red-500/10"
-              )}>
-                {stat.trend}
-              </span>
-            </div>
-            <div>
-              <p className="text-sm font-medium mb-1" style={{ color: tokens.textMuted }}>{stat.label}</p>
-              <h3 className="text-2xl font-bold" style={{ color: tokens.text }}>{stat.value}</h3>
-            </div>
-          </div>
-        ))} */}
         {loading ? (
           <CommonLoader fullScreen={true} overlay={true} />
         ) : (
@@ -272,86 +251,92 @@ export default function DashboardPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div
-          className="lg:col-span-2 p-6 rounded-2xl border"
-          style={{
-            backgroundColor: tokens.surface,
-            borderColor: tokens.border,
-          }}
-        >
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="font-bold text-lg" style={{ color: tokens.text }}>
-              Inquiry Distribution
-            </h3>
-            <select
-              name="timeRange"
-              aria-label="Select time range for inquiry distribution"
-              className="bg-transparent text-sm outline-none border-none cursor-pointer"
-              style={{ color: tokens.textSec }}
-            >
-              <option>Last 7 Days</option>
-              <option>Last 30 Days</option>
-            </select>
-          </div>
-          <div className="h-[300px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={chartData}>
-                <defs>
-                  <linearGradient id="colorInq" x1="0" y1="0" x2="0" y2="1">
-                    <stop
-                      offset="5%"
-                      stopColor={tokens.accent}
-                      stopOpacity={0.3}
-                    />
-                    <stop
-                      offset="95%"
-                      stopColor={tokens.accent}
-                      stopOpacity={0}
-                    />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  vertical={false}
-                  stroke={tokens.chartGrid}
-                />
-                <XAxis
-                  dataKey="name"
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fill: tokens.textMuted, fontSize: 12 }}
-                />
-                <YAxis
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fill: tokens.textMuted, fontSize: 12 }}
-                />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: tokens.tooltipBg,
-                    border: "none",
-                    borderRadius: "12px",
-                    color: "#fff",
-                  }}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="inquiries"
-                  stroke={tokens.accent}
-                  fillOpacity={1}
-                  fill="url(#colorInq)"
-                  strokeWidth={3}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="assigned"
-                  stroke={tokens.success}
-                  fillOpacity={0}
-                  strokeWidth={3}
-                  strokeDasharray="5 5"
-                />
-              </AreaChart>
-            </ResponsiveContainer>
+        <div className="lg:col-span-2 lg:grid-cols-5 md:grid-cols-3 gap-6 grid">
+          <Card className="lg:col-span-2 md:col-span-3 sm:col-span-3">
+            <InquiryAnalytics />
+          </Card>
+          <div
+            className="lg:col-span-3 md:col-span-3 sm:col-span-3 grid p-6 rounded-2xl border"
+            style={{
+              backgroundColor: tokens.surface,
+              borderColor: tokens.border,
+            }}
+          >
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="font-bold text-lg" style={{ color: tokens.text }}>
+                Inquiry Distribution
+              </h3>
+              <select
+                name="timeRange"
+                aria-label="Select time range for inquiry distribution"
+                className="bg-transparent text-sm outline-none border-none cursor-pointer"
+                style={{ color: tokens.textSec }}
+              >
+                <option>Last 7 Days</option>
+                <option>Last 30 Days</option>
+              </select>
+            </div>
+
+            <div className="h-[90%] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={chartData}>
+                  <defs>
+                    <linearGradient id="colorInq" x1="0" y1="0" x2="0" y2="1">
+                      <stop
+                        offset="5%"
+                        stopColor={tokens.accent}
+                        stopOpacity={0.3}
+                      />
+                      <stop
+                        offset="95%"
+                        stopColor={tokens.accent}
+                        stopOpacity={0}
+                      />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    vertical={false}
+                    stroke={tokens.chartGrid}
+                  />
+                  <XAxis
+                    dataKey="name"
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: tokens.textMuted, fontSize: 12 }}
+                  />
+                  <YAxis
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: tokens.textMuted, fontSize: 12 }}
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: tokens.tooltipBg,
+                      border: "none",
+                      borderRadius: "12px",
+                      color: "#fff",
+                    }}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="inquiries"
+                    stroke={tokens.accent}
+                    fillOpacity={1}
+                    fill="url(#colorInq)"
+                    strokeWidth={3}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="assigned"
+                    stroke={tokens.success}
+                    fillOpacity={0}
+                    strokeWidth={3}
+                    strokeDasharray="5 5"
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
           </div>
         </div>
 
