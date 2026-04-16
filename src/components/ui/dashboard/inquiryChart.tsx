@@ -142,7 +142,7 @@ export function InquiryStatusChart({ data, loading }: ChartProps) {
   }));
   return (
     <Card className="border-none! p-0!">
-      <h3 style={{ color: tokens.text, marginBottom: 12 }}>Inquiry Status</h3>
+      {/* <h3 style={{ color: tokens.text, marginBottom: 12 }}>Inquiry Status</h3> */}
 
       <ResponsiveContainer width="100%" height={300}>
         <PieChart>
@@ -153,11 +153,14 @@ export function InquiryStatusChart({ data, loading }: ChartProps) {
             nameKey="name"
             innerRadius={70}
             outerRadius={100}
-            paddingAngle={4}
+            paddingAngle={2}
             isAnimationActive={!loading}
-            animationDuration={800}
+            animationDuration={400}
             onAnimationEnd={() => setReady(true)}
             animationEasing="ease-out"
+            stroke={tokens.border}
+            strokeWidth={1}
+            cornerRadius={6}
           >
             {/* {data.map((_, index) => (
               <Cell key={index} fill={COLORS[index % COLORS.length]} />

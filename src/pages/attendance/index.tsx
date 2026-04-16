@@ -10,6 +10,7 @@ import { getAttendanceColumns, getAttendancePersonColumns } from "./data";
 import { useGetAttendanceById } from "@/src/hooks/attendance/useGetAttendanceById";
 import { PersonSelector } from "@/src/components/ui/attendance/personSelector";
 import { SalesPerson } from "@/src/types/users";
+import { useRef } from "react";
 
 export default function AttendancePage() {
   const { tokens } = useTheme();
@@ -22,9 +23,11 @@ export default function AttendancePage() {
   const [selectedPerson, setSelectedPerson] = useState<SalesPerson | null>(
     null,
   );
-
+  const lastPersonIdRef = useRef<string | null>(null);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const shouldFetch = Boolean(date || personId);
+  const [attendance1, setAttendance1] = useState([]);
+  const [attendance2, setAttendance2] = useState([]);
   const columns = useMemo(
     () =>
       getAttendanceColumns({
@@ -54,27 +57,55 @@ export default function AttendancePage() {
 
   //     getAllAttendance(query);
   //   }, [date]);
+  // useEffect(() => {
+  //   if (!shouldFetch) return;
+
+  //   const query = new URLSearchParams({
+  //     ...(date ? { date } : {}),
+  //   }).toString();
+
+  //   if (personId) {
+  //     getAttendancePerson(personId);
+  //   } else {
+  //     getAllAttendance(query);
+  //   }
+  // }, [date, personId]);
+
   useEffect(() => {
-    if (!shouldFetch) return;
+    if (activeTab !== "byDate") return;
+
+    // ✅ prevent refetch if already loaded
+    if (attendance1.length > 0) return;
 
     const query = new URLSearchParams({
       ...(date ? { date } : {}),
     }).toString();
 
-    if (personId) {
-      getAttendancePerson(personId);
-    } else {
-      getAllAttendance(query);
-    }
-  }, [date, personId]);
+    getAllAttendance(query).then((res) => {
+      setAttendance1(res?.data || []);
+    });
+  }, [date, activeTab]);
 
-  const attendance = useMemo(() => {
-    if (personId) {
-      return personData || [];
-    }
+  useEffect(() => {
+    if (activeTab !== "byPerson") return;
+    if (!personId) return;
 
-    return data || [];
-  }, [personId, personData, data]);
+    // ✅ prevent refetch if already loaded for same person
+    if (attendance2.length > 0 && lastPersonIdRef.current === personId) return;
+
+    getAttendancePerson(personId).then((res) => {
+      setAttendance2(res?.data || []);
+      lastPersonIdRef.current = personId;
+    });
+  }, [personId, activeTab]);
+
+  // const attendance = useMemo(() => {
+  //   if (personId) {
+  //     return personData || [];
+  //   }
+
+  //   return data || [];
+  // }, [personId, personData, data]);
   const totalPages = Math.ceil((data?.total || 0) / (data?.limit || 10));
   return (
     <div className="space-y-6">
@@ -109,7 +140,7 @@ export default function AttendancePage() {
             label: "By Date",
             key: "byDate",
             content: (
-              <>
+              <div className="space-y-4">
                 <div className="flex flex-col md:flex-row gap-4">
                   <div className="relative flex-1">
                     <Search
@@ -149,14 +180,14 @@ export default function AttendancePage() {
                   rowsPerPage={10}
                   totalPages={totalPages}
                   columns={columns}
-                  data={attendance}
+                  data={attendance1}
                   loading={loading}
                   pagination={false}
                   searchable={false}
                   showSerialNumber
-                  onRowClick={(row) => setPersonId(row.salespersonId)}
+                  // onRowClick={(row) => setPersonId(row.salespersonId)}
                 />
-              </>
+              </div>
             ),
           },
 
@@ -164,7 +195,7 @@ export default function AttendancePage() {
             label: "By Person",
             key: "byPerson",
             content: (
-              <>
+              <div className="space-y-4">
                 <PersonSelector
                   setPersonId={setPersonId}
                   setSelectedPerson={setSelectedPerson}
@@ -175,14 +206,14 @@ export default function AttendancePage() {
                   rowsPerPage={10}
                   totalPages={totalPages}
                   columns={columns2}
-                  data={attendance}
+                  data={attendance2}
                   loading={loading2}
                   pagination={false}
                   searchable={false}
                   showSerialNumber
                   onRowClick={(row) => setPersonId(row.salespersonId)}
                 />
-              </>
+              </div>
             ),
           },
         ]}

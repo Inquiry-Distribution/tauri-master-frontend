@@ -7,6 +7,7 @@ import ButtonLoader from "../loader/buttonLoader";
 import { Recycle, RefreshCcw } from "lucide-react";
 import { InquiryStatusChart } from "./inquiryChart";
 import CommonLoader from "../loader/loader";
+import Swal from "sweetalert2";
 
 // helper for date formatting (yyyy-mm-dd)
 const formatDate = (date: Date) => date.toISOString().split("T")[0];
@@ -63,7 +64,11 @@ export default function InquiryAnalytics() {
   // ✅ submit handler
   const handleSubmit = async () => {
     if (from > to) {
-      alert("From date cannot be greater than To date");
+      Swal.fire({
+        icon: "error",
+        title: "Invalid Date Range",
+        text: "'From' date cannot be later than 'To' date.",
+      });
       return;
     }
     await getInquiryReportByStatus(from, to);
@@ -84,6 +89,7 @@ export default function InquiryAnalytics() {
 
   return (
     <div className="space-y-4">
+      <h3 className="text-lg font-semibold text-text">Inquiry Status</h3>
       {/* ───── Filters ───── */}
       <div className="flex flex-wrap gap-2">
         <Button
@@ -134,7 +140,7 @@ export default function InquiryAnalytics() {
           Last Month
         </Button>
       </div>
-      <div className="grid lg:grid-cols-9 md:grid-cols-5 sm:grid-cols-3 gap-1">
+      <div className="grid lg:grid-cols-10 md:grid-cols-6 sm:grid-cols-4 gap-2">
         <div className="lg:col-span-4 md:col-span-2 sm:col-span-1">
           <Input
             label="From"
@@ -143,9 +149,12 @@ export default function InquiryAnalytics() {
             inputValue={from}
             onChange={(e) => setFrom(e.target.value)}
             placeholder="From date"
+            showLabel={false}
           />
         </div>
-
+        <div className="text-text font-semibold text-2xl w-full flex items-center justify-center col-span-1">
+          →
+        </div>
         <div className="lg:col-span-4 md:col-span-2 sm:col-span-1">
           <Input
             label="To"
@@ -154,10 +163,16 @@ export default function InquiryAnalytics() {
             inputValue={to}
             onChange={(e) => setTo(e.target.value)}
             placeholder="To date"
+            showLabel={false}
           />
         </div>
         <div className="col-span-1 flex items-end justify-end">
-          <Button size="sm" onClick={handleSubmit} disabled={loading}>
+          <Button
+            size="sm"
+            variant="primary"
+            onClick={handleSubmit}
+            disabled={loading}
+          >
             {/* {loading ? <ButtonLoader/> : <RefreshCcw/>} */}
             <RefreshCcw className={loading ? "animate-spin" : ""} />
           </Button>

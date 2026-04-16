@@ -17,7 +17,8 @@ export function useThemeTokens(dark: boolean): ThemeTokens {
       text: dark ? "#E2E8F0" : "#1E293B",
       textOpp: !dark ? "#E2E8F0" : "#1E293B",
       textSec: dark ? "#94A3B8" : "#475569",
-      textMuted: dark ? "#4D5868" : "#94A3B8",
+      textMuted: dark ? "#65748b" : "#94A3B8",
+      // textMuted: dark ? "#4D5868" : "#94A3B8",
 
       // ── Accent / Primary (#4f7df3) ────────────────
       accent: dark ? "#6B8FF8" : "#4F7DF3",
