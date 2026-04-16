@@ -21,4 +21,8 @@ export const InquiryService = {
     });
     return data;
   },
+  reassignInquiry: async (id: string, payload: { salesPersonId: string }) => {
+    const { data } = await api.post(`/inquiries/${id}/reassign`, payload);
+    return data;
+  },
 };

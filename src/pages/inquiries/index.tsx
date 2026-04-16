@@ -21,6 +21,7 @@ import { useGetInquiries } from "@/src/hooks/inquiry/useGetAllInquiry";
 import { Inquiry } from "@/src/types/inquiry";
 import { NotificationForm } from "@/src/components/ui/notification/notificationForm";
 import { Modal } from "@/src/components/ui/modal";
+import ReassignInquiryModal from "@/src/components/ui/distributeInquiry/reassignInquiry/reassignInquiry";
 
 // type InquiryRow = {
 //   id: number;
@@ -173,13 +174,16 @@ export default function InquiriesPage() {
   const [limit, setLimit] = useState(10);
   const [status, setStatus] = useState<string>("all");
   const [search, setSearch] = useState("");
+
+  const [selectedInquiry, setSelectedInquiry] = useState<any | null>(null);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const columns = useMemo(
     () =>
       getInquiryColumns({
         setSelectedUserId,
+        setSelectedInquiry,
       }),
-    [setSelectedUserId],
+    [setSelectedUserId, setSelectedInquiry],
   );
   const { data, loading, error, getInquiries } = useGetInquiries();
   useEffect(() => {
@@ -297,6 +301,17 @@ export default function InquiriesPage() {
             onClose={() => setSelectedUserId(null)}
           />
         </Modal>
+      )}
+
+      {selectedInquiry && (
+        <ReassignInquiryModal
+          inquiryId={selectedInquiry.id}
+          assignedTo={selectedInquiry.assignedTo}
+          onClose={() => setSelectedInquiry(null)}
+          onSuccess={() => {
+            getInquiries(`page=${page}&limit=${limit}`);
+          }}
+        />
       )}
     </div>
   );

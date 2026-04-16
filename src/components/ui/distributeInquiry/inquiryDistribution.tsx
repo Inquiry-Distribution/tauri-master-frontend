@@ -378,7 +378,8 @@ export function InquiryDistributor({
   onShare,
   month = "April 2026",
   form,
-
+  defaultSelectedId = null,
+  onConfirmShare,
   createInquiry,
   loading,
 }: any) {
@@ -386,7 +387,9 @@ export function InquiryDistributor({
   const [query, setQuery] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
   const [persons, setPersons] = useState<UISalesPerson[]>(defaultPersons);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(
+    defaultSelectedId || null,
+  );
   const [modalPerson, setModalPerson] = useState<UISalesPerson | null>(null);
 
   // on the Share Inquiry button:
@@ -455,27 +458,37 @@ export function InquiryDistributor({
     );
   }, [query, persons]);
 
+  // const onConfirm = async () => {
+  //   if (!selectedPerson) return;
+
+  //   try {
+  //     await createInquiry(selectedPerson.id);
+
+  //     Swal.fire({
+  //       icon: "success",
+  //       title: "Inquiry distributed successfully",
+  //     });
+
+  //     setModalPerson(null);
+  //   } catch (err) {
+  //     console.error(err);
+  //     Swal.fire({
+  //       icon: "error",
+  //       title: "Failed to submit inquiry",
+  //     });
+  //   }
+  // };
+
   const onConfirm = async () => {
     if (!selectedPerson) return;
 
     try {
-      await createInquiry(selectedPerson.id);
-
-      Swal.fire({
-        icon: "success",
-        title: "Inquiry distributed successfully",
-      });
-
+      await onConfirmShare?.(selectedPerson.id);
       setModalPerson(null);
     } catch (err) {
       console.error(err);
-      Swal.fire({
-        icon: "error",
-        title: "Failed to submit inquiry",
-      });
     }
   };
-
   return (
     <div className="font-sans">
       {/* Search */}

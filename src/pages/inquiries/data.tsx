@@ -10,11 +10,13 @@ import { useState } from "react";
 
 type ColumnDeps = {
   setSelectedUserId: (id: string) => void;
+  setSelectedInquiry: (inquiry: Inquiry | null) => void;
   tokens?: any;
 };
 
 export const getInquiryColumns = ({
   setSelectedUserId,
+  setSelectedInquiry,
 }: ColumnDeps): TableColumn<Inquiry>[] => {
   return [
     {
@@ -119,15 +121,27 @@ export const getInquiryColumns = ({
       ),
     },
 
+    // {
+    //   key: "actions",
+    //   label: "Action",
+    //   render: (row) =>
+    //     row.status === "assigned" ? (
+    //       <Button variant="secondary">Reassign</Button>
+    //     ) : (
+    //       <Button variant="primary">Assign</Button>
+    //     ),
+    // },
     {
       key: "actions",
       label: "Action",
-      render: (row) =>
-        row.status === "assigned" ? (
-          <Button variant="secondary">Reassign</Button>
-        ) : (
-          <Button variant="primary">Assign</Button>
-        ),
+      render: (row) => (
+        <Button
+          variant={row.status === "assigned" ? "secondary" : "primary"}
+          onClick={() => setSelectedInquiry(row)}
+        >
+          {row.status === "assigned" ? "Reassign" : "Assign"}
+        </Button>
+      ),
     },
   ];
 };
