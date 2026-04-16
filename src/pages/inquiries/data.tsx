@@ -7,16 +7,22 @@ import { Inquiry } from "@/src/types/inquiry";
 import { getPriorityStyleMap, getStatusStyleMap } from "./create/inquiryStyles";
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
+import ButtonLoader from "@/src/components/ui/loader/buttonLoader";
+import { Trash } from "lucide-react";
 
 type ColumnDeps = {
   setSelectedUserId: (id: string) => void;
   setSelectedInquiry: (inquiry: Inquiry | null) => void;
+  deleteLoading: boolean;
+  onDelete: (id: string) => void; // 👈 add this
   tokens?: any;
 };
 
 export const getInquiryColumns = ({
   setSelectedUserId,
   setSelectedInquiry,
+  deleteLoading,
+  onDelete,
 }: ColumnDeps): TableColumn<Inquiry>[] => {
   return [
     {
@@ -135,12 +141,17 @@ export const getInquiryColumns = ({
       key: "actions",
       label: "Action",
       render: (row) => (
-        <Button
-          variant={row.status === "assigned" ? "secondary" : "primary"}
-          onClick={() => setSelectedInquiry(row)}
-        >
-          {row.status === "assigned" ? "Reassign" : "Assign"}
-        </Button>
+        <div className="flex w-full items-center justify-end gap-2">
+          <Button
+            variant={row.status === "assigned" ? "secondary" : "primary"}
+            onClick={() => setSelectedInquiry(row)}
+          >
+            {row.status === "assigned" ? "Reassign" : "Assign"}
+          </Button>
+          <Button variant="danger" onClick={() => onDelete(row.id)}>
+            {deleteLoading ? <ButtonLoader /> : <Trash size={16} />}
+          </Button>
+        </div>
       ),
     },
   ];

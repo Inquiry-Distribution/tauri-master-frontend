@@ -25,4 +25,8 @@ export const InquiryService = {
     const { data } = await api.post(`/inquiries/${id}/reassign`, payload);
     return data;
   },
+  deleteInquiry: async (id: string) => {
+    const { data } = await api.delete(`/inquiries/${id}`);
+    return data;
+  },
 };

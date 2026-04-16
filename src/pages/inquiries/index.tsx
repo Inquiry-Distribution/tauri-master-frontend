@@ -22,6 +22,9 @@ import { Inquiry } from "@/src/types/inquiry";
 import { NotificationForm } from "@/src/components/ui/notification/notificationForm";
 import { Modal } from "@/src/components/ui/modal";
 import ReassignInquiryModal from "@/src/components/ui/distributeInquiry/reassignInquiry/reassignInquiry";
+import { useDeleteInquiry } from "@/src/hooks/inquiry/useDeleteInquiry";
+import Swal from "sweetalert2";
+import ButtonLoader from "@/src/components/ui/loader/buttonLoader";
 
 // type InquiryRow = {
 //   id: number;
@@ -177,15 +180,50 @@ export default function InquiriesPage() {
 
   const [selectedInquiry, setSelectedInquiry] = useState<any | null>(null);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const { data, loading, error, getInquiries } = useGetInquiries();
+  const { deleteInquiry, loading: deleteLoading } = useDeleteInquiry();
+
+  const handleDelete = async (id: string) => {
+    const result = await Swal.fire({
+      title: "Are you sure?",
+      text: "This inquiry will be permanently deleted.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#6b7280",
+      confirmButtonText: deleteLoading ? "Deleting..." : "Yes, delete it",
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      await deleteInquiry(id);
+
+      Swal.fire({
+        icon: "success",
+        title: "Inquiry deleted successfully",
+      });
+
+      // refresh list
+      getInquiries(`page=${page}&limit=${limit}`);
+    } catch (err) {
+      Swal.fire({
+        icon: "error",
+        title: "Failed to delete inquiry",
+      });
+    }
+  };
   const columns = useMemo(
     () =>
       getInquiryColumns({
         setSelectedUserId,
         setSelectedInquiry,
+        deleteLoading,
+        onDelete: handleDelete,
       }),
-    [setSelectedUserId, setSelectedInquiry],
+    [setSelectedUserId, setSelectedInquiry, handleDelete, deleteLoading],
   );
-  const { data, loading, error, getInquiries } = useGetInquiries();
+
   useEffect(() => {
     const selected = tabFilters.find((t) => t.key === activeTab);
 
