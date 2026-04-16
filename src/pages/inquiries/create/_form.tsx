@@ -98,7 +98,7 @@ const InquiryForm = () => {
           error={error}
           onSubmit={handleSubmit}
           form={form}
-          createInquiry={handleSubmit}
+          onConfirmShare={handleSubmit}
         />
       </div>
     </form>

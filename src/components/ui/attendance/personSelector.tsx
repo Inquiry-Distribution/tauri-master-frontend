@@ -25,12 +25,12 @@ export const PersonSelector = ({
   return (
     <div className="flex flex-col gap-1 w-full max-w-sm">
       {/* Label */}
-      <label
+      {/* <label
         className="text-xs font-medium"
         style={{ color: tokens.textMuted }}
       >
         Select Person
-      </label>
+      </label> */}
 
       {/* Select */}
       <div className="relative">
@@ -55,7 +55,7 @@ export const PersonSelector = ({
             color: tokens.text,
           }}
         >
-          <option value="">All Persons</option>
+          <option value="">Select Person...</option>
 
           {persons.map((p) => (
             <option key={p.id} value={p.id}>

@@ -20,10 +20,21 @@ type User = {
   updatedAt?: string; // ISO date string
 };
 
+// type AuthContextType = {
+//   user: User | null;
+//   isAuthenticated: boolean;
+
+//   login: (data: {
+//     access_token: string;
+//     refresh_token: string;
+//     user: User;
+//   }) => void;
+//   logout: () => void;
+// };
 type AuthContextType = {
   user: User | null;
   isAuthenticated: boolean;
-
+  loading: boolean;
   login: (data: {
     access_token: string;
     refresh_token: string;
@@ -31,18 +42,11 @@ type AuthContextType = {
   }) => void;
   logout: () => void;
 };
-
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
-
-  //   useEffect(() => {
-  //     const storedUser = localStorage.getItem("userData");
-  //     if (storedUser) {
-  //       setUser(JSON.parse(storedUser));
-  //     }
-  //   }, []);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const storedUser = localStorage.getItem("userData");
@@ -55,7 +59,29 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         localStorage.removeItem("userData");
       }
     }
+
+    setLoading(false);
   }, []);
+
+  //   useEffect(() => {
+  //     const storedUser = localStorage.getItem("userData");
+  //     if (storedUser) {
+  //       setUser(JSON.parse(storedUser));
+  //     }
+  //   }, []);
+
+  // useEffect(() => {
+  //   const storedUser = localStorage.getItem("userData");
+
+  //   if (storedUser && storedUser !== "undefined") {
+  //     try {
+  //       setUser(JSON.parse(storedUser));
+  //     } catch (err) {
+  //       console.error("Invalid userData in localStorage", err);
+  //       localStorage.removeItem("userData");
+  //     }
+  //   }
+  // }, []);
 
   //   const login = ({ access_token, refresh_token, user }: any) => {
   //     localStorage.setItem("access_token", access_token);
@@ -86,7 +112,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <AuthContext.Provider
-      value={{ user, isAuthenticated: !!user, login, logout }}
+      value={{
+        user,
+        isAuthenticated: !!localStorage.getItem("access_token"),
+        login,
+        logout,
+        loading,
+      }}
     >
       {children}
     </AuthContext.Provider>

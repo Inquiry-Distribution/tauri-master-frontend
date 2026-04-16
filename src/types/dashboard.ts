@@ -7,3 +7,10 @@ export type DashboardSummaryStat = {
   totalDevices: number;
   blockedDevices: number;
 };
+
+export type InquiryReportByStatus = {
+  _count: {
+    id: number;
+  };
+  status: string;
+};
