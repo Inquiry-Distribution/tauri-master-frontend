@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useTheme } from "../../contexts";
 import {
   Search,
@@ -16,9 +16,11 @@ import { TableColumn } from "@/src/components/ui/table/types";
 import DynamicTable from "@/src/components/ui/table/dynamicTable";
 import { useNavigate } from "react-router-dom";
 import Tabs from "@/src/components/ui/tabs";
-import { columns, tabFilters } from "./data";
+import { getInquiryColumns, tabFilters } from "./data";
 import { useGetInquiries } from "@/src/hooks/inquiry/useGetAllInquiry";
 import { Inquiry } from "@/src/types/inquiry";
+import { NotificationForm } from "@/src/components/ui/notification/notificationForm";
+import { Modal } from "@/src/components/ui/modal";
 
 // type InquiryRow = {
 //   id: number;
@@ -171,7 +173,14 @@ export default function InquiriesPage() {
   const [limit, setLimit] = useState(10);
   const [status, setStatus] = useState<string>("all");
   const [search, setSearch] = useState("");
-
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const columns = useMemo(
+    () =>
+      getInquiryColumns({
+        setSelectedUserId,
+      }),
+    [setSelectedUserId],
+  );
   const { data, loading, error, getInquiries } = useGetInquiries();
   useEffect(() => {
     const selected = tabFilters.find((t) => t.key === activeTab);
@@ -250,76 +259,6 @@ export default function InquiriesPage() {
         </button>
       </div>
 
-      {/* <Tabs
-        variant="solid"
-        tabs={[
-          {
-            key: "all",
-            label: "All",
-            content: (
-              <div className="overflow-x-auto">
-                <DynamicTable
-                  searchable={false}
-                  columns={columns}
-                  data={data}
-                  currentPage={1}
-                  rowsPerPage={10}
-                  totalPages={1}
-                />
-              </div>
-            ),
-          },
-          {
-            key: "assigned",
-            label: "Assigned",
-            content: (
-              <div className="overflow-x-auto">
-                <DynamicTable
-                  searchable={false}
-                  columns={columns}
-                  data={data.filter((item) => item.status === "assigned")}
-                  currentPage={1}
-                  rowsPerPage={10}
-                  totalPages={1}
-                />
-              </div>
-            ),
-          },
-          {
-            key: "unassigned",
-            label: "Unassigned",
-            content: (
-              <div className="overflow-x-auto">
-                <DynamicTable
-                  searchable={false}
-                  columns={columns}
-                  data={data.filter((item) => item.status === "unassigned")}
-                  currentPage={1}
-                  rowsPerPage={10}
-                  totalPages={1}
-                />
-              </div>
-            ),
-          },
-          {
-            key: "closed",
-            label: "Closed",
-            content: (
-              <div className="overflow-x-auto">
-                <DynamicTable
-                  searchable={false}
-                  columns={columns}
-                  data={data.filter((item) => item.status === "closed")}
-                  currentPage={1}
-                  rowsPerPage={10}
-                  totalPages={1}
-                />
-              </div>
-            ),
-          },
-        ]}
-      /> */}
-
       <Tabs
         variant="solid"
         onChange={(key) => {
@@ -347,22 +286,18 @@ export default function InquiriesPage() {
           ),
         }))}
       />
-
-      {/* <div
-        className="rounded-2xl p-4 border overflow-hidden"
-        style={{ backgroundColor: tokens.surface, borderColor: tokens.border }}
-      >
-        <div className="overflow-x-auto">
-          <DynamicTable
-            columns={inquiryColumns}
-            data={mockInquiries}
-            currentPage={1}
-            rowsPerPage={10}
-            totalPages={1}
+      {selectedUserId && (
+        <Modal
+          title="Send Notification"
+          onClose={() => setSelectedUserId(null)}
+          width={520}
+        >
+          <NotificationForm
+            userId={selectedUserId!}
+            onClose={() => setSelectedUserId(null)}
           />
-          
-        </div>
-      </div> */}
+        </Modal>
+      )}
     </div>
   );
 }

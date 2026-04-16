@@ -63,6 +63,8 @@ const InquiryForm = () => {
     <form encType="multipart/form-data">
       <div className="space-y-4 ">
         <FileInput
+          maxSizeMB={25}
+          limit={10}
           label="Upload Inquiry"
           inputName="images"
           onChange={(files) => setForm((prev) => ({ ...prev, images: files }))}

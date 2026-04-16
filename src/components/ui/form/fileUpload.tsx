@@ -130,6 +130,28 @@ const FileInput = ({
   };
 
   useEffect(() => {
+    const handlePaste = (e: ClipboardEvent) => {
+      if (disabled) return;
+
+      const items = e.clipboardData?.files;
+      if (!items || items.length === 0) return;
+
+      const files = Array.from(items).filter((file) =>
+        file.type.startsWith("image/"),
+      );
+
+      if (files.length > 0) {
+        handleFiles(files);
+      }
+    };
+
+    window.addEventListener("paste", handlePaste);
+
+    return () => {
+      window.removeEventListener("paste", handlePaste);
+    };
+  }, [disabled]);
+  useEffect(() => {
     return () => {
       files.forEach((f) => URL.revokeObjectURL(f.url));
     };
@@ -240,7 +262,7 @@ const FileInput = ({
                   className="w-8 h-8 rounded-lg flex items-center justify-center transition-transform hover:scale-110"
                   style={{ backgroundColor: "rgba(255,255,255,0.9)" }}
                 >
-                  <Eye size={14} style={{ color: tokens.text }} />
+                  <Eye size={14} style={{ color: tokens.accent }} />
                 </button>
                 <button
                   type="button"

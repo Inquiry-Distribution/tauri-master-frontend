@@ -13,6 +13,8 @@ import CreateInquiry from "../pages/inquiries/create";
 import LoginPage from "../pages/auth/login";
 import RegisterPage from "../pages/auth/register";
 import ForgotPasswordPage from "../pages/auth/forgot-password";
+import InquiryDetailPage from "../pages/inquiries/detail";
+import AttendancePage from "../pages/attendance";
 
 export default function AppRoutes() {
   return useRoutes([
@@ -39,10 +41,12 @@ export default function AppRoutes() {
             { path: "dashboard", element: <DashboardPage /> },
             { path: "inquiries", element: <InquiriesPage /> },
             { path: "inquiries/create", element: <CreateInquiry /> },
+            { path: "inquiries/:id", element: <InquiryDetailPage /> },
             { path: "sales-persons", element: <SalesPersonsPage /> },
             { path: "sales-persons/:id", element: <SalesPersonReportPage /> },
             { path: "devices", element: <DevicesPage /> },
             { path: "ai-reports", element: <AIReportsPage /> },
+            { path: "attendance", element: <AttendancePage /> },
             { path: "*", element: <NotFound /> },
           ],
         },
