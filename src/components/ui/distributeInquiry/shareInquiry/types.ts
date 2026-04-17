@@ -37,6 +37,7 @@ export interface PersonWorkload {
 export interface ShareInquiryModalProps {
   person: UISalesPerson;
   workload?: PersonWorkload;
+  loading: boolean;
   onClose: () => void;
   onConfirm: (person: UISalesPerson) => void;
 }

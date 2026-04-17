@@ -6,12 +6,12 @@ export const useGetAttendanceById = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const getAttendancePerson = useCallback(async (id: string) => {
+  const getAttendancePerson = useCallback(async (id: string, query: string) => {
     try {
       setLoading(true);
       setError(null);
 
-      const response = await AttendanceService.getAttendancePerson(id);
+      const response = await AttendanceService.getAttendancePerson(id, query);
 
       setData(response?.data);
 

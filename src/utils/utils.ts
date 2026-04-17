@@ -1,6 +1,7 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { InquiryReportByStatus } from "../types/dashboard";
+import { useEffect, useState } from "react";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -30,4 +31,21 @@ export function transformInquiryData(data: InquiryReportByStatus[]) {
     name: item.status.replace("_", " ").toUpperCase(),
     value: item._count.id,
   }));
+}
+
+export function useDebounce(value: any, delay = 400) {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    // cleanup if value changes before delay finishes
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
 }

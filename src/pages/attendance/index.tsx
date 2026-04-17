@@ -1,9 +1,9 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useTheme } from "../../contexts";
-import { Search, Filter, Plus, RefreshCcw } from "lucide-react";
+import { Search, Filter, Plus, RefreshCcw, Calendar1 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useGetAllAttendance } from "@/src/hooks/attendance/useGetAllAttendance";
-import type { Attendance } from "@/src/types/attendance";
+
 import Tabs from "@/src/components/ui/tabs";
 import DynamicTable from "@/src/components/ui/table/dynamicTable";
 import { getAttendanceColumns, getAttendancePersonColumns } from "./data";
@@ -13,6 +13,7 @@ import { SalesPerson } from "@/src/types/users";
 import { useRef } from "react";
 import Input from "@/src/components/ui/form/input";
 import { Button } from "@/src/components/ui/button";
+import { useDebounce } from "@/src/utils/utils";
 
 const formatDate = (date: Date) => date.toISOString().split("T")[0];
 
@@ -59,11 +60,19 @@ export default function AttendancePage() {
   const [selectedPerson, setSelectedPerson] = useState<SalesPerson | null>(
     null,
   );
-  const [showFilters, setShowFilters] = useState(false);
+  const [showFilters1, setShowFilters1] = useState(false);
+  const [status1, setStatus1] = useState<string | null>(null);
+  const [page1, setPage1] = useState(1);
+  const [limit1, setLimit1] = useState(10);
+  const [totalPages1, setTotalPages1] = useState(1);
+  const [search1, setSearch1] = useState("");
 
-  const [fromDate, setFromDate] = useState("");
-  const [toDate, setToDate] = useState("");
+  const [showFilters, setShowFilters] = useState(false);
   const [activeFilter, setActiveFilter] = useState("30d");
+  const [status2, setStatus2] = useState<string | null>(null);
+  const [page2, setPage2] = useState(1);
+  const [limit2, setLimit2] = useState(10);
+  const [totalPagesPerson2, setTotalPagesPerson2] = useState(1);
 
   const lastQueryRef = useRef<string | null>(null);
   const lastPersonIdRef = useRef<string | null>(null);
@@ -100,74 +109,97 @@ export default function AttendancePage() {
     loading: loading2,
   } = useGetAttendanceById();
 
+  const debouncedSearch = useDebounce(search1, 400);
   useEffect(() => {
     if (activeTab !== "byDate") return;
 
-    // ✅ prevent refetch if already loaded
-    if (attendance1.length > 0) return;
-
-    const query = new URLSearchParams({
+    const queryObj: Record<string, string> = {
       ...(date ? { date } : {}),
-    }).toString();
+      ...(status1 ? { status: status1 } : {}),
+      ...(debouncedSearch ? { search: debouncedSearch } : {}),
+      ...(page1 ? { page: String(page1) } : {}),
+      ...(limit1 ? { limit: String(limit1) } : {}),
+    };
+
+    const query = new URLSearchParams(queryObj).toString();
 
     getAllAttendance(query).then((res) => {
-      setAttendance1(res?.data || []);
-    });
-  }, [date, activeTab]);
+      const records = res?.data?.records || [];
+      const total = res?.data?.total || 0;
 
+      setAttendance1(records);
+      setTotalPages1(Math.ceil(total / limit1));
+    });
+  }, [activeTab, date, status1, debouncedSearch, page1, limit1]);
   // useEffect(() => {
   //   if (activeTab !== "byPerson") return;
   //   if (!personId) return;
 
-  //   // ✅ prevent refetch if already loaded for same person
-  //   if (attendance2.length > 0 && lastPersonIdRef.current === personId) return;
+  //   const queryObj = {
+  //     ...(fromDate ? { fromDate } : {}),
+  //     ...(toDate ? { toDate } : {}),
+  //   };
 
-  //   getAttendancePerson(personId).then((res) => {
+  //   const queryString = new URLSearchParams(queryObj).toString();
+
+  //   // prevent duplicate refetch for same person + same filters
+  //   const cacheKey = `${personId}-${queryString}`;
+  //   if (lastQueryRef.current === cacheKey) return;
+
+  //   getAttendancePerson(`${personId}?${queryString}`).then((res) => {
   //     setAttendance2(res?.data || []);
-  //     lastPersonIdRef.current = personId;
+  //     lastQueryRef.current = cacheKey;
   //   });
-  // }, [personId, activeTab]);
+  // }, [personId, activeTab, fromDate, toDate]);
 
   useEffect(() => {
     if (activeTab !== "byPerson") return;
     if (!personId) return;
 
-    const queryObj = {
-      ...(fromDate ? { fromDate } : {}),
-      ...(toDate ? { toDate } : {}),
+    const queryObj: Record<string, string> = {
+      ...(from ? { from } : {}),
+      ...(to ? { to } : {}),
+      ...(status2 ? { status: status2 } : {}),
+      ...(page2 ? { page: String(page2) } : {}),
+      ...(limit2 ? { limit: String(limit2) } : {}),
     };
 
     const queryString = new URLSearchParams(queryObj).toString();
 
-    // prevent duplicate refetch for same person + same filters
     const cacheKey = `${personId}-${queryString}`;
     if (lastQueryRef.current === cacheKey) return;
 
-    getAttendancePerson(`${personId}?${queryString}`).then((res) => {
-      setAttendance2(res?.data || []);
+    getAttendancePerson(personId, queryString).then((res) => {
+      setAttendance2(res?.data?.records || []);
+
+      // ✅ IMPORTANT: update total pages
+      const total = res?.data?.total || 0;
+      const lim = limit2;
+
+      setTotalPagesPerson2(Math.ceil(total / lim));
+
       lastQueryRef.current = cacheKey;
     });
-  }, [personId, activeTab, fromDate, toDate]);
+  }, [personId, activeTab, from, to, status2, page2, limit2]);
+  const applyRange = (type: string) => {
+    if (!personId) return; // ✅ guard
 
-  const applyRange = async (type: string) => {
-    return;
-    // const { from, to } = getDateRange(type);
+    const { from: fromDateObj, to: toDateObj } = getDateRange(type);
 
-    // const f = formatDate(from);
-    // const t = formatDate(to);
+    const f = formatDate(fromDateObj);
+    const t = formatDate(toDateObj);
 
-    // setFrom(f);
-    // setTo(t);
-
-    // await getAttendance(f, t);
+    setFrom(f);
+    setTo(t);
+    setPage2(1); // ✅ reset pagination
   };
-  // const attendance = useMemo(() => {
-  //   if (personId) {
-  //     return personData || [];
-  //   }
 
-  //   return data || [];
-  // }, [personId, personData, data]);
+  useEffect(() => {
+    if (personId) {
+      setActiveFilter("30d");
+      applyRange("30d");
+    }
+  }, [personId]);
   const totalPages = Math.ceil((data?.total || 0) / (data?.limit || 10));
   return (
     <div className="space-y-6">
@@ -183,16 +215,6 @@ export default function AttendancePage() {
             View, manage all attendance records.
           </p>
         </div>
-        {/* <div className="flex gap-3">
-          <button
-            type="button"
-            className="flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm text-white bg-blue-600 hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/20"
-            onClick={() => navigate("/inquiries/create")}
-          >
-            <Plus size={18} />
-            Add Inquiry
-          </button>
-        </div> */}
       </div>
       <Tabs
         value={activeTab}
@@ -205,7 +227,7 @@ export default function AttendancePage() {
               <div className="space-y-4">
                 <div className="flex flex-col md:flex-row gap-4">
                   <div className="relative flex-1">
-                    <Search
+                    <Calendar1
                       size={18}
                       className="absolute left-3 top-1/2 -translate-y-1/2"
                       style={{ color: tokens.textMuted }}
@@ -220,33 +242,97 @@ export default function AttendancePage() {
                         color: tokens.text,
                       }}
                       value={date}
-                      onChange={(e) => setDate(e.target.value)}
+                      onChange={(e) => {
+                        setDate(e.target.value);
+                        setPage1(1);
+                      }}
                     />
                   </div>
-                  <button
-                    type="button"
-                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl border font-bold text-sm transition-all"
-                    style={{
-                      backgroundColor: tokens.surface,
-                      borderColor: tokens.border,
-                      color: tokens.text,
-                    }}
+                  <Button
+                    variant="secondary"
+                    onClick={() => setShowFilters1((s) => !s)}
                   >
                     <Filter size={18} />
-                    Filters
-                  </button>
+                  </Button>
                 </div>
+                {showFilters1 && (
+                  <>
+                    {/* STATUS FILTER */}
+                    <div className="flex flex-wrap items-center gap-2">
+                      <div
+                        className="text-sm font-medium"
+                        style={{ color: tokens.textMuted }}
+                      >
+                        Status:
+                      </div>
+
+                      <Button
+                        size="sm"
+                        variant={status1 === null ? "primary" : "ghost"}
+                        onClick={() => {
+                          setStatus1(null);
+                          setPage1(1);
+                        }}
+                      >
+                        All
+                      </Button>
+
+                      <Button
+                        size="sm"
+                        variant={status1 === "present" ? "primary" : "ghost"}
+                        onClick={() => {
+                          setStatus1("present");
+                          setPage1(1);
+                        }}
+                      >
+                        Present
+                      </Button>
+
+                      <Button
+                        size="sm"
+                        variant={status1 === "absent" ? "primary" : "ghost"}
+                        onClick={() => {
+                          setStatus1("absent");
+                          setPage1(1);
+                        }}
+                      >
+                        Absent
+                      </Button>
+
+                      <Button
+                        size="sm"
+                        variant={status1 === "half_day" ? "primary" : "ghost"}
+                        onClick={() => {
+                          setStatus1("half_day");
+                          setPage1(1);
+                        }}
+                      >
+                        Half Day
+                      </Button>
+                    </div>
+                  </>
+                )}
 
                 <DynamicTable
-                  currentPage={1}
-                  rowsPerPage={10}
-                  totalPages={totalPages}
+                  currentPage={page1}
+                  rowsPerPage={limit1}
+                  totalPages={totalPages1}
                   columns={columns}
                   data={attendance1}
                   loading={loading}
-                  pagination={false}
-                  searchable={false}
+                  pagination={true}
+                  searchable={true}
                   showSerialNumber
+                  searchTerm={search1}
+                  onSearchChange={(val) => {
+                    setSearch1(val);
+                    setPage1(1);
+                  }}
+                  onPageChange={(p) => setPage1(p)}
+                  onRowsPerPageChange={(l) => {
+                    setLimit1(l);
+                    setPage1(1);
+                  }}
                   // onRowClick={(row) => setPersonId(row.salespersonId)}
                 />
               </div>
@@ -267,64 +353,116 @@ export default function AttendancePage() {
                   <Button
                     variant="secondary"
                     onClick={() => setShowFilters((s) => !s)}
+                    disabled={!personId || personId === ""}
                   >
                     <Filter size={18} />
                   </Button>
                 </div>
-                {showFilters && (
+                {showFilters && !(!personId || personId === "") && (
                   <>
-                    <div className="flex flex-wrap gap-2">
-                      <Button
-                        size="sm"
-                        variant={activeFilter === "7d" ? "primary" : "ghost"}
-                        onClick={() => {
-                          setActiveFilter("7d");
+                    <div className="flex flex-wrap items-center justify-start gap-4">
+                      <div className="flex flex-wrap items-center justify-start gap-2">
+                        <div
+                          className="text-sm font-medium"
+                          style={{ color: tokens.textMuted }}
+                        >
+                          Date Range:
+                        </div>
+                        <Button
+                          size="sm"
+                          variant={activeFilter === "7d" ? "primary" : "ghost"}
+                          onClick={() => {
+                            if (!personId) return; // ✅ guard
+                            setActiveFilter("7d");
 
-                          applyRange("7d");
-                        }}
-                      >
-                        Last 7 days
-                      </Button>
+                            applyRange("7d");
+                          }}
+                        >
+                          Last 7 days
+                        </Button>
 
-                      <Button
-                        size="sm"
-                        variant={activeFilter === "30d" ? "primary" : "ghost"}
-                        onClick={() => {
-                          setActiveFilter("30d");
+                        <Button
+                          size="sm"
+                          variant={activeFilter === "30d" ? "primary" : "ghost"}
+                          onClick={() => {
+                            if (!personId) return; // ✅ guard
+                            setActiveFilter("30d");
 
-                          applyRange("30d");
-                        }}
-                      >
-                        Last 30 days
-                      </Button>
+                            applyRange("30d");
+                          }}
+                        >
+                          Last 30 days
+                        </Button>
 
-                      <Button
-                        size="sm"
-                        variant={
-                          activeFilter === "thisMonth" ? "primary" : "ghost"
-                        }
-                        onClick={() => {
-                          setActiveFilter("thisMonth");
+                        <Button
+                          size="sm"
+                          variant={
+                            activeFilter === "thisMonth" ? "primary" : "ghost"
+                          }
+                          onClick={() => {
+                            if (!personId) return; // ✅ guard
+                            setActiveFilter("thisMonth");
 
-                          applyRange("thisMonth");
-                        }}
-                      >
-                        This Month
-                      </Button>
+                            applyRange("thisMonth");
+                          }}
+                        >
+                          This Month
+                        </Button>
 
-                      <Button
-                        size="sm"
-                        variant={
-                          activeFilter === "lastMonth" ? "primary" : "ghost"
-                        }
-                        onClick={() => {
-                          setActiveFilter("lastMonth");
+                        <Button
+                          size="sm"
+                          variant={
+                            activeFilter === "lastMonth" ? "primary" : "ghost"
+                          }
+                          onClick={() => {
+                            if (!personId) return; // ✅ guard
+                            setActiveFilter("lastMonth");
 
-                          applyRange("lastMonth");
-                        }}
-                      >
-                        Last Month
-                      </Button>
+                            applyRange("lastMonth");
+                          }}
+                        >
+                          Last Month
+                        </Button>
+                      </div>
+                      <div className="flex flex-wrap items-center justify-start gap-2">
+                        <div
+                          className="text-sm font-medium"
+                          style={{ color: tokens.textMuted }}
+                        >
+                          Status:
+                        </div>
+                        <Button
+                          size="sm"
+                          variant={status2 === null ? "primary" : "ghost"}
+                          onClick={() => setStatus2(null)}
+                        >
+                          All
+                        </Button>
+
+                        <Button
+                          size="sm"
+                          variant={status2 === "present" ? "primary" : "ghost"}
+                          onClick={() => setStatus2("present")}
+                        >
+                          Present
+                        </Button>
+
+                        <Button
+                          size="sm"
+                          variant={status2 === "absent" ? "primary" : "ghost"}
+                          onClick={() => setStatus2("absent")}
+                        >
+                          Absent
+                        </Button>
+
+                        <Button
+                          size="sm"
+                          variant={status2 === "half_day" ? "primary" : "ghost"}
+                          onClick={() => setStatus2("half_day")}
+                        >
+                          Half Day
+                        </Button>
+                      </div>
                     </div>
                     <div className=" w-1/3 grid lg:grid-cols-10 md:grid-cols-6 sm:grid-cols-4 gap-2">
                       <div className="lg:col-span-4 md:col-span-2 sm:col-span-1">
@@ -333,7 +471,12 @@ export default function AttendancePage() {
                           inputName="from"
                           inputType="date"
                           inputValue={from}
-                          onChange={(e) => setFrom(e.target.value)}
+                          onChange={(e) => {
+                            if (!personId) return;
+                            setFrom(e.target.value);
+                            setActiveFilter(""); // ✅ unset preset
+                            setPage2(1);
+                          }}
                           placeholder="From date"
                           showLabel={false}
                         />
@@ -347,7 +490,12 @@ export default function AttendancePage() {
                           inputName="to"
                           inputType="date"
                           inputValue={to}
-                          onChange={(e) => setTo(e.target.value)}
+                          onChange={(e) => {
+                            if (!personId) return;
+                            setTo(e.target.value);
+                            setActiveFilter(""); // ✅ unset preset
+                            setPage2(1);
+                          }}
                           placeholder="To date"
                           showLabel={false}
                         />
@@ -356,7 +504,9 @@ export default function AttendancePage() {
                         <Button
                           size="sm"
                           variant="primary"
-                          onClick={() => {}}
+                          onClick={() => {
+                            setPage2(1); // trigger refetch
+                          }}
                           disabled={loading}
                         >
                           {/* {loading ? <ButtonLoader/> : <RefreshCcw/>} */}
@@ -370,16 +520,21 @@ export default function AttendancePage() {
                 )}
 
                 <DynamicTable
-                  currentPage={1}
-                  rowsPerPage={10}
-                  totalPages={totalPages}
+                  currentPage={page2}
+                  rowsPerPage={limit2}
+                  totalPages={totalPagesPerson2}
                   columns={columns2}
                   data={attendance2}
                   loading={loading2}
-                  pagination={false}
+                  pagination={true}
                   searchable={false}
                   showSerialNumber
                   onRowClick={(row) => setPersonId(row.salespersonId)}
+                  onPageChange={(p) => setPage2(p)} // ✅ important
+                  onRowsPerPageChange={(l) => {
+                    setLimit2(l);
+                    setPage2(1); // reset page
+                  }}
                 />
               </div>
             ),

@@ -49,6 +49,7 @@ function DynamicTable<T extends Record<string, any>>({
   striped = false,
   showSerialNumber = true,
 }: DynamicTableProps<T>) {
+  console.log("Rendering DynamicTable with data:", data);
   // ── Selection helpers ──────────────────────────────────────────────────────
   const safeSelected = selectedRows ?? [];
 

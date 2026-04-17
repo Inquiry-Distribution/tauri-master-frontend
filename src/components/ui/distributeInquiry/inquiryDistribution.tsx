@@ -599,6 +599,7 @@ export function InquiryDistributor({
             onConfirm={() => {
               onConfirm();
             }}
+            loading={loading}
             person={modalPerson}
           />
         </Modal>

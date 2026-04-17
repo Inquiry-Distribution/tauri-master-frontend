@@ -8,12 +8,14 @@ import {
   statusBg,
   statusColor,
 } from "./helpers";
+import ButtonLoader from "../../loader/buttonLoader";
 
 const ShareInquiry = ({
   person,
   workload: workloadProp,
   onClose,
   onConfirm,
+  loading,
 }: ShareInquiryModalProps) => {
   const ctx = useContext(ThemeContext);
   if (!ctx) return null;
@@ -182,7 +184,7 @@ const ShareInquiry = ({
           onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.88")}
           onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
         >
-          Confirm Share
+          {loading ? <ButtonLoader /> : "Confirm Share"}
         </button>
       </div>
     </div>
