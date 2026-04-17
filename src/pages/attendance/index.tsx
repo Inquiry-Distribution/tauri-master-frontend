@@ -464,7 +464,7 @@ export default function AttendancePage() {
                         </Button>
                       </div>
                     </div>
-                    <div className=" w-1/3 grid lg:grid-cols-10 md:grid-cols-6 sm:grid-cols-4 gap-2">
+                    <div className=" lg:w-1/3 md:w-1/2 w-full grid lg:grid-cols-10 md:grid-cols-6 grid-cols-4 gap-2">
                       <div className="lg:col-span-4 md:col-span-2 sm:col-span-1">
                         <Input
                           label="From"

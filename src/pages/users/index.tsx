@@ -52,6 +52,23 @@ import SectionLoader from "@/src/components/ui/loader/sectionLoader";
 //   },
 // ];
 
+const mapSalesPerson = (sp: any): SalesPerson => {
+  return {
+    id: sp.id,
+    name: sp.name,
+    email: sp.email,
+
+    // ❌ not in API → fallback dummy
+    phone: "N/A",
+    employeeId: "EMP-" + sp.id.slice(0, 5),
+    assignedArea: "Unassigned",
+
+    isActive: sp.isActive,
+
+    inquiries: sp.inquiries,
+    attendance: sp.attendance,
+  };
+};
 export default function SalesPersonsPage() {
   const { tokens } = useTheme();
   const { getAllSalesPerson, loading, error } = useSalesPerson();
@@ -64,8 +81,12 @@ export default function SalesPersonsPage() {
       try {
         const data = await getAllSalesPerson();
 
+        const mapped = data?.data?.salespersons?.map(mapSalesPerson) || [];
+
+        setSalesPersons(mapped);
+
         // ⚠️ adjust based on your API response structure
-        setSalesPersons(data?.data || data || []);
+        // setSalesPersons(data?.data || data || []);
       } catch (err) {
         console.error(err);
       }

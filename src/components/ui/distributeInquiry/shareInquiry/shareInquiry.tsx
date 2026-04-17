@@ -12,7 +12,7 @@ import ButtonLoader from "../../loader/buttonLoader";
 
 const ShareInquiry = ({
   person,
-  workload: workloadProp,
+  // workload: workloadProp,
   onClose,
   onConfirm,
   loading,
@@ -20,8 +20,18 @@ const ShareInquiry = ({
   const ctx = useContext(ThemeContext);
   if (!ctx) return null;
   const { tokens } = ctx;
-
-  const w = workloadProp ?? getWorkload(person);
+  const w = person.workload ?? {
+    inquiriesOpen: 0,
+    inquiriesLimit: 0,
+    avgResponseMin: 0,
+    conversionRate: 0,
+    lastActive: "N/A",
+    lastActiveType: "away",
+    capacityUsed: 0,
+    capacityLimit: 0,
+    status: "active",
+  };
+  // const w = workloadProp ?? getWorkload(person);
   const sColor = statusColor(w.status);
   const sBg = statusBg(w.status);
   const capPct = Math.round((w.capacityUsed / w.capacityLimit) * 100);

@@ -5,4 +5,8 @@ export const UserService = {
     const { data } = await api.get("/users/sales");
     return data;
   },
+  getAllSalesPerson1: async () => {
+    const { data } = await api.get("/reports/salespersons");
+    return data;
+  },
 };

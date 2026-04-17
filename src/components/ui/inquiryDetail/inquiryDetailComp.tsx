@@ -133,7 +133,9 @@ export function TimelineItem({
     </div>
   );
 }
-
+const removeprefix = (str: string, prefix: string) => {
+  return str.replace(prefix, "");
+};
 /** Image thumbnail card */
 export function ImageThumb({ img }: { img: InquiryImage }) {
   const filename = img.filename.split("\\").pop() ?? img.filename;
@@ -145,9 +147,9 @@ export function ImageThumb({ img }: { img: InquiryImage }) {
         style={{ background: "var(--surfaceElevated)" }}
       >
         {/* Show image if URL is absolute; otherwise show placeholder */}
-        {img.url.startsWith("uploads") ? (
+        {img.url.startsWith("/app") ? (
           <img
-            src={assetURL ? assetURL + img.url : img.url}
+            src={assetURL ? assetURL + removeprefix(img.url, "/app") : img.url}
             alt={filename}
             className="w-full h-full object-cover"
           />
