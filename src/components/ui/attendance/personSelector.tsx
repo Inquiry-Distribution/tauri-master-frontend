@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useSalesPerson } from "@/src/hooks/salesPerson/useSalesPerson";
+import { useSalesPerson1 } from "@/src/hooks/salesPerson/useSalesPerson";
 import { SalesPerson } from "@/src/types/users";
 import { useTheme } from "@/src/contexts";
 
@@ -10,7 +10,7 @@ export const PersonSelector = ({
   setPersonId: (id: string | null) => void;
   setSelectedPerson: (person: SalesPerson | null) => void;
 }) => {
-  const { getAllSalesPerson, loading } = useSalesPerson();
+  const { getAllSalesPerson, loading } = useSalesPerson1();
   const { tokens } = useTheme();
 
   const [persons, setPersons] = useState<SalesPerson[]>([]);

@@ -3,6 +3,7 @@ import { Mail, Phone, MoreVertical } from "lucide-react";
 import { SalesPerson } from "@/src/types/users";
 import { cn } from "@/src/utils/utils";
 import { useTheme } from "@/src/contexts";
+import SalesPersonAttendance from "./salesPersonAttendance";
 
 interface Props {
   person: SalesPerson;
@@ -26,22 +27,48 @@ export default function SalesPersonCard({
   const { tokens } = useTheme();
 
   // ✅ Merge API data with defaults
+  // const data = {
+  //   ...defaultStats,
+  //   ...person,
+  //   avatar:
+  //     (person as any)?.avatar ||
+  //     `https://ui-avatars.com/api/?name=${encodeURIComponent(person.name)}`,
+  // };
+  const inquiries = person.inquiries;
+
+  const totalInquiries = inquiries?.total ?? 0;
+  const closedInquiries = inquiries?.closed ?? 0;
+
+  const performance = inquiries?.total
+    ? Math.round((inquiries.converted / inquiries.total) * 100)
+    : 0;
+
   const data = {
-    ...defaultStats,
     ...person,
-    avatar:
-      (person as any)?.avatar ||
-      `https://ui-avatars.com/api/?name=${encodeURIComponent(person.name)}`,
+
+    status: person.isActive ? "active" : "inactive",
+
+    totalInquiries,
+    closedInquiries,
+    performance,
+
+    avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(person.name)}`,
   };
 
+  const performanceColor =
+    data.performance >= 70
+      ? tokens.success
+      : data.performance >= 40
+        ? tokens.warning
+        : tokens.danger;
   return (
     <div
       className="rounded-2xl border overflow-hidden transition-all duration-200 hover:shadow-xl"
       style={{ backgroundColor: tokens.surface, borderColor: tokens.border }}
     >
-      <div className="p-6">
+      <div className="p-6 space-y-4">
         {/* Header */}
-        <div className="flex justify-between items-start mb-6">
+        {/* <div className="flex justify-between items-start mb-6">
           <div className="relative">
             <img
               src={data.avatar}
@@ -69,23 +96,61 @@ export default function SalesPersonCard({
           >
             <MoreVertical size={18} />
           </button>
+        </div> */}
+        <div className="flex justify-between items-start">
+          <div className="flex gap-3">
+            <img
+              alt={data.name}
+              src={data.avatar}
+              className="w-14 h-14 rounded-xl"
+            />
+
+            <div className="space-y-1">
+              {/* <h3 className="font-bold text-sm">{data.name}</h3> */}
+
+              <p className="text-[11px] opacity-70">ID: {data.employeeId}</p>
+              {/* <p className="text-[11px] opacity-70">{data.email}</p> */}
+              <div className="flex  gap-2 mt-2">
+                <div
+                  className="flex items-center gap-2 text-xs"
+                  style={{ color: tokens.textSec }}
+                >
+                  <Mail size={14} />
+                  {data.email || "No email"}
+                </div>
+
+                <div
+                  className="flex items-center gap-2 text-xs"
+                  style={{ color: tokens.textSec }}
+                >
+                  <Phone size={14} />
+                  {data.phone || "No phone"}
+                </div>
+              </div>
+              <p className="text-xs" style={{ color: tokens.textMuted }}>
+                Area: {data.assignedArea || "Not Assigned"}
+              </p>
+            </div>
+          </div>
+
+          <button className="opacity-60">⋮</button>
         </div>
 
         {/* Info */}
-        <div className="mb-6">
+        <div className="mb-3">
           <h3 className="text-lg font-bold" style={{ color: tokens.text }}>
             {data.name}
           </h3>
 
-          <p className="text-xs mt-1" style={{ color: tokens.textMuted }}>
+          {/* <p className="text-xs mt-1" style={{ color: tokens.textMuted }}>
             ID: {data.employeeId || "N/A"}
-          </p>
+          </p> */}
 
-          <p className="text-xs" style={{ color: tokens.textMuted }}>
+          {/* <p className="text-xs" style={{ color: tokens.textMuted }}>
             Area: {data.assignedArea || "Not Assigned"}
-          </p>
+          </p> */}
 
-          <div className="flex flex-col gap-1 mt-2">
+          {/* <div className="flex flex-col gap-1 mt-2">
             <div
               className="flex items-center gap-2 text-xs"
               style={{ color: tokens.textSec }}
@@ -101,11 +166,19 @@ export default function SalesPersonCard({
               <Phone size={14} />
               {data.phone || "No phone"}
             </div>
+          </div> */}
+        </div>
+        <div className="space-y-2">
+          <span className="font-bold text-xs uppercase tracking-wider text-textMuted">
+            Attendance
+          </span>
+          <div className="flex gap-2  text-xs w-full mb-3">
+            <SalesPersonAttendance attendance={data?.attendance} />
           </div>
         </div>
 
         {/* Performance */}
-        <div className="space-y-4">
+        {/* <div className="space-y-4">
           <div>
             <div
               className="flex justify-between text-xs font-bold mb-1.5 uppercase tracking-wider"
@@ -129,15 +202,15 @@ export default function SalesPersonCard({
                 className="h-full transition-all duration-500"
                 style={{
                   width: `${data.performance}%`,
-                  backgroundColor:
-                    data.performance > 80 ? tokens.success : tokens.danger,
+                  backgroundColor: performanceColor,
+                  // data.performance > 80 ? tokens.success : tokens.danger,
                 }}
               />
             </div>
-          </div>
+          </div> */}
 
-          {/* Stats */}
-          <div className="grid grid-cols-2 gap-4 pt-2">
+        {/* Stats */}
+        {/* <div className="grid grid-cols-2 gap-4 pt-2">
             <div
               className="p-3 rounded-xl"
               style={{ backgroundColor: tokens.bg }}
@@ -166,6 +239,63 @@ export default function SalesPersonCard({
               <p className="text-lg font-bold" style={{ color: tokens.text }}>
                 {data.closedInquiries}
               </p>
+            </div>
+          </div> */}
+        {/* </div> */}
+
+        <div className="space-y-4">
+          {/* Performance */}
+          <div>
+            <div
+              className="flex justify-between text-[10px] font-bold uppercase tracking-wider mb-1"
+              style={{ color: tokens.textMuted }}
+            >
+              <span>Performance</span>
+              <span style={{ color: performanceColor }}>
+                {data.performance}%
+              </span>
+            </div>
+
+            <div
+              className="h-2 w-full rounded-full overflow-hidden"
+              style={{ backgroundColor: tokens.bg }}
+            >
+              <div
+                className="h-full transition-all duration-500"
+                style={{
+                  width: `${data.performance}%`,
+                  backgroundColor: performanceColor,
+                }}
+              />
+            </div>
+          </div>
+
+          {/* Stats Row (tight layout) */}
+          <div className="grid grid-cols-2 gap-3">
+            <div
+              className="p-3 rounded-xl flex flex-col justify-center"
+              style={{ backgroundColor: tokens.bg }}
+            >
+              <p
+                className="text-[10px] uppercase font-bold"
+                style={{ color: tokens.textMuted }}
+              >
+                Total
+              </p>
+              <p className="text-lg font-bold">{data.totalInquiries}</p>
+            </div>
+
+            <div
+              className="p-3 rounded-xl flex flex-col justify-center"
+              style={{ backgroundColor: tokens.bg }}
+            >
+              <p
+                className="text-[10px] uppercase font-bold"
+                style={{ color: tokens.textMuted }}
+              >
+                Closed
+              </p>
+              <p className="text-lg font-bold">{data.closedInquiries}</p>
             </div>
           </div>
         </div>

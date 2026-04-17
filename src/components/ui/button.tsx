@@ -9,15 +9,17 @@ export function Button({
   disabled,
   icon: Icon,
   style: sx,
+  className = "",
   type = "button",
 }: {
   children: React.ReactNode;
   variant?: "primary" | "secondary" | "danger" | "ghost" | "dashed";
-  size?: "sm" | "md" | "lg";
+  size?: "xs" | "sm" | "md" | "lg" | "xl";
   onClick?: () => void;
   disabled?: boolean;
   icon?: any;
   style?: React.CSSProperties;
+  className?: string;
   type?: "button" | "submit" | "reset";
 }) {
   const ctx = useContext(ThemeContext);
@@ -28,11 +30,15 @@ export function Button({
 
   // ── Sizes ─────────────────────────────
   const sizeClasses =
-    size === "sm"
-      ? "text-xs px-2.5 py-[5px]"
-      : size === "md"
-        ? "text-[13px] px-3.5 py-[7px]"
-        : "text-[15px] px-4 py-[8px]";
+    size === "xs"
+      ? "text-[11px] px-2 py-[4px]"
+      : size === "sm"
+        ? "text-xs px-2.5 py-[5px]"
+        : size === "md"
+          ? "text-[13px] px-3.5 py-[7px]"
+          : size === "lg"
+            ? "text-[15px] px-4 py-[8px]"
+            : "text-[16px] px-5 py-[10px]"; // xl
 
   // ── Base ──────────────────────────────
   const baseClasses =
@@ -42,7 +48,7 @@ export function Button({
     ? "opacity-50 cursor-not-allowed"
     : "cursor-pointer";
 
-  // ── Variants (NORMAL) ─────────────────
+  // ── Variants ──────────────────────────
   const variants = {
     primary: {
       bg: tokens.accent,
@@ -85,7 +91,7 @@ export function Button({
       onClick={!disabled ? onClick : undefined}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      className={`${baseClasses} ${sizeClasses} ${disabledClasses}`}
+      className={`${baseClasses} ${sizeClasses} ${disabledClasses} ${className}`}
       style={{
         backgroundColor: hovered && !disabled ? v.hoverBg : v.bg,
         color: v.color,

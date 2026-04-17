@@ -228,11 +228,11 @@ const FileInput = ({
 
       {/* Image preview grid */}
       {files.length > 0 && (
-        <div className="grid grid-cols-4 gap-3 mt-1">
+        <div className="grid grid-cols-7 gap-3 mt-1">
           {files.map((f, i) => (
             <div
               key={i}
-              className="group relative aspect-square rounded-xl overflow-hidden"
+              className="group relative aspect-square w-25 h-25 rounded-xl overflow-hidden"
               style={{
                 border: `1px solid ${tokens.border}`,
                 backgroundColor: tokens.bg,
@@ -299,7 +299,7 @@ const FileInput = ({
             <button
               type="button"
               onClick={() => inputRef.current?.click()}
-              className="aspect-square rounded-xl flex items-center justify-center transition-all"
+              className="aspect-square w-25 h-25 rounded-xl flex items-center justify-center transition-all"
               style={{
                 border: `2px dashed ${tokens.border}`,
                 backgroundColor: "transparent",

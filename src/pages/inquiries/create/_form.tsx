@@ -2,11 +2,15 @@ import { InquiryDistributor } from "@/src/components/ui/distributeInquiry/inquir
 import FileInput from "@/src/components/ui/form/fileUpload";
 import Input from "@/src/components/ui/form/input";
 import TextArea from "@/src/components/ui/form/textArea";
+import FullPageLoader from "@/src/components/ui/loader/fullPageLoader";
 import { useCreateInquiry } from "@/src/hooks/inquiry/useCreateInquiry";
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import Swal from "sweetalert2";
 
 const InquiryForm = () => {
   const { createInquiry, loading, error } = useCreateInquiry();
+  const navigate = useNavigate();
   const [form, setForm] = useState<{
     description: string;
     mobile: string;
@@ -42,28 +46,46 @@ const InquiryForm = () => {
   // };
   const handleSubmit = async (salesPersonIdFromDistributor: string) => {
     // e.preventDefault();
+    try {
+      const formData = new FormData();
 
-    const formData = new FormData();
+      formData.append("description", form.description);
+      formData.append("mobile", form.mobile);
+      formData.append("inquiryTime", form.inquiryTime);
+      formData.append("salesPersonId", salesPersonIdFromDistributor);
 
-    formData.append("description", form.description);
-    formData.append("mobile", form.mobile);
-    formData.append("inquiryTime", form.inquiryTime);
-    formData.append("salesPersonId", salesPersonIdFromDistributor);
-
-    // ✅ append files correctly
-    if (form.images && form.images.length > 0) {
-      form.images.forEach((file) => {
-        formData.append("images", file); // important: same key "images"
+      // ✅ append files correctly
+      if (form.images && form.images.length > 0) {
+        form.images.forEach((file) => {
+          formData.append("images", file); // important: same key "images"
+        });
+      }
+      await createInquiry(formData);
+      Swal.fire({
+        icon: "success",
+        title: "Inquiry Created.",
+        text: "Your inquiry has been created and shared successfully!",
+      });
+      setForm({
+        description: "",
+        mobile: "",
+        inquiryTime: "",
+        images: [],
+      });
+      navigate("/inquiries");
+    } catch (err) {
+      Swal.fire({
+        icon: "error",
+        title: "Error Creating Inquiry.",
+        text: "Please try again later!",
       });
     }
-
-    await createInquiry(formData);
   };
   return (
     <form encType="multipart/form-data">
       <div className="space-y-4 ">
         <FileInput
-          maxSizeMB={25}
+          maxSizeMB={5}
           limit={10}
           label="Upload Inquiry"
           inputName="images"
@@ -101,6 +123,7 @@ const InquiryForm = () => {
           onConfirmShare={handleSubmit}
         />
       </div>
+      {loading && <FullPageLoader />}
     </form>
   );
 };

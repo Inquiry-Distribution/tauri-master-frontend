@@ -5,9 +5,11 @@ import { Modal } from "../modal";
 import ShareInquiry from "./shareInquiry/shareInquiry";
 import Swal from "sweetalert2";
 import { SalesPerson } from "@/src/types/users";
-import { UISalesPerson } from "./shareInquiry/types";
+import { ShareInquiryPerson, UISalesPerson } from "./shareInquiry/types";
 import SectionLoader from "../loader/sectionLoader";
 import CommonLoader from "../loader/loader";
+import { mapToShareInquiryPerson } from "./shareInquiry/helpers";
+import { Button } from "../button";
 
 // keep your types + dummy data + helpers SAME
 // ── Types ──────────────────────────────────────────────────────────────────────
@@ -66,7 +68,7 @@ const COLORS = [
   "#FBBF24",
 ];
 
-const getAvatarColor = (index: number) => COLORS[index % COLORS.length];
+export const getAvatarColor = (index: number) => COLORS[index % COLORS.length];
 // ── Dummy Data ─────────────────────────────────────────────────────────────────
 // const DUMMY_PERSONS: SalesPerson[] = [
 //   {
@@ -289,19 +291,124 @@ function DeltaBadge({ delta, t }: any) {
   );
 }
 
+// function SummaryPanel({ person, t, month }: any) {
+//   const rows = useMemo(() => generateRows(person.id), [person.id]);
+
+//   return (
+//     <div className="border-t border-border animate-[slideDown_0.2s_ease]">
+//       {/* header */}
+//       <div
+//         className="flex items-center gap-2.5 px-4 py-2.5 border-b border-border"
+//         style={{ background: t.surfaceElevated }}
+//       >
+//         <div
+//           className="w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-bold"
+//           style={{
+//             background: `${person.avatarColor}20`,
+//             border: `1.5px solid ${person.avatarColor}`,
+//             color: person.avatarColor,
+//           }}
+//         >
+//           {person.initials}
+//         </div>
+
+//         <span className="text-[13px] font-semibold" style={{ color: t.text }}>
+//           {person.name}
+//         </span>
+
+//         <span className="text-xs" style={{ color: t.textMuted }}>
+//           · {person.role}
+//         </span>
+
+//         <span
+//           className="ml-auto text-[11px] font-semibold px-2.5 py-[2px] rounded-full"
+//           style={{
+//             background: t.accentLight,
+//             color: t.accentText,
+//           }}
+//         >
+//           {month}
+//         </span>
+//       </div>
+
+//       {/* table header */}
+//       <div className="grid grid-cols-[1fr_130px_130px_90px] px-4 py-1.5 text-[10.5px] font-bold uppercase tracking-wide">
+//         {["Metric", "This Month", "Last Month", "Change"].map((col, i) => (
+//           <span
+//             key={col}
+//             className={i === 0 ? "text-left" : "text-right"}
+//             style={{ color: t.textMuted }}
+//           >
+//             {col}
+//           </span>
+//         ))}
+//       </div>
+
+//       {/* rows */}
+//       {rows.map((row: any, idx: number) => (
+//         <div
+//           key={row.id}
+//           className="grid grid-cols-[1fr_130px_130px_90px] px-4 py-2 items-center transition-colors"
+//           onMouseEnter={(e) =>
+//             (e.currentTarget.style.background = t.accentLight)
+//           }
+//           onMouseLeave={(e) =>
+//             (e.currentTarget.style.background = "transparent")
+//           }
+//         >
+//           <span className="text-sm font-medium">{row.label}</span>
+
+//           <span className="text-sm font-semibold text-right">
+//             {formatVal(row.thisMonth, row.format)}
+//           </span>
+
+//           <span className="text-sm text-right" style={{ color: t.textSec }}>
+//             {formatVal(row.lastMonth, row.format)}
+//           </span>
+
+//           <div className="flex justify-end">
+//             <DeltaBadge delta={row.delta} t={t} />
+//           </div>
+//         </div>
+//       ))}
+//     </div>
+//   );
+// }
+
 function SummaryPanel({ person, t, month }: any) {
-  const rows = useMemo(() => generateRows(person.id), [person.id]);
+  const inq = person.inquiries ?? {};
+  const att = person.attendance ?? {};
+
+  const convRate = parseFloat(inq.conversionRate ?? "0");
+  const closeRate = parseFloat(inq.closeRate ?? "0");
+
+  const barColor = (pct: number) =>
+    pct >= 50 ? t.success : pct >= 20 ? t.warning : t.accent;
 
   return (
-    <div className="border-t border-border animate-[slideDown_0.2s_ease]">
-      {/* header */}
+    <div style={{ borderTop: `0.5px solid ${t.border}` }}>
+      {/* ── Header ── */}
       <div
-        className="flex items-center gap-2.5 px-4 py-2.5 border-b border-border"
-        style={{ background: t.surfaceElevated }}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 12,
+          padding: "10px 16px",
+          borderBottom: `0.5px solid ${t.border}`,
+          background: t.surfaceElevated,
+        }}
       >
         <div
-          className="w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-bold"
           style={{
+            width: 36,
+            height: 36,
+            borderRadius: "50%",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: 13,
+            fontWeight: 500,
+            flexShrink: 0,
             background: `${person.avatarColor}20`,
             border: `1.5px solid ${person.avatarColor}`,
             color: person.avatarColor,
@@ -310,17 +417,22 @@ function SummaryPanel({ person, t, month }: any) {
           {person.initials}
         </div>
 
-        <span className="text-[13px] font-semibold" style={{ color: t.text }}>
-          {person.name}
-        </span>
-
-        <span className="text-xs" style={{ color: t.textMuted }}>
-          · {person.role}
-        </span>
+        <div>
+          <div style={{ fontSize: 14, fontWeight: 500, color: t.text }}>
+            {person.name}
+          </div>
+          <div style={{ fontSize: 12, color: t.textMuted }}>
+            {person.role ?? "Sales"}
+          </div>
+        </div>
 
         <span
-          className="ml-auto text-[11px] font-semibold px-2.5 py-[2px] rounded-full"
           style={{
+            marginLeft: "auto",
+            fontSize: 11,
+            fontWeight: 500,
+            padding: "3px 10px",
+            borderRadius: 6,
             background: t.accentLight,
             color: t.accentText,
           }}
@@ -329,46 +441,223 @@ function SummaryPanel({ person, t, month }: any) {
         </span>
       </div>
 
-      {/* table header */}
-      <div className="grid grid-cols-[1fr_130px_130px_90px] px-4 py-1.5 text-[10.5px] font-bold uppercase tracking-wide">
-        {["Metric", "This Month", "Last Month", "Change"].map((col, i) => (
-          <span
-            key={col}
-            className={i === 0 ? "text-left" : "text-right"}
-            style={{ color: t.textMuted }}
-          >
-            {col}
-          </span>
+      {/* ── Inquiries grid ── */}
+      <SectionLabel label="Inquiries" t={t} />
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+          gap: 8,
+          padding: "0 16px 12px",
+        }}
+      >
+        {[
+          { label: "Total", value: inq.total ?? 0, color: t.text },
+          { label: "Assigned", value: inq.assigned ?? 0, color: t.accent },
+          {
+            label: "In Progress",
+            value: inq.inProgress ?? 0,
+            color: t.warning,
+          },
+          { label: "Follow Up", value: inq.followUp ?? 0, color: t.text },
+          { label: "Closed", value: inq.closed ?? 0, color: t.textSec },
+          { label: "Converted", value: inq.converted ?? 0, color: t.success },
+        ].map(({ label, value, color }) => (
+          <StatCard
+            key={label}
+            label={label}
+            value={value}
+            color={color}
+            t={t}
+          />
         ))}
       </div>
 
-      {/* rows */}
-      {rows.map((row: any, idx: number) => (
+      {/* ── Performance bars ── */}
+      <Divider t={t} />
+      <SectionLabel label="Performance" t={t} />
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+          gap: 8,
+          padding: "0 16px 12px",
+        }}
+      >
+        <RateBar
+          label="Conversion rate"
+          pct={convRate}
+          color={barColor(convRate)}
+          t={t}
+        />
+        <RateBar
+          label="Close rate"
+          pct={closeRate}
+          color={barColor(closeRate)}
+          t={t}
+        />
+      </div>
+
+      {/* ── Attendance ── */}
+      <Divider t={t} />
+      <SectionLabel label="Attendance" t={t} />
+      <div
+        style={{
+          display: "flex",
+          gap: 8,
+          padding: "0 16px 14px",
+        }}
+      >
+        {[
+          { key: "Present", value: att.present ?? 0, dot: t.success },
+          { key: "Half day", value: att.halfDay ?? 0, dot: t.warning },
+          { key: "Absent", value: att.absent ?? 0, dot: t.danger },
+          { key: "Total", value: att.totalDays ?? 0, dot: t.border },
+        ].map(({ key, value, dot }) => (
+          <AttChip key={key} label={key} value={value} dot={dot} t={t} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ── Sub-components ── */
+
+function SectionLabel({ label, t }: { label: string; t: any }) {
+  return (
+    <div
+      style={{
+        fontSize: 11,
+        fontWeight: 500,
+        color: t.textMuted,
+        letterSpacing: "0.05em",
+        textTransform: "uppercase",
+        padding: "10px 16px 6px",
+      }}
+    >
+      {label}
+    </div>
+  );
+}
+
+function Divider({ t }: { t: any }) {
+  return (
+    <div style={{ height: 1, background: t.borderLight, margin: "0 16px" }} />
+  );
+}
+
+function StatCard({
+  label,
+  value,
+  color,
+  t,
+}: {
+  label: string;
+  value: number;
+  color: string;
+  t: any;
+}) {
+  return (
+    <div
+      style={{
+        background: t.surfaceElevated,
+        borderRadius: 8,
+        padding: "10px 12px",
+      }}
+    >
+      <div style={{ fontSize: 11, color: t.textMuted, marginBottom: 4 }}>
+        {label}
+      </div>
+      <div style={{ fontSize: 20, fontWeight: 500, color, lineHeight: 1 }}>
+        {value}
+      </div>
+    </div>
+  );
+}
+
+function RateBar({
+  label,
+  pct,
+  color,
+  t,
+}: {
+  label: string;
+  pct: number;
+  color: string;
+  t: any;
+}) {
+  return (
+    <div
+      style={{
+        background: t.surfaceElevated,
+        borderRadius: 8,
+        padding: "10px 12px",
+      }}
+    >
+      <div style={{ fontSize: 11, color: t.textMuted, marginBottom: 6 }}>
+        {label}
+      </div>
+      <div
+        style={{
+          height: 4,
+          borderRadius: 99,
+          background: t.borderLight,
+          overflow: "hidden",
+        }}
+      >
         <div
-          key={row.id}
-          className="grid grid-cols-[1fr_130px_130px_90px] px-4 py-2 items-center transition-colors"
-          onMouseEnter={(e) =>
-            (e.currentTarget.style.background = t.accentLight)
-          }
-          onMouseLeave={(e) =>
-            (e.currentTarget.style.background = "transparent")
-          }
-        >
-          <span className="text-sm font-medium">{row.label}</span>
+          style={{
+            height: "100%",
+            width: `${Math.min(pct, 100)}%`,
+            borderRadius: 99,
+            background: color,
+            transition: "width 0.4s ease",
+          }}
+        />
+      </div>
+      <div style={{ fontSize: 13, fontWeight: 500, color, marginTop: 4 }}>
+        {pct.toFixed(2)}%
+      </div>
+    </div>
+  );
+}
 
-          <span className="text-sm font-semibold text-right">
-            {formatVal(row.thisMonth, row.format)}
-          </span>
-
-          <span className="text-sm text-right" style={{ color: t.textSec }}>
-            {formatVal(row.lastMonth, row.format)}
-          </span>
-
-          <div className="flex justify-end">
-            <DeltaBadge delta={row.delta} t={t} />
-          </div>
-        </div>
-      ))}
+function AttChip({
+  label,
+  value,
+  dot,
+  t,
+}: {
+  label: string;
+  value: number;
+  dot: string;
+  t: any;
+}) {
+  return (
+    <div
+      style={{
+        flex: 1,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        gap: 3,
+        background: t.surfaceElevated,
+        borderRadius: 8,
+        padding: "8px 4px",
+      }}
+    >
+      <div
+        style={{
+          width: 8,
+          height: 8,
+          borderRadius: "50%",
+          background: dot,
+        }}
+      />
+      <div style={{ fontSize: 16, fontWeight: 500, color: t.text }}>
+        {value}
+      </div>
+      <div style={{ fontSize: 11, color: t.textMuted }}>{label}</div>
     </div>
   );
 }
@@ -386,24 +675,29 @@ export function InquiryDistributor({
   const { getAllSalesPerson, loading: salesLoading, error } = useSalesPerson();
   const [query, setQuery] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
-  const [persons, setPersons] = useState<UISalesPerson[]>(defaultPersons);
+  const [persons, setPersons] = useState<ShareInquiryPerson[]>([]);
+  // const [persons, setPersons] = useState<UISalesPerson[]>(defaultPersons);
   const [selectedId, setSelectedId] = useState<string | null>(
     defaultSelectedId || null,
   );
-  const [modalPerson, setModalPerson] = useState<UISalesPerson | null>(null);
-
+  // const [modalPerson, setModalPerson] = useState<UISalesPerson | null>(null);
+  const [modalPerson, setModalPerson] = useState<ShareInquiryPerson | null>(
+    null,
+  );
   // on the Share Inquiry button:
 
   const ctx = useContext(ThemeContext);
   if (!ctx) return null;
   const { tokens } = ctx;
 
-  const selectedPerson = persons.find((p: any) => p.id === selectedId) ?? null;
+  const selectedPerson =
+    persons.find((p: ShareInquiryPerson) => p.id === selectedId) ?? null;
 
   useEffect(() => {
     const fetchSalesPersons = async () => {
       try {
         const res = await getAllSalesPerson();
+        console.log("res", res);
 
         // const mapped = res.data.data.map((p: any, index: number) => ({
         //   id: p.id,
@@ -436,11 +730,16 @@ export function InquiryDistributor({
             avatarColor: getAvatarColor(index),
           }));
         };
-
-        setPersons(mapToUI(res.data));
+        const salespersons: SalesPerson[] = res.data?.salespersons ?? [];
+        const mapped = salespersons.map((p, index) =>
+          mapToShareInquiryPerson(p, index),
+        );
+        setPersons(mapped);
+        // setPersons(mapToUI(res.data));
       } catch (err) {
         console.error(err);
       }
+      console.log("persons", persons);
     };
     setTimeout(() => {
       fetchSalesPersons();
@@ -454,7 +753,7 @@ export function InquiryDistributor({
       (p: any) =>
         p.name.toLowerCase().includes(q) ||
         p.email.toLowerCase().includes(q) ||
-        p.mobile.includes(q),
+        (p.mobile ?? "").includes(q),
     );
   }, [query, persons]);
 
@@ -574,18 +873,19 @@ export function InquiryDistributor({
 
       {/* Button */}
       <div className="flex justify-end mt-3">
-        <button
+        <Button
           type="button"
+          size="xl"
           onClick={() => setModalPerson(selectedPerson)}
           disabled={!selectedPerson}
-          className={`px-5 py-2 rounded-lg text-sm font-semibold transition ${
-            selectedPerson
-              ? "bg-blue-600 text-white hover:opacity-90"
-              : "bg-gray-200 text-gray-400 cursor-not-allowed"
-          }`}
+          // className={`px-5 py-2 rounded-lg text-sm font-semibold transition ${
+          //   selectedPerson
+          //     ? "bg-blue-600 text-white hover:opacity-90"
+          //     : "bg-gray-200 text-gray-400 cursor-not-allowed"
+          // }`}
         >
           Share Inquiry
-        </button>
+        </Button>
       </div>
 
       {modalPerson && (
@@ -599,6 +899,7 @@ export function InquiryDistributor({
             onConfirm={() => {
               onConfirm();
             }}
+            loading={loading}
             person={modalPerson}
           />
         </Modal>

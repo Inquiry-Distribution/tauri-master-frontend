@@ -1,5 +1,7 @@
 import { useTheme } from "@/src/contexts";
-import { PersonWorkload, SalesPerson, WorkloadStatus } from "./types";
+import { PersonWorkload, ShareInquiryPerson, WorkloadStatus } from "./types";
+import { getAvatarColor } from "../inquiryDistribution";
+import { SalesPerson } from "@/src/types/users";
 
 export function getWorkload(person: SalesPerson): PersonWorkload {
   const s = parseInt(person.id, 10);
@@ -117,3 +119,45 @@ export function Row({
     </div>
   );
 }
+
+export const mapToShareInquiryPerson = (
+  p: SalesPerson,
+  index: number,
+): ShareInquiryPerson => {
+  const inquiries = p.inquiries;
+  const assignedCount = inquiries?.assigned ?? 0;
+  const total = inquiries?.total || 10;
+
+  return {
+    id: p.id,
+    name: p.name,
+    email: p.email,
+    mobile: p.phone ?? "", // ← map phone → mobile
+    role: p.assignedArea || "Sales",
+    initials: p.name
+      ?.split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2),
+    avatarColor: getAvatarColor(index),
+    inquiries,
+    attendance: p.attendance,
+    workload: {
+      inquiriesOpen: assignedCount + (inquiries?.inProgress ?? 0),
+      inquiriesLimit: total,
+      avgResponseMin: 12,
+      conversionRate: parseFloat(inquiries?.conversionRate ?? "0"),
+      lastActive: "Today 10:30 AM",
+      lastActiveType: "online",
+      capacityUsed: assignedCount,
+      capacityLimit: total,
+      status:
+        assignedCount > 10
+          ? "overloaded"
+          : assignedCount > 5
+            ? "busy"
+            : "active",
+    },
+  };
+};
