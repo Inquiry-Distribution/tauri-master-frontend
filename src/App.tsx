@@ -12,9 +12,16 @@ import { ThemeProvider } from "./contexts";
 import { queryClient } from "./api/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { AuthProvider } from "./contexts/authContext";
+import "@/src/api/axios";
+// import { setNavigate } from "./api/navigate";
 // import AppRoutes from './routes/AppRoutes';
 
 export default function App() {
+  // const navigate = useNavigate();
+
+  // useEffect(() => {
+  //   setNavigate(navigate);
+  // }, [navigate]);
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>

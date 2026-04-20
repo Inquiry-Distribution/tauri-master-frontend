@@ -697,7 +697,6 @@ export function InquiryDistributor({
     const fetchSalesPersons = async () => {
       try {
         const res = await getAllSalesPerson();
-        console.log("res", res);
 
         // const mapped = res.data.data.map((p: any, index: number) => ({
         //   id: p.id,
@@ -739,7 +738,6 @@ export function InquiryDistributor({
       } catch (err) {
         console.error(err);
       }
-      console.log("persons", persons);
     };
     setTimeout(() => {
       fetchSalesPersons();

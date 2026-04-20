@@ -17,7 +17,7 @@ export const useGetInquiryReportByStatus = () => {
         from,
         to,
       );
-      console.log("API Response:", response.data);
+
       setData(response.data);
 
       return response;

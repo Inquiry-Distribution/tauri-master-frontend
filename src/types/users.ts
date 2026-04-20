@@ -36,3 +36,9 @@ export type SalesPerson = {
     totalDays: number;
   };
 };
+
+export type UpdateUser = {
+  name: string;
+  phone: string;
+  email: string;
+};

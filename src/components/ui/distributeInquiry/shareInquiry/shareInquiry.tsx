@@ -25,7 +25,7 @@ const ShareInquiry = ({
     inquiriesLimit: 0,
     avgResponseMin: 0,
     conversionRate: 0,
-    lastActive: "N/A",
+    lastActive: "",
     lastActiveType: "away",
     capacityUsed: 0,
     capacityLimit: 0,

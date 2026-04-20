@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { motion } from "motion/react";
 import { api } from "@/src/api/axios";
+import Swal from "sweetalert2";
 // import { cn } from '../../lib/utils.ts'  ;
 
 export default function LoginPage() {
@@ -25,18 +26,51 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleLogin = async () => {
-    const res = await api.post("/auth/login", {
-      email,
-      password,
-    });
+    try {
+      const res = await api.post("/auth/login", {
+        email,
+        password,
+      });
 
-    const { token, refreshToken, user } = res.data.data;
+      const { token, refreshToken, user } = res.data.data;
 
-    login({
-      access_token: token,
-      refresh_token: refreshToken,
-      user,
-    });
+      login({
+        access_token: token,
+        refresh_token: refreshToken,
+        user,
+      });
+    } catch (err: any) {
+      let title = "Login failed";
+      let text = "Something went wrong";
+      let icon: "error" | "warning" = "error";
+
+      if (err.response) {
+        const status = err.response.status;
+        const message = err.response.data?.message;
+
+        if (status === 401) {
+          title = "Invalid Credentials";
+          text = message || "Email or password is incorrect.";
+          icon = "warning";
+        } else if (status === 403) {
+          title = "Access Denied";
+          text = message || "You are not allowed to login here.";
+        } else {
+          text = message || text;
+        }
+      } else if (err.request) {
+        title = "Network Error";
+        text = "Unable to reach server. Check your connection.";
+      }
+
+      Swal.fire({
+        icon,
+        title,
+        text,
+      });
+
+      console.error("Login failed", err);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
