@@ -1,6 +1,8 @@
 // src/lib/context/AuthContext.tsx
 
 import React, { createContext, useContext, useState, useEffect } from "react";
+import { AuthService } from "../services/auth.service";
+import Swal from "sweetalert2";
 
 type User = {
   id: string;
@@ -104,10 +106,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setUser(user);
   };
 
-  const logout = () => {
-    localStorage.clear();
-    setUser(null);
-    // window.location.href = "/login";
+  const logout = async () => {
+    try {
+      await AuthService.logout();
+      localStorage.clear();
+      setUser(null);
+      // window.location.href = "/login";
+    } catch (err) {
+      Swal.fire({
+        icon: "error",
+        title: "Logout failed",
+        text: "Please try again later",
+      });
+      console.error("Logout logging out user", err);
+    }
   };
 
   return (

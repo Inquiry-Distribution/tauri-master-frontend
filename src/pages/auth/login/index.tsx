@@ -40,12 +40,35 @@ export default function LoginPage() {
         user,
       });
     } catch (err: any) {
-      // alert(`Error: ${String(err)}`);
+      let title = "Login failed";
+      let text = "Something went wrong";
+      let icon: "error" | "warning" = "error";
+
+      if (err.response) {
+        const status = err.response.status;
+        const message = err.response.data?.message;
+
+        if (status === 401) {
+          title = "Invalid Credentials";
+          text = message || "Email or password is incorrect.";
+          icon = "warning";
+        } else if (status === 403) {
+          title = "Access Denied";
+          text = message || "You are not allowed to login here.";
+        } else {
+          text = message || text;
+        }
+      } else if (err.request) {
+        title = "Network Error";
+        text = "Unable to reach server. Check your connection.";
+      }
+
       Swal.fire({
-        icon: "error",
-        title: "Login failed",
-        text: err,
+        icon,
+        title,
+        text,
       });
+
       console.error("Login failed", err);
     }
   };

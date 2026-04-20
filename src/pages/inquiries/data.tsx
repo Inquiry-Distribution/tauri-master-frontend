@@ -5,7 +5,7 @@ import { TableColumn } from "@/src/components/ui/table/types";
 import { useTheme } from "@/src/contexts";
 import { Inquiry } from "@/src/types/inquiry";
 import { getPriorityStyleMap, getStatusStyleMap } from "./create/inquiryStyles";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useState } from "react";
 import ButtonLoader from "@/src/components/ui/loader/buttonLoader";
 import { Trash } from "lucide-react";
