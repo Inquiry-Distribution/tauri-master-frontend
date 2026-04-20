@@ -1,9 +1,20 @@
-import React from "react";
-import { Mail, Phone, MoreVertical } from "lucide-react";
+import React, { useState } from "react";
+import { Mail, Phone, MoreVertical, Edit } from "lucide-react";
 import { SalesPerson } from "@/src/types/users";
 import { cn } from "@/src/utils/utils";
 import { useTheme } from "@/src/contexts";
 import SalesPersonAttendance from "./salesPersonAttendance";
+import { Button } from "../button";
+import { useUpdateUser } from "@/src/hooks/salesPerson/useUpdateUser";
+import { Modal } from "../modal";
+import UpdateSalesPersonForm from "./updateSalesPersonForm";
+import { useToggleActiveStatus } from "@/src/hooks/salesPerson/useToggleActive";
+import {
+  statusUserBg,
+  statusUserColor,
+} from "../distributeInquiry/shareInquiry/helpers";
+import ButtonLoader from "../loader/buttonLoader";
+import Swal from "sweetalert2";
 
 interface Props {
   person: SalesPerson;
@@ -25,6 +36,24 @@ export default function SalesPersonCard({
   onToggleStatus,
 }: Props) {
   const { tokens } = useTheme();
+  const [updateUserModal, setUpdateUserModal] = useState<boolean>(false);
+  const {
+    toggleActiveStatus,
+    loading: toggleLoading,
+    error: toggleError,
+  } = useToggleActiveStatus();
+  const handleToggleStatus = async () => {
+    try {
+      await toggleActiveStatus(person.id);
+      onToggleStatus?.(person);
+    } catch (error) {
+      Swal.fire({
+        icon: "error",
+        title: "Failed to toggle status",
+      });
+      console.error(error);
+    }
+  };
 
   // ✅ Merge API data with defaults
   // const data = {
@@ -315,6 +344,31 @@ export default function SalesPersonCard({
         >
           View Full Report
         </button>
+        <Button
+          onClick={() => handleToggleStatus()}
+          type="button"
+          variant="ghost"
+          style={{
+            background: statusUserBg(!toggleLoading ? data.status : ""),
+            color: statusUserColor(!toggleLoading ? data.status : ""),
+          }}
+        >
+          {toggleLoading ? (
+            <ButtonLoader />
+          ) : data.status === "active" ? (
+            "Active"
+          ) : (
+            "Inactive"
+          )}
+        </Button>
+        <Button
+          type="button"
+          variant="secondary"
+          size="xs"
+          onClick={() => setUpdateUserModal(true)}
+        >
+          <Edit size={15} />
+        </Button>
 
         <button
           onClick={() => onToggleStatus?.(data)}
@@ -328,6 +382,19 @@ export default function SalesPersonCard({
           {data.status === "active" ? "Block Agent" : "Unblock Agent"}
         </button>
       </div>
+      {updateUserModal && (
+        <Modal
+          title="Update Sales Person"
+          onClose={() => setUpdateUserModal(false)}
+          width={400}
+        >
+          <UpdateSalesPersonForm
+            salesPersonId={data.id}
+            person={data}
+            onClose={() => setUpdateUserModal(false)}
+          />
+        </Modal>
+      )}
     </div>
   );
 }

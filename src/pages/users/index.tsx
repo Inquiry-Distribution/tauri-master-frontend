@@ -59,7 +59,7 @@ const mapSalesPerson = (sp: any): SalesPerson => {
     email: sp.email,
 
     // ❌ not in API → fallback dummy
-    phone: "N/A",
+    phone: "",
     employeeId: "EMP-" + sp.id.slice(0, 5),
     assignedArea: "Unassigned",
 

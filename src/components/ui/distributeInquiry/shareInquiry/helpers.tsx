@@ -38,11 +38,24 @@ export function statusColor(status: WorkloadStatus) {
       ? "#FB923C"
       : "#F87171";
 }
+export function statusUserColor(status: string) {
+  return status === "active"
+    ? "#34D399"
+    : status === "inactive"
+      ? "#FB923C"
+      : "#F87171";
+}
 
 export function statusBg(status: WorkloadStatus) {
   const dark = useTheme();
   if (status === "Available") return dark ? "#052E1C" : "#ECFDF5";
   if (status === "Busy") return dark ? "#2D1500" : "#FFF7ED";
+  return dark ? "#2D0A0A" : "#FEF2F2";
+}
+export function statusUserBg(status: string) {
+  const dark = useTheme();
+  if (status === "active") return dark ? "#052E1C" : "#ECFDF5";
+  if (status === "inactive") return dark ? "#2D1500" : "#FFF7ED";
   return dark ? "#2D0A0A" : "#FEF2F2";
 }
 
