@@ -1,6 +1,9 @@
 import { useRef, useState, useContext, useEffect } from "react";
 import { UploadCloud, Eye, Trash2, FileImage } from "lucide-react";
 import { ThemeContext } from "@/src/contexts/index";
+import { listen } from "@tauri-apps/api/event";
+import { convertFileSrc } from "@tauri-apps/api/core";
+import { readFile, stat } from "@tauri-apps/plugin-fs";
 
 export type UploadedFile = {
   file: File;
@@ -32,12 +35,59 @@ const FileInput = ({
   const [files, setFiles] = useState<UploadedFile[]>([]);
   const [dragging, setDragging] = useState(false);
 
+  const isHandledRef = useRef(false);
+
   const ctx = useContext(ThemeContext);
   if (!ctx) return null;
   const { tokens } = ctx;
 
   const maxBytes = maxSizeMB * 1024 * 1024;
   const acceptTypes = accept.split(",").map((t) => t.trim());
+
+  useEffect(() => {
+    let unlisten: (() => void) | undefined;
+
+    listen("tauri://drag-drop", async (event: any) => {
+      if (isHandledRef.current) return;
+      isHandledRef.current = true;
+
+      setTimeout(() => {
+        isHandledRef.current = false;
+      }, 100);
+      if (disabled) return;
+
+      const paths: string[] = event.payload.paths;
+
+      const mapped = await Promise.all(
+        paths.map(async (path) => {
+          const bytes = await readFile(path);
+          const name = path.split(/[\\/]/).pop() || "file";
+
+          const blob = new Blob([bytes]);
+
+          const realFile = new File([blob], name, {
+            type: "image/jpeg",
+          });
+
+          return {
+            file: realFile,
+            url: URL.createObjectURL(blob), // better than convertFileSrc
+          };
+        }),
+      );
+
+      setFiles((prev) => {
+        const updated = [...prev, ...mapped].slice(0, limit);
+        return updated;
+      });
+    }).then((fn) => {
+      unlisten = fn;
+    });
+
+    return () => {
+      if (unlisten) unlisten();
+    };
+  }, [disabled, limit]);
 
   // const handleFiles = (selected: File[]) => {
   //   const valid: UploadedFile[] = [];
