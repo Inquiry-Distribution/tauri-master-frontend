@@ -37,7 +37,7 @@ export default function SalesPersonCard({
 }: Props) {
   const { tokens } = useTheme();
   const [updateUserModal, setUpdateUserModal] = useState<boolean>(false);
-  const [status,setStatus]=useState(person.isActive?'active':'inactive')
+  const [status, setStatus] = useState(person.isActive ? "active" : "inactive");
   const {
     toggleActiveStatus,
     loading: toggleLoading,
@@ -46,7 +46,7 @@ export default function SalesPersonCard({
   const handleToggleStatus = async () => {
     try {
       await toggleActiveStatus(person.id);
-      setStatus((prev)=>(prev==='active'?"inactive":"active"))
+      setStatus((prev) => (prev === "active" ? "inactive" : "active"));
       onToggleStatus?.(person);
     } catch (error) {
       Swal.fire({
@@ -93,10 +93,9 @@ export default function SalesPersonCard({
         ? tokens.warning
         : tokens.danger;
 
-
-        useEffect(()=>{
-          setStatus(person.isActive?"active":"inactive")
-        },[person.isActive])
+  useEffect(() => {
+    setStatus(person.isActive ? "active" : "inactive");
+  }, [person.isActive]);
   return (
     <div
       className="rounded-2xl border overflow-hidden transition-all duration-200 hover:shadow-xl"
@@ -345,12 +344,12 @@ export default function SalesPersonCard({
           backgroundColor: tokens.bg + "30",
         }}
       >
-        <button
+        {/* <button
           onClick={() => onViewReport?.(data)}
           className="text-sm font-bold text-blue-600 hover:underline"
         >
           View Full Report
-        </button>
+        </button> */}
         <Button
           onClick={() => handleToggleStatus()}
           type="button"
@@ -377,7 +376,7 @@ export default function SalesPersonCard({
           <Edit size={15} />
         </Button>
 
-        <button
+        {/* <button
           onClick={() => onToggleStatus?.(data)}
           className={cn(
             "text-xs font-bold px-3 py-1.5 rounded-lg transition-colors",
@@ -387,7 +386,7 @@ export default function SalesPersonCard({
           )}
         >
           {data.status === "active" ? "Block Agent" : "Unblock Agent"}
-        </button>
+        </button> */}
       </div>
       {updateUserModal && (
         <Modal
