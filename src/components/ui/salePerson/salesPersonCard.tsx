@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Mail, Phone, MoreVertical, Edit } from "lucide-react";
 import { SalesPerson } from "@/src/types/users";
 import { cn } from "@/src/utils/utils";
@@ -37,6 +37,7 @@ export default function SalesPersonCard({
 }: Props) {
   const { tokens } = useTheme();
   const [updateUserModal, setUpdateUserModal] = useState<boolean>(false);
+  const [status,setStatus]=useState(person.isActive?'active':'inactive')
   const {
     toggleActiveStatus,
     loading: toggleLoading,
@@ -45,6 +46,7 @@ export default function SalesPersonCard({
   const handleToggleStatus = async () => {
     try {
       await toggleActiveStatus(person.id);
+      setStatus((prev)=>(prev==='active'?"inactive":"active"))
       onToggleStatus?.(person);
     } catch (error) {
       Swal.fire({
@@ -75,7 +77,7 @@ export default function SalesPersonCard({
   const data = {
     ...person,
 
-    status: person.isActive ? "active" : "inactive",
+    status: status,
 
     totalInquiries,
     closedInquiries,
@@ -90,6 +92,11 @@ export default function SalesPersonCard({
       : data.performance >= 40
         ? tokens.warning
         : tokens.danger;
+
+
+        useEffect(()=>{
+          setStatus(person.isActive?"active":"inactive")
+        },[person.isActive])
   return (
     <div
       className="rounded-2xl border overflow-hidden transition-all duration-200 hover:shadow-xl"
