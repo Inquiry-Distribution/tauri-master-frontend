@@ -59,9 +59,9 @@ const mapSalesPerson = (sp: any): SalesPerson => {
     email: sp.email,
 
     // ❌ not in API → fallback dummy
-    phone: "",
-    employeeId: "EMP-" + sp.id.slice(0, 5),
-    assignedArea: "Unassigned",
+    phone: sp.phone || "",
+    employeeId: sp.employeeId || "",
+    assignedArea: sp.assignedArea || "Unassigned",
 
     isActive: sp.isActive,
 
@@ -94,6 +94,14 @@ export default function SalesPersonsPage() {
 
     fetchData();
   }, []);
+
+  const handleUpdated = (updatedPerson: SalesPerson) => {
+    setSalesPersons((prev) =>
+      prev.map((p) =>
+        p.id === updatedPerson.id ? { ...p, ...updatedPerson } : p,
+      ),
+    );
+  };
 
   return (
     <div className="space-y-6">
@@ -132,6 +140,7 @@ export default function SalesPersonsPage() {
                     person={person}
                     onViewReport={(p) => {}}
                     onToggleStatus={(p) => {}}
+                    onUpdated={handleUpdated}
                   />
                 ))
               : !loading && (

@@ -35,10 +35,12 @@ export type SalesPerson = {
     absent: number;
     totalDays: number;
   };
+  profileImage?: string;
 };
 
 export type UpdateUser = {
   name: string;
+  employeeId: string;
   phone: string;
   email: string;
 };

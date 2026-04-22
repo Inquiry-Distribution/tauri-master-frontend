@@ -20,7 +20,7 @@ export const UserService = {
     return data;
   },
   setResetPin: async (id: any, payload: { pin: string }) => {
-    const { data } = await api.patch(`/users/${id}/reset-pin`, payload);
+    const { data } = await api.patch(`/users/${id}/pin`, payload);
     return data;
   },
 };
