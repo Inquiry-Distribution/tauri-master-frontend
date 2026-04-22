@@ -1,6 +1,7 @@
 import { Avatar } from "@/src/components/ui/avatar";
 import { Button } from "@/src/components/ui/button";
 import { Card } from "@/src/components/ui/card";
+import ReassignInquiryModal from "@/src/components/ui/distributeInquiry/reassignInquiry/reassignInquiry";
 import { Icon } from "@/src/components/ui/inquiryDetail/icons";
 import {
   Divider,
@@ -13,9 +14,9 @@ import {
 } from "@/src/components/ui/inquiryDetail/inquiryDetailComp";
 import { useTheme } from "@/src/contexts";
 import { useGetInquiryById } from "@/src/hooks/inquiry/useGetInquiryById";
-import { Inquiry } from "@/src/types/inquiry";
+import { Inquiry, InquiryNote } from "@/src/types/inquiry";
 import { formatDateTime } from "@/src/utils/utils";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 
 // const MOCK_INQUIRY: Inquiry = {
@@ -80,6 +81,7 @@ export default function InquiryDetailPage() {
   const { id } = useParams();
 
   const { isDark } = useTheme();
+  const [isReassignOpen, setIsReassignOpen] = useState(false);
   //   const inquiry = MOCK_INQUIRY; // swap with useQuery / useFetch hook
   const { data: inquiry, loading, error, getInquiryById } = useGetInquiryById();
   const shortId = inquiry?.id.slice(0, 8).toUpperCase() ?? "";
@@ -106,13 +108,13 @@ export default function InquiryDetailPage() {
         </button>
 
         <div className="flex items-center gap-2">
-          <Button variant="secondary">
+          <Button variant="secondary" onClick={() => setIsReassignOpen(true)}>
             <span className="flex items-center gap-1.5">
               {Icon.refresh}
               Reassign
             </span>
           </Button>
-          <Button variant="primary">Mark as Closed</Button>
+          {/* <Button variant="primary">Mark as Closed</Button> */}
         </div>
       </div>
 
@@ -183,11 +185,11 @@ export default function InquiryDetailPage() {
           <Card>
             <div className="flex items-center justify-between mb-3">
               <SectionHeading>Notes</SectionHeading>
-              <button className="text-xs text-(--accent) hover:underline font-medium">
+              {/* <button className="text-xs text-(--accent) hover:underline font-medium">
                 + Add note
-              </button>
+              </button> */}
             </div>
-            {inquiry?.notes.length === 0 ? (
+            {inquiry?.notes?.length === 0 ? (
               <div
                 className="rounded-lg p-4 text-center"
                 style={{ background: "var(--surfaceElevated)" }}
@@ -195,7 +197,20 @@ export default function InquiryDetailPage() {
                 <p className="text-sm text-(--textMuted)">No notes yet.</p>
               </div>
             ) : (
-              <div className="space-y-2">{/* map notes here */}</div>
+              <div className="space-y-2">
+                {inquiry?.notes?.map((note: InquiryNote) => (
+                  <div
+                    key={note.id}
+                    className="p-3 rounded-lg border border-(--border) bg-(--surface)"
+                  >
+                    <p className="text-sm text-(--text)">{note.text}</p>
+
+                    <div className="mt-1 text-xs text-(--textMuted)">
+                      {note.addedBy?.name} · {formatDateTime(note.createdAt)}
+                    </div>
+                  </div>
+                ))}
+              </div>
             )}
           </Card>
 
@@ -355,6 +370,17 @@ export default function InquiryDetailPage() {
           </Card>
         </div>
       </div>
+      {isReassignOpen && inquiry?.id && (
+        <ReassignInquiryModal
+          inquiryId={inquiry.id}
+          assignedTo={inquiry.assignedTo}
+          onClose={() => setIsReassignOpen(false)}
+          onSuccess={() => {
+            // optional: refetch inquiry after reassignment
+            getInquiryById(inquiry.id);
+          }}
+        />
+      )}
     </div>
   );
 }
