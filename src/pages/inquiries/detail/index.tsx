@@ -12,6 +12,7 @@ import {
   StatusBadge,
   TimelineItem,
 } from "@/src/components/ui/inquiryDetail/inquiryDetailComp";
+import Lightbox from "@/src/components/ui/lightbox";
 import { useTheme } from "@/src/contexts";
 import { useGetInquiryById } from "@/src/hooks/inquiry/useGetInquiryById";
 import { Inquiry, InquiryNote } from "@/src/types/inquiry";
@@ -77,10 +78,15 @@ import { useParams } from "react-router-dom";
 //   ],
 // };
 
+const toUrl = (path: string) =>
+  `${import.meta.env.VITE_PUBLIC_ASSET_URL}` + path;
+
 export default function InquiryDetailPage() {
   const { id } = useParams();
 
   const { isDark } = useTheme();
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
   const [isReassignOpen, setIsReassignOpen] = useState(false);
   //   const inquiry = MOCK_INQUIRY; // swap with useQuery / useFetch hook
   const { data: inquiry, loading, error, getInquiryById } = useGetInquiryById();
@@ -91,6 +97,12 @@ export default function InquiryDetailPage() {
       getInquiryById(id);
     }
   }, [id, getInquiryById]);
+
+  const lightboxItems =
+    inquiry?.images?.map((img: any) => ({
+      url: toUrl(img.url), // adjust if backend needs full URL
+      name: img.filename,
+    })) || [];
 
   return (
     <div
@@ -171,12 +183,20 @@ export default function InquiryDetailPage() {
                 Attachments ({inquiry?.images?.length ?? 0})
               </SectionHeading>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                {inquiry?.images?.map((img: Inquiry["images"][number]) => (
-                  <>
-                    {/* <pre>{JSON.stringify(img)}</pre> */}
-                    <ImageThumb key={img.id} img={img} />
-                  </>
-                ))}
+                {inquiry?.images?.map(
+                  (img: Inquiry["images"][number], i: number) => (
+                    <div
+                      key={img.id}
+                      onClick={() => {
+                        setLightboxIndex(i);
+                        setLightboxOpen(true);
+                      }}
+                      className="cursor-pointer"
+                    >
+                      <ImageThumb img={img} />
+                    </div>
+                  ),
+                )}
               </div>
             </Card>
           )}
@@ -381,6 +401,21 @@ export default function InquiryDetailPage() {
           }}
         />
       )}
+
+      <Lightbox
+        items={lightboxItems}
+        open={lightboxOpen}
+        initialIndex={lightboxIndex}
+        onClose={() => setLightboxOpen(false)}
+        // onDelete={(i) => {
+        //   console.log("delete image at index:", i);
+
+        //   // optional: call API + refetch
+        //   // deleteInquiryImage(inquiry.id, lightboxItems[i].id)
+
+        //   setLightboxOpen(false);
+        // }}
+      />
     </div>
   );
 }

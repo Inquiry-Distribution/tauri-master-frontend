@@ -224,41 +224,43 @@ const Lightbox = ({
 
         <div className="flex items-center gap-2">
           {/* 🗑 Delete */}
-          <button
-            onClick={() => {
-              //   if (confirm("Delete this image?")) {
-              //     onDelete?.(index);
-              //   }
-              Swal.fire({
-                title: "Delete this image?",
-                text: "You won't be able to undo this!",
-                icon: "warning",
-                showCancelButton: true,
-                confirmButtonText: "Yes, delete it",
-                cancelButtonText: "Cancel",
-              }).then((result) => {
-                if (result.isConfirmed) {
-                  onDelete?.(index);
+          {typeof onDelete === "function" && (
+            <button
+              onClick={() => {
+                //   if (confirm("Delete this image?")) {
+                //     onDelete?.(index);
+                //   }
+                Swal.fire({
+                  title: "Delete this image?",
+                  text: "You won't be able to undo this!",
+                  icon: "warning",
+                  showCancelButton: true,
+                  confirmButtonText: "Yes, delete it",
+                  cancelButtonText: "Cancel",
+                }).then((result) => {
+                  if (result.isConfirmed) {
+                    onDelete?.(index);
 
-                  Swal.fire(
-                    "Deleted!",
-                    "Your image has been removed.",
-                    "success",
-                  );
-                }
-              });
-            }}
-            className="p-2 rounded-lg backdrop-blur-md transition hover:scale-110 active:scale-95"
-            style={{
-              background: isDark
-                ? "rgba(220,38,38,0.6)"
-                : "rgba(255,255,255,0.7)",
-              border: `1px solid ${tokens.border}`,
-            }}
-            title="Delete"
-          >
-            <Trash2 size={16} />
-          </button>
+                    Swal.fire(
+                      "Deleted!",
+                      "Your image has been removed.",
+                      "success",
+                    );
+                  }
+                });
+              }}
+              className="p-2 rounded-lg backdrop-blur-md transition hover:scale-110 active:scale-95"
+              style={{
+                background: isDark
+                  ? "rgba(220,38,38,0.6)"
+                  : "rgba(255,255,255,0.7)",
+                border: `1px solid ${tokens.border}`,
+              }}
+              title="Delete"
+            >
+              <Trash2 size={16} />
+            </button>
+          )}
 
           {/* ❌ Close */}
           <button
