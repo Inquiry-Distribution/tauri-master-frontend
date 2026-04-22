@@ -116,18 +116,18 @@ export const getAttendanceColumns = ({
       ),
     },
 
-    {
-      key: "actions",
-      label: "Action",
-      render: (row) => (
-        <button
-          onClick={() => setSelectedUserId(row.salespersonId)}
-          className="text-xs px-3 py-1 rounded-md bg-(--primary) text-white hover:opacity-80"
-        >
-          View
-        </button>
-      ),
-    },
+    // {
+    //   key: "actions",
+    //   label: "Action",
+    //   render: (row) => (
+    //     <button
+    //       onClick={() => setSelectedUserId(row.salespersonId)}
+    //       className="text-xs px-3 py-1 rounded-md bg-(--primary) text-white hover:opacity-80"
+    //     >
+    //       View
+    //     </button>
+    //   ),
+    // },
   ];
 };
 
@@ -235,20 +235,20 @@ export const getAttendancePersonColumns = ({
       },
     },
 
-    {
-      key: "actions",
-      label: "Action",
-      render: (row) =>
-        setSelectedUserId ? (
-          <button
-            onClick={() => setSelectedUserId(row.salespersonId)}
-            className="px-3 py-1 text-xs rounded-md bg-(--primary) text-white hover:opacity-80"
-          >
-            View
-          </button>
-        ) : (
-          <span className="text-xs text-(--textMuted)">—</span>
-        ),
-    },
+    // {
+    //   key: "actions",
+    //   label: "Action",
+    //   render: (row) =>
+    //     setSelectedUserId ? (
+    //       <button
+    //         onClick={() => setSelectedUserId(row.salespersonId)}
+    //         className="px-3 py-1 text-xs rounded-md bg-(--primary) text-white hover:opacity-80"
+    //       >
+    //         View
+    //       </button>
+    //     ) : (
+    //       <span className="text-xs text-(--textMuted)">—</span>
+    //     ),
+    // },
   ];
 };

@@ -28,11 +28,11 @@ export default function Header() {
 
   return (
     <header
-      className="h-16 border-b flex items-center justify-between px-4 md:px-6 transition-colors duration-200 sticky top-0 z-30"
+      className="h-16 border-b flex items-center justify-between px-4 md:px-6 transition-colors duration-200 sticky top-0 z-30 lg:z-50"
       style={{ backgroundColor: tokens.surface, borderColor: tokens.border }}
     >
       <div className="flex items-center gap-4 flex-1 max-w-xl">
-        <button
+        {/* <button
           onClick={toggleSidebar}
           className="p-2 rounded-lg hover:bg-opacity-10 transition-colors"
           style={{ color: tokens.textSec, backgroundColor: tokens.borderLight }}
@@ -43,6 +43,17 @@ export default function Header() {
             <Menu size={20} />
           )}
           <Menu size={20} className="hidden lg:block" />
+        </button> */}
+        <button
+          onClick={() => {
+            console.log("Toggling sidebar. Current state: CLICK", sidebarOpen);
+            toggleSidebar();
+          }}
+          className="p-2 rounded-lg transition-colors hover:bg-opacity-10 cursor-pointer"
+          style={{ color: tokens.textSec, backgroundColor: tokens.borderLight }}
+        >
+          {/* <Menu size={20} /> */}
+          {sidebarOpen === true ? <X size={20} /> : <Menu size={20} />}
         </button>
 
         <div className="relative w-full group hidden sm:block">

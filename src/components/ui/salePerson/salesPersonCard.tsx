@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Mail, Phone, MoreVertical, Edit } from "lucide-react";
 import { SalesPerson } from "@/src/types/users";
 import { cn } from "@/src/utils/utils";
@@ -15,36 +15,48 @@ import {
 } from "../distributeInquiry/shareInquiry/helpers";
 import ButtonLoader from "../loader/buttonLoader";
 import Swal from "sweetalert2";
+import SetResetPinForm from "./setResetPinForm";
+import { useResetDeviceBySalesPerson } from "@/src/hooks/salesPerson/useResetDeviceBySalesPerson";
 
 interface Props {
   person: SalesPerson;
   onViewReport?: (person: SalesPerson) => void;
   onToggleStatus?: (person: SalesPerson) => void;
+  onUpdated?: (updated: SalesPerson) => void;
 }
 
-const defaultStats = {
-  status: "active",
-  performance: 75,
-  totalInquiries: 0,
-  closedInquiries: 0,
-  avatar: "https://ui-avatars.com/api/?name=User",
-};
+// const defaultStats = {
+//   status: "active",
+//   performance: 75,
+//   totalInquiries: 0,
+//   closedInquiries: 0,
+//   avatar: "https://ui-avatars.com/api/?name=User",
+// };
 
 export default function SalesPersonCard({
   person,
   onViewReport,
   onToggleStatus,
+  onUpdated,
 }: Props) {
   const { tokens } = useTheme();
   const [updateUserModal, setUpdateUserModal] = useState<boolean>(false);
+  const [setResetPinModal, setSetResetPinModal] = useState<boolean>(false);
+  const [status, setStatus] = useState(person.isActive ? "active" : "inactive");
   const {
     toggleActiveStatus,
     loading: toggleLoading,
     error: toggleError,
   } = useToggleActiveStatus();
+  const {
+    resetDevice,
+    loading: resetLoading,
+    error: resetError,
+  } = useResetDeviceBySalesPerson();
   const handleToggleStatus = async () => {
     try {
       await toggleActiveStatus(person.id);
+      setStatus((prev) => (prev === "active" ? "inactive" : "active"));
       onToggleStatus?.(person);
     } catch (error) {
       Swal.fire({
@@ -55,6 +67,35 @@ export default function SalesPersonCard({
     }
   };
 
+  const handleResetDevice = async (id: string) => {
+    try {
+      const result = await Swal.fire({
+        title: "Reset device?",
+        text: "You won't be able to undo this!",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Yes, reset it",
+        cancelButtonText: "Cancel",
+      });
+
+      if (!result.isConfirmed) return;
+
+      await resetDevice(id);
+
+      Swal.fire({
+        icon: "success",
+        title: "Device reset successfully",
+      });
+    } catch (error: any) {
+      console.error(error);
+
+      Swal.fire({
+        icon: "error",
+        title: "Failed to reset device",
+        text: String(error.response?.data?.message) || "Something went wrong",
+      });
+    }
+  };
   // ✅ Merge API data with defaults
   // const data = {
   //   ...defaultStats,
@@ -64,24 +105,22 @@ export default function SalesPersonCard({
   //     `https://ui-avatars.com/api/?name=${encodeURIComponent(person.name)}`,
   // };
   const inquiries = person.inquiries;
-
-  const totalInquiries = inquiries?.total ?? 0;
-  const closedInquiries = inquiries?.closed ?? 0;
-
-  const performance = inquiries?.total
-    ? Math.round((inquiries.converted / inquiries.total) * 100)
-    : 0;
+  const attendance = person.attendance;
 
   const data = {
     ...person,
 
     status: person.isActive ? "active" : "inactive",
 
-    totalInquiries,
-    closedInquiries,
-    performance,
+    totalInquiries: inquiries?.total ?? 0,
+    closedInquiries: inquiries?.closed ?? 0,
 
-    avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(person.name)}`,
+    // use API conversionRate instead of recalculating
+    performance: parseFloat(inquiries?.conversionRate?.replace("%", "") || "0"),
+
+    avatar:
+      person?.profileImage ||
+      `https://ui-avatars.com/api/?name=${encodeURIComponent(person.name)}`,
   };
 
   const performanceColor =
@@ -90,6 +129,10 @@ export default function SalesPersonCard({
       : data.performance >= 40
         ? tokens.warning
         : tokens.danger;
+
+  // useEffect(() => {
+  //   setStatus(person.isActive ? "active" : "inactive");
+  // }, [person.isActive]);
   return (
     <div
       className="rounded-2xl border overflow-hidden transition-all duration-200 hover:shadow-xl"
@@ -162,7 +205,7 @@ export default function SalesPersonCard({
             </div>
           </div>
 
-          <button className="opacity-60">⋮</button>
+          {/* <button className="opacity-60">⋮</button> */}
         </div>
 
         {/* Info */}
@@ -338,39 +381,52 @@ export default function SalesPersonCard({
           backgroundColor: tokens.bg + "30",
         }}
       >
-        <button
+        {/* <button
           onClick={() => onViewReport?.(data)}
           className="text-sm font-bold text-blue-600 hover:underline"
         >
           View Full Report
-        </button>
+        </button> */}
         <Button
           onClick={() => handleToggleStatus()}
           type="button"
           variant="ghost"
           style={{
-            background: statusUserBg(!toggleLoading ? data.status : ""),
-            color: statusUserColor(!toggleLoading ? data.status : ""),
+            background: statusUserBg(!toggleLoading ? status : ""),
+            color: statusUserColor(!toggleLoading ? status : ""),
           }}
         >
           {toggleLoading ? (
             <ButtonLoader />
-          ) : data.status === "active" ? (
+          ) : status === "active" ? (
             "Active"
           ) : (
             "Inactive"
           )}
         </Button>
+
         <Button
           type="button"
           variant="secondary"
-          size="xs"
+          size="md"
+          onClick={() => setSetResetPinModal(true)}
+        >
+          Reset Pin
+          {/* <Edit size={15} /> */}
+        </Button>
+        <Button
+          type="button"
+          variant="secondary"
+          size="md"
           onClick={() => setUpdateUserModal(true)}
         >
-          <Edit size={15} />
+          <Edit size={15} /> Edit
+        </Button>
+        <Button variant="danger" onClick={() => handleResetDevice(data.id)}>
+          {resetLoading ? <ButtonLoader /> : "Reset Device"}
         </Button>
 
-        <button
+        {/* <button
           onClick={() => onToggleStatus?.(data)}
           className={cn(
             "text-xs font-bold px-3 py-1.5 rounded-lg transition-colors",
@@ -380,7 +436,7 @@ export default function SalesPersonCard({
           )}
         >
           {data.status === "active" ? "Block Agent" : "Unblock Agent"}
-        </button>
+        </button> */}
       </div>
       {updateUserModal && (
         <Modal
@@ -392,6 +448,21 @@ export default function SalesPersonCard({
             salesPersonId={data.id}
             person={data}
             onClose={() => setUpdateUserModal(false)}
+            onUpdated={(updated) => {
+              onUpdated?.(updated);
+            }}
+          />
+        </Modal>
+      )}
+      {setResetPinModal && (
+        <Modal
+          title="(Re)Set Pin"
+          onClose={() => setSetResetPinModal(false)}
+          width={400}
+        >
+          <SetResetPinForm
+            salesPersonId={data.id}
+            onClose={() => setSetResetPinModal(false)}
           />
         </Modal>
       )}

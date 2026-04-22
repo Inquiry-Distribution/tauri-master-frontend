@@ -39,11 +39,37 @@ export default function Sidebar() {
   return (
     <aside
       className={cn(
-        "fixed lg:relative z-50 h-full flex flex-col border-r transition-all duration-300 ease-in-out",
-        sidebarOpen
-          ? "w-64 translate-x-0"
-          : "w-0 -translate-x-full lg:w-20 lg:translate-x-0",
+        "fixed lg:relative h-full flex flex-col border-r transition-all duration-300 ease-in-out",
+        "z-50 lg:z-auto",
+        isMobile
+          ? sidebarOpen
+            ? "translate-x-0 w-64"
+            : "-translate-x-full w-64 pointer-events-none"
+          : sidebarOpen
+            ? "w-64"
+            : "w-20",
       )}
+      // className={cn(
+      //   "fixed lg:relative z-50 h-full flex flex-col border-r transition-all duration-300 ease-in-out",
+      //   sidebarOpen ? "w-64" : "w-20",
+      //   isMobile && !sidebarOpen && "-translate-x-full",
+      // )}
+      // className={cn(
+      //   "fixed top-0 left-0 lg:relative z-50 h-full flex flex-col border-r transition-all duration-300 ease-in-out",
+      //   isMobile
+      //     ? sidebarOpen
+      //       ? "w-64 translate-x-0"
+      //       : "-translate-x-full"
+      //     : sidebarOpen
+      //       ? "w-64"
+      //       : "w-20",
+      // )}
+      // className={cn(
+      //   "fixed lg:relative z-50 h-full flex flex-col border-r transition-all duration-300 ease-in-out",
+      //   sidebarOpen
+      //     ? "w-64 translate-x-0"
+      //     : "w-0 -translate-x-full lg:w-20 lg:translate-x-0",
+      // )}
       style={{
         backgroundColor: tokens.sidebarBg,
         borderColor: tokens.sidebarBorder,
@@ -51,7 +77,7 @@ export default function Sidebar() {
       }}
     >
       <div className="p-6 flex items-center justify-between">
-        <div className="flex items-center gap-3 overflow-hidden">
+        <div className="flex items-center gap-3 overflow-visible">
           <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-lg shadow-blue-500/20 shrink-0">
             <BarChart3 size={24} />
           </div>
@@ -65,7 +91,7 @@ export default function Sidebar() {
             InquiryHub
           </span>
         </div>
-        {isMobile && (
+        {isMobile && sidebarOpen && (
           <button
             type="button"
             title="Close Sidebar"

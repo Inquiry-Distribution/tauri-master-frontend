@@ -15,12 +15,14 @@ const InquiryForm = () => {
     description: string;
     mobile: string;
     inquiryTime: string;
+    source:string;
     // salesPersonId: string;
     images: File[];
   }>({
     description: "",
     mobile: "",
     inquiryTime: "",
+    source:"",
     // salesPersonId: "",
     images: [],
   });
@@ -53,6 +55,7 @@ const InquiryForm = () => {
       formData.append("mobile", form.mobile);
       formData.append("inquiryTime", form.inquiryTime);
       formData.append("salesPersonId", salesPersonIdFromDistributor);
+      formData.append("source", form.source);
 
       // ✅ append files correctly
       if (form.images && form.images.length > 0) {
@@ -70,6 +73,7 @@ const InquiryForm = () => {
         description: "",
         mobile: "",
         inquiryTime: "",
+        source:"",
         images: [],
       });
       navigate("/inquiries");
@@ -98,12 +102,19 @@ const InquiryForm = () => {
           inputValue={form.description}
           onChange={handleChange}
         />
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-3  gap-4">
           <Input
             label="Mobile"
             inputName="mobile"
             placeholder="9876543210"
             inputValue={form.mobile}
+            onChange={handleChange}
+          />
+          <Input
+            label="Source"
+            inputName="source"
+            placeholder="Enter Source..."
+            inputValue={form.source}
             onChange={handleChange}
           />
           <Input

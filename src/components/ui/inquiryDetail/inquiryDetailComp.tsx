@@ -147,7 +147,7 @@ export function ImageThumb({ img }: { img: InquiryImage }) {
         style={{ background: "var(--surfaceElevated)" }}
       >
         {/* Show image if URL is absolute; otherwise show placeholder */}
-        {img.url.startsWith("/app") ? (
+        {img.url.startsWith("inquiries") ? (
           <img
             src={assetURL ? assetURL + removeprefix(img.url, "/app") : img.url}
             alt={filename}

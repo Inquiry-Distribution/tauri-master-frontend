@@ -60,7 +60,10 @@ export default function AttendancePage() {
   const [selectedPerson, setSelectedPerson] = useState<SalesPerson | null>(
     null,
   );
+
+  const [filterMode, setFilterMode] = useState<"date" | "range">("date");
   const [showFilters1, setShowFilters1] = useState(false);
+  const [activeFilter1, setActiveFilter1] = useState("30d");
   const [status1, setStatus1] = useState<string | null>(null);
   const [page1, setPage1] = useState(1);
   const [limit1, setLimit1] = useState(10);
@@ -84,9 +87,11 @@ export default function AttendancePage() {
   const today = new Date();
   const oneMonthAgo = new Date();
   oneMonthAgo.setMonth(today.getMonth() - 1);
-
+  const [from1, setFrom1] = useState(formatDate(oneMonthAgo));
+  const [to1, setTo1] = useState(formatDate(today));
   const [from, setFrom] = useState(formatDate(oneMonthAgo));
   const [to, setTo] = useState(formatDate(today));
+
   const columns = useMemo(
     () =>
       getAttendanceColumns({
@@ -114,7 +119,8 @@ export default function AttendancePage() {
     if (activeTab !== "byDate") return;
 
     const queryObj: Record<string, string> = {
-      ...(date ? { date } : {}),
+      ...(filterMode === "date" && date ? { date } : {}),
+      ...(filterMode === "range" ? { from: from1, to: to1 } : {}),
       ...(status1 ? { status: status1 } : {}),
       ...(debouncedSearch ? { search: debouncedSearch } : {}),
       ...(page1 ? { page: String(page1) } : {}),
@@ -130,7 +136,17 @@ export default function AttendancePage() {
       setAttendance1(records);
       setTotalPages1(Math.ceil(total / limit1));
     });
-  }, [activeTab, date, status1, debouncedSearch, page1, limit1]);
+  }, [
+    activeTab,
+    date,
+    from1, // ✅ add this
+    to1, // ✅ add this
+    status1,
+    debouncedSearch,
+    page1,
+    limit1,
+  ]);
+
   // useEffect(() => {
   //   if (activeTab !== "byPerson") return;
   //   if (!personId) return;
@@ -181,6 +197,17 @@ export default function AttendancePage() {
       lastQueryRef.current = cacheKey;
     });
   }, [personId, activeTab, from, to, status2, page2, limit2]);
+
+  const applyRange1 = (type: string) => {
+    const { from, to } = getDateRange(type);
+    setDate("");
+
+    setFrom1(formatDate(from));
+    setTo1(formatDate(to));
+
+    setFilterMode("range"); // ✅ key
+    setPage1(1);
+  };
   const applyRange = (type: string) => {
     if (!personId) return; // ✅ guard
 
@@ -244,7 +271,11 @@ export default function AttendancePage() {
                       value={date}
                       onChange={(e) => {
                         setDate(e.target.value);
+                        setFilterMode("date"); // ✅ key
                         setPage1(1);
+                        setFrom1("");
+setTo1("");
+setActiveFilter1("");
                       }}
                     />
                   </div>
@@ -257,6 +288,66 @@ export default function AttendancePage() {
                 </div>
                 {showFilters1 && (
                   <>
+                  <div className="flex flex-wrap items-center justify-start gap-4">
+                    <div className="flex flex-wrap items-center justify-start gap-2">
+                      <div
+                        className="text-sm font-medium"
+                        style={{ color: tokens.textMuted }}
+                      >
+                        Date Range:
+                      </div>
+                      <Button
+                        size="sm"
+                        variant={activeFilter1 === "7d" ? "primary" : "ghost"}
+                        onClick={() => {
+                          setActiveFilter1("7d");
+
+                          applyRange1("7d");
+                        }}
+                      >
+                        Last 7 days
+                      </Button>
+
+                      <Button
+                        size="sm"
+                        variant={activeFilter1 === "30d" ? "primary" : "ghost"}
+                        onClick={() => {
+                          setActiveFilter1("30d");
+
+                          applyRange1("30d");
+                        }}
+                      >
+                        Last 30 days
+                      </Button>
+
+                      <Button
+                        size="sm"
+                        variant={
+                          activeFilter1 === "thisMonth" ? "primary" : "ghost"
+                        }
+                        onClick={() => {
+                          setActiveFilter1("thisMonth");
+
+                          applyRange1("thisMonth");
+                        }}
+                      >
+                        This Month
+                      </Button>
+
+                      <Button
+                        size="sm"
+                        variant={
+                          activeFilter1 === "lastMonth" ? "primary" : "ghost"
+                        }
+                        onClick={() => {
+                          setActiveFilter1("lastMonth");
+
+                          applyRange1("lastMonth");
+                        }}
+                      >
+                        Last Month
+                      </Button>
+                    </div>
                     {/* STATUS FILTER */}
                     <div className="flex flex-wrap items-center gap-2">
                       <div
@@ -309,6 +400,59 @@ export default function AttendancePage() {
                       >
                         Half Day
                       </Button>
+                    </div>
+                    </div>
+                    <div className=" lg:w-1/3 md:w-1/2 w-full grid lg:grid-cols-10 md:grid-cols-6 grid-cols-4 gap-2">
+                      <div className="lg:col-span-4 md:col-span-2 sm:col-span-1">
+                        <Input
+                          label="From"
+                          inputName="from"
+                          inputType="date"
+                          inputValue={from1}
+                          onChange={(e) => {
+                            setFrom1(e.target.value);
+                            setFilterMode("range"); // ✅ key
+                            setActiveFilter1("");
+                            setPage1(1);
+                          }}
+                          placeholder="From date"
+                          showLabel={false}
+                        />
+                      </div>
+                      <div className="text-text font-semibold text-2xl w-full flex items-center justify-center col-span-1">
+                        →
+                      </div>
+                      <div className="lg:col-span-4 md:col-span-2 sm:col-span-1">
+                        <Input
+                          label="To"
+                          inputName="to"
+                          inputType="date"
+                          inputValue={to1}
+                          onChange={(e) => {
+                            setTo1(e.target.value);
+                            setFilterMode("range"); // ✅ key
+                            setActiveFilter1("");
+                            setPage1(1);
+                          }}
+                          placeholder="To date"
+                          showLabel={false}
+                        />
+                      </div>
+                      {/* <div className="col-span-1 flex items-end justify-end">
+                        <Button
+                          size="sm"
+                          variant="primary"
+                          onClick={() => {
+                            setPage1(1); // trigger refetch
+                          }}
+                          disabled={loading}
+                        >
+                          
+                          <RefreshCcw
+                            className={loading ? "animate-spin" : ""}
+                          />
+                        </Button>
+                      </div> */}
                     </div>
                   </>
                 )}
@@ -500,7 +644,7 @@ export default function AttendancePage() {
                           showLabel={false}
                         />
                       </div>
-                      <div className="col-span-1 flex items-end justify-end">
+                      {/* <div className="col-span-1 flex items-end justify-end">
                         <Button
                           size="sm"
                           variant="primary"
@@ -509,12 +653,12 @@ export default function AttendancePage() {
                           }}
                           disabled={loading}
                         >
-                          {/* {loading ? <ButtonLoader/> : <RefreshCcw/>} */}
+                          
                           <RefreshCcw
                             className={loading ? "animate-spin" : ""}
                           />
                         </Button>
-                      </div>
+                      </div> */}
                     </div>
                   </>
                 )}

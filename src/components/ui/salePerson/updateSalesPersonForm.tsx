@@ -16,10 +16,12 @@ const UpdateSalesPersonForm = ({
   salesPersonId,
   person,
   onClose,
+  onUpdated,
 }: {
   salesPersonId: string;
   person: SalesPerson;
   onClose: () => void;
+  onUpdated?: (updated: SalesPerson) => void;
 }) => {
   const { updateUser, loading, error } = useUpdateUser();
 
@@ -27,6 +29,7 @@ const UpdateSalesPersonForm = ({
     name: person.name,
     email: person.email,
     phone: person?.phone || "",
+    employeeId: person.employeeId || "",
   });
 
   const handleChange = (e: any) => {
@@ -37,23 +40,24 @@ const UpdateSalesPersonForm = ({
   };
 
   const handleSubmit = async () => {
-    // e.preventDefault();
     try {
-      // ✅ append files correctly
-      console.log(form);
+      const updated = await updateUser(salesPersonId, form);
 
-      await updateUser(salesPersonId, form);
       Swal.fire({
         icon: "success",
         title: "Sales Person Updated.",
-        text: "Your sales person has been updated successfully!",
       });
+
+      onUpdated?.({
+        ...person,
+        ...form, // merge new values
+      });
+
       onClose();
     } catch (err) {
       Swal.fire({
         icon: "error",
         title: "Error Updating Sales Person.",
-        text: "Please try again later!",
       });
     }
   };
@@ -65,6 +69,13 @@ const UpdateSalesPersonForm = ({
           inputName="name"
           placeholder="Name"
           inputValue={form.name}
+          onChange={handleChange}
+        />
+        <Input
+          label="Employee ID"
+          inputName="employeeId"
+          placeholder="Employee ID"
+          inputValue={form.employeeId}
           onChange={handleChange}
         />
         <Input
