@@ -4,6 +4,8 @@ import { ThemeContext } from "@/src/contexts/index";
 import { listen } from "@tauri-apps/api/event";
 import { convertFileSrc } from "@tauri-apps/api/core";
 import { readFile, stat } from "@tauri-apps/plugin-fs";
+import Lightbox from "../lightbox";
+import Swal from "sweetalert2";
 
 export type UploadedFile = {
   file: File;
@@ -34,8 +36,47 @@ const FileInput = ({
   const inputRef = useRef<HTMLInputElement>(null);
   const [files, setFiles] = useState<UploadedFile[]>([]);
   const [dragging, setDragging] = useState(false);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
 
   const isHandledRef = useRef(false);
+
+  const pressTimer = useRef<NodeJS.Timeout | null>(null);
+  const [pressingIndex, setPressingIndex] = useState<number | null>(null);
+
+  const handleTouchStart = (i: number) => {
+    setPressingIndex(i);
+
+    pressTimer.current = setTimeout(() => {
+      setPressingIndex(null);
+
+      Swal.fire({
+        title: "Delete this image?",
+        text: "You won't be able to undo this!",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Yes, delete it",
+        cancelButtonText: "Cancel",
+      }).then((result) => {
+        if (result.isConfirmed) {
+          removeFile(i);
+
+          Swal.fire("Deleted!", "Your image has been removed.", "success");
+        }
+      });
+      // if (confirm("Delete this image?")) {
+      //   removeFile(i);
+      // }
+    }, 600);
+  };
+
+  const handleTouchEnd = () => {
+    setPressingIndex(null);
+
+    if (pressTimer.current) {
+      clearTimeout(pressTimer.current);
+    }
+  };
 
   const ctx = useContext(ThemeContext);
   if (!ctx) return null;
@@ -201,11 +242,16 @@ const FileInput = ({
       window.removeEventListener("paste", handlePaste);
     };
   }, [disabled]);
+  // useEffect(() => {
+  //   return () => {
+  //     files.forEach((f) => URL.revokeObjectURL(f.url));
+  //   };
+  // }, [files]);
   useEffect(() => {
     return () => {
       files.forEach((f) => URL.revokeObjectURL(f.url));
     };
-  }, [files]);
+  }, []);
 
   return (
     <div className="w-full flex flex-col gap-2">
@@ -278,12 +324,24 @@ const FileInput = ({
 
       {/* Image preview grid */}
       {files.length > 0 && (
-        <div className="grid grid-cols-7 gap-3 mt-1">
+        // <div className="grid lg:grid-cols-15 md:grid-cols-6 gap-4 mt-1">
+        <div className="flex flex-wrap w-full items-center justify-start gap-4 mt-1">
           {files.map((f, i) => (
             <div
               key={i}
-              className="group relative aspect-square w-25 h-25 rounded-xl overflow-hidden"
+              onClick={() => {
+                setLightboxIndex(i);
+                setLightboxOpen(true);
+              }}
+              onTouchStart={() => handleTouchStart(i)}
+              onTouchEnd={handleTouchEnd}
+              className="group relative aspect-square w-25 h-25 rounded-xl overflow-hidden cursor-pointer transition-transform duration-150"
               style={{
+                transform: pressingIndex === i ? "scale(0.95)" : "scale(1)",
+                boxShadow:
+                  pressingIndex === i
+                    ? "0 4px 10px rgba(0,0,0,0.2)"
+                    : "0 8px 20px rgba(0,0,0,0.3)",
                 border: `1px solid ${tokens.border}`,
                 backgroundColor: tokens.bg,
               }}
@@ -305,16 +363,21 @@ const FileInput = ({
                 <button
                   type="button"
                   title="Preview"
+                  // onClick={(e) => {
+                  //   e.stopPropagation();
+                  //   window.open(f.url, "_blank");
+                  // }}
                   onClick={(e) => {
                     e.stopPropagation();
-                    window.open(f.url, "_blank");
+                    setLightboxIndex(i);
+                    setLightboxOpen(true);
                   }}
                   className="w-8 h-8 rounded-lg flex items-center justify-center transition-transform hover:scale-110"
                   style={{ backgroundColor: "rgba(255,255,255,0.9)" }}
                 >
                   <Eye size={14} style={{ color: tokens.accent }} />
                 </button>
-                <button
+                {/* <button
                   type="button"
                   title="Remove"
                   onClick={(e) => {
@@ -325,7 +388,7 @@ const FileInput = ({
                   style={{ backgroundColor: "rgba(255,255,255,0.9)" }}
                 >
                   <Trash2 size={14} style={{ color: tokens.danger }} />
-                </button>
+                </button> */}
               </div>
 
               {/* File name tooltip at bottom */}
@@ -382,6 +445,25 @@ const FileInput = ({
           {files.length} of {limit} files uploaded
         </p>
       )}
+      <Lightbox
+        open={lightboxOpen}
+        initialIndex={lightboxIndex}
+        onClose={() => setLightboxOpen(false)}
+        items={files.map((f) => ({
+          url: f.url,
+          name: f.file.name,
+        }))}
+        onDelete={(i) => {
+          removeFile(i);
+          if (files.length > 1) {
+            setLightboxIndex((prev) =>
+              prev >= files.length - 1 ? prev - 1 : prev,
+            );
+          } else {
+            setLightboxOpen(false);
+          }
+        }}
+      />
     </div>
   );
 };
