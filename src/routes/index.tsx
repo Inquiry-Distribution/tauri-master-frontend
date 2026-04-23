@@ -45,7 +45,7 @@ export default function AppRoutes() {
             { path: "sales-persons", element: <SalesPersonsPage /> },
             { path: "sales-persons/:id", element: <SalesPersonReportPage /> },
             { path: "devices", element: <DevicesPage /> },
-            { path: "ai-reports", element: <AIReportsPage /> },
+            // { path: "ai-reports", element: <AIReportsPage /> },
             { path: "attendance", element: <AttendancePage /> },
             { path: "*", element: <NotFound /> },
           ],
