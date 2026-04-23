@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTheme } from "../../contexts";
 import {
   Smartphone,
@@ -8,14 +8,17 @@ import {
   User,
   Clock,
 } from "lucide-react";
-import { Device } from "../../types";
+
 import { Card } from "@/src/components/ui/card";
 import { Button } from "@/src/components/ui/button";
 import DynamicTable from "@/src/components/ui/table/dynamicTable";
 import { TableColumn } from "@/src/components/ui/table/types";
 import { cn } from "../../utils/utils";
-import { buildColumns, INITIAL_DEVICES } from "./data";
+import { buildColumns, DUMMY_API_DEVICES } from "./data";
 import { LiveLocationsCard } from "./deviceComponents";
+import { mapApiToUIDevice, UIDevice } from "@/src/mappers/device.mapper";
+import { useGetAllDevices } from "@/src/hooks/device/useGetAllDevices";
+import { Device } from "@/src/types/devices";
 
 // ── Mock data ───────────────────────────────────────────────────────────────
 
@@ -25,7 +28,26 @@ export default function DevicesPage() {
   const { tokens } = useTheme();
 
   // Devices state
-  const [devices, setDevices] = useState<Device[]>(INITIAL_DEVICES);
+  const [devices, setDevices] = useState<Device[]>([]);
+
+  const { data, loading, error, getDevices } = useGetAllDevices();
+
+  useEffect(() => {
+    getDevices();
+  }, [getDevices]);
+
+  useEffect(() => {
+    if (Array.isArray(data)) {
+      setDevices(data);
+    } else {
+      setDevices([]); // no fallback
+    }
+  }, [data]);
+
+  //dummyData
+  // useEffect(() => {
+  //   setDevices(DUMMY_API_DEVICES);
+  // }, []);
 
   // Table state
   const [search, setSearch] = useState("");
@@ -37,25 +59,21 @@ export default function DevicesPage() {
   // Toggle block/unblock
   const handleToggle = (id: string) =>
     setDevices((prev) =>
-      prev.map((d) =>
-        d.id === id
-          ? { ...d, status: d.status === "active" ? "blocked" : "active" }
-          : d,
-      ),
+      prev?.map((d) => (d.id === id ? { ...d, isBlocked: !d.isBlocked } : d)),
     );
 
   // Filter + sort
   const filtered = devices
     .filter((d) =>
-      [d.deviceName, d.os, d.id, d.salesPersonId, d.status]
+      [d.platform, d.appVersion, d.id, d.salespersonId, d.isBlocked]
         .join(" ")
         .toLowerCase()
         .includes(search.toLowerCase()),
     )
     .sort((a, b) => {
       if (!sortKey || !sortDir) return 0;
-      const av = String(a[sortKey] ?? "");
-      const bv = String(b[sortKey] ?? "");
+      const av = String(a[sortKey as keyof Device] ?? "");
+      const bv = String(b[sortKey as keyof Device] ?? "");
       return sortDir === "asc" ? av.localeCompare(bv) : bv.localeCompare(av);
     });
 
@@ -102,6 +120,7 @@ export default function DevicesPage() {
                   setRowsPerPage(n);
                   setPage(1);
                 }}
+                searchable={false}
                 searchTerm={search}
                 onSearchChange={(v) => {
                   setSearch(v);
