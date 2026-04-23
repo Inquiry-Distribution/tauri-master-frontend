@@ -21,6 +21,22 @@ export type Device = {
     name: string;
     email: string;
     phone: string;
+    employeeId: string;
   };
   blockedBy: string | null;
+};
+
+export type DeviceLocation = {
+  id: string;
+  deviceId: string;
+  isBlocked: boolean;
+  lastLat: string;
+  lastLng: string;
+  lastAddress: null;
+  lastLocatedAt: string;
+  lastSeen: string;
+  salesperson: {
+    id: string;
+    name: string;
+  };
 };

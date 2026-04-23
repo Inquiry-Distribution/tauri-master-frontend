@@ -33,6 +33,7 @@ export const DUMMY_API_DEVICES: Device[] = [
       name: "Rahul Sharma",
       email: "rahul.sharma@example.com",
       phone: "9876543210",
+      employeeId: "0001",
     },
     blockedBy: null,
   },
@@ -59,6 +60,7 @@ export const DUMMY_API_DEVICES: Device[] = [
       name: "Priya Verma",
       email: "priya.verma@example.com",
       phone: "9123456780",
+      employeeId: "0002",
     },
     blockedBy: "Admin User",
   },
@@ -85,6 +87,7 @@ export const DUMMY_API_DEVICES: Device[] = [
       name: "Amit Kumar",
       email: "amit.kumar@example.com",
       phone: "9988776655",
+      employeeId: "0003",
     },
     blockedBy: null,
   },
@@ -111,6 +114,7 @@ export const DUMMY_API_DEVICES: Device[] = [
       name: "Neha Singh",
       email: "neha.singh@example.com",
       phone: "9001122334",
+      employeeId: "0004",
     },
     blockedBy: null,
   },
@@ -222,9 +226,9 @@ export function buildColumns(
           <p className="font-medium text-(--text)">
             {row.salesperson?.name || "Unassigned"}
           </p>
-          <p className="text-xs text-(--textMuted)">
-            {row.salesperson?.id || "—"}
-          </p>
+          {/* <p className="text-xs text-(--textMuted)">
+            {row.salesperson?.employeeId || "—"}
+          </p> */}
         </div>
       ),
     },
@@ -234,7 +238,9 @@ export function buildColumns(
       label: "Mobile",
       sortable: true,
       render: (row) => (
-        <span className="text-sm text-(--text)">{row.mobileNumber || "—"}</span>
+        <span className="text-sm text-(--text)">
+          {row.salesperson.phone || "—"}
+        </span>
       ),
     },
 

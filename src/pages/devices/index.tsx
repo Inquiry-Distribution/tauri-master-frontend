@@ -112,6 +112,7 @@ export default function DevicesPage() {
               <DynamicTable<Device>
                 columns={columns}
                 data={paginated}
+                loading={loading}
                 currentPage={page}
                 rowsPerPage={rowsPerPage}
                 totalPages={totalPages}
@@ -142,7 +143,7 @@ export default function DevicesPage() {
         </div>
 
         {/* Sidebar */}
-        <LiveLocationsCard devices={devices} />
+        <LiveLocationsCard />
       </div>
     </div>
   );

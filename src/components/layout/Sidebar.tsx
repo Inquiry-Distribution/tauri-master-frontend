@@ -49,27 +49,6 @@ export default function Sidebar() {
             ? "w-64"
             : "w-20",
       )}
-      // className={cn(
-      //   "fixed lg:relative z-50 h-full flex flex-col border-r transition-all duration-300 ease-in-out",
-      //   sidebarOpen ? "w-64" : "w-20",
-      //   isMobile && !sidebarOpen && "-translate-x-full",
-      // )}
-      // className={cn(
-      //   "fixed top-0 left-0 lg:relative z-50 h-full flex flex-col border-r transition-all duration-300 ease-in-out",
-      //   isMobile
-      //     ? sidebarOpen
-      //       ? "w-64 translate-x-0"
-      //       : "-translate-x-full"
-      //     : sidebarOpen
-      //       ? "w-64"
-      //       : "w-20",
-      // )}
-      // className={cn(
-      //   "fixed lg:relative z-50 h-full flex flex-col border-r transition-all duration-300 ease-in-out",
-      //   sidebarOpen
-      //     ? "w-64 translate-x-0"
-      //     : "w-0 -translate-x-full lg:w-20 lg:translate-x-0",
-      // )}
       style={{
         backgroundColor: tokens.sidebarBg,
         borderColor: tokens.sidebarBorder,
