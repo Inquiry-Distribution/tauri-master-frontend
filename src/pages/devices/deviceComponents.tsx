@@ -2,9 +2,13 @@
 
 import { Button } from "@/src/components/ui/button";
 import { Card } from "@/src/components/ui/card";
-import { Device } from "@/src/types";
-import { cn } from "@/src/utils/utils";
+import ButtonLoader from "@/src/components/ui/loader/buttonLoader";
+import { useBlockDevice } from "@/src/hooks/device/useBlockDevice";
+import { useUnblockDevice } from "@/src/hooks/device/useUnblockDevice";
+import { Device } from "@/src/types/devices";
+import { cn, formatLat, formatLng } from "@/src/utils/utils";
 import { MapPin, Shield, ShieldOff, Smartphone } from "lucide-react";
+import { useCallback } from "react";
 
 /** Left cell: device icon + name/OS */
 export function DeviceInfo({ device }: { device: Device }) {
@@ -13,7 +17,7 @@ export function DeviceInfo({ device }: { device: Device }) {
       <div
         className={cn(
           "w-10 h-10 rounded-xl flex items-center justify-center shrink-0",
-          device.status === "active"
+          device.isBlocked
             ? "bg-blue-100 text-blue-600 dark:bg-blue-900/30"
             : "bg-red-100 text-red-600 dark:bg-red-900/30",
         )}
@@ -21,9 +25,9 @@ export function DeviceInfo({ device }: { device: Device }) {
         <Smartphone size={20} />
       </div>
       <div>
-        <p className="text-sm font-bold leading-tight">{device.deviceName}</p>
+        <p className="text-sm font-bold leading-tight">{device.platform}</p>
         <p className="text-xs text-(--textMuted)">
-          {device.os} · {device.id}
+          {device.appVersion} · {device.id}
         </p>
       </div>
     </div>
@@ -57,17 +61,40 @@ export function DeviceToggleButton({
   onToggle,
 }: {
   device: Device;
-  onToggle: (id: string) => void;
+  onToggle?: (id: string, nextState: boolean) => void;
 }) {
-  const isActive = device.status === "active";
+  const isActive = !device.isBlocked;
+
+  const { blockDevice, loading: blocking } = useBlockDevice();
+
+  const { unblockDevice, loading: unblocking } = useUnblockDevice();
+
+  const loading = blocking || unblocking;
+
+  const handleToggle = useCallback(async () => {
+    try {
+      if (isActive) {
+        await blockDevice(device.id);
+        onToggle?.(device.id, false); // now blocked
+      } else {
+        await unblockDevice(device.id);
+        onToggle?.(device.id, true); // now unblocked
+      }
+    } catch (err) {
+      // optional: toast or logging
+      console.error(err);
+    }
+  }, [isActive, device.id, blockDevice, unblockDevice, onToggle]);
+
   return (
     <Button
       size="sm"
       variant={isActive ? "danger" : "secondary"}
       icon={isActive ? ShieldOff : Shield}
-      onClick={() => onToggle(device.id)}
+      onClick={handleToggle}
+      disabled={loading}
     >
-      {isActive ? "Block" : "Unblock"}
+      {loading ? <ButtonLoader /> : isActive ? "Block" : "Unblock"}
     </Button>
   );
 }
@@ -76,7 +103,7 @@ export function DeviceToggleButton({
 export function CoordBadge({ lat, lng }: { lat: number; lng: number }) {
   return (
     <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-800 text-(--textMuted) tabular-nums">
-      {lat.toFixed(2)}, {lng.toFixed(2)}
+      {formatLat(lat)},{formatLng(lng)}
     </span>
   );
 }
@@ -111,14 +138,17 @@ export function LiveLocationsCard({ devices }: { devices: Device[] }) {
               <div
                 className={cn(
                   "w-2 h-2 rounded-full",
-                  device.status === "active" ? "bg-green-500" : "bg-red-400",
+                  device.isBlocked ? "bg-blue-500" : "bg-red-400",
                 )}
               />
               <span className="text-xs font-medium text-(--text)">
-                Agent {device.salesPersonId}
+                Agent {device.salespersonId}
               </span>
             </div>
-            <CoordBadge lat={device.location.lat} lng={device.location.lng} />
+            <CoordBadge
+              lat={Number(device.lastLat)}
+              lng={Number(device.lastLng)}
+            />
           </div>
         ))}
       </div>

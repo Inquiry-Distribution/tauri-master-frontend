@@ -22,6 +22,13 @@ export function formatTime(iso: string) {
   });
 }
 
+export const formatTimeHM = (date: string | number | Date) =>
+  new Intl.DateTimeFormat("en-GB", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).format(new Date(date));
+
 export function formatDateTime(iso: string) {
   return `${formatDate(iso)}, ${formatTime(iso)}`;
 }
@@ -49,3 +56,9 @@ export function useDebounce(value: any, delay = 400) {
 
   return debouncedValue;
 }
+
+export const formatLat = (lat: number) =>
+  `${Math.abs(lat).toFixed(2)}° ${lat >= 0 ? "N" : "S"}`;
+
+export const formatLng = (lng: number) =>
+  `${Math.abs(lng).toFixed(2)}° ${lng >= 0 ? "E" : "W"}`;
