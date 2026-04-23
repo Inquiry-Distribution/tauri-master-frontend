@@ -31,7 +31,7 @@ export default function AppRoutes() {
       element: <ForgotPasswordPage />,
     },
     {
-      element: <ProtectedRoute allowedRoles={["admin"]} />,
+      element: <ProtectedRoute allowedRoles={["admin", "superuser"]} />,
       children: [
         {
           path: "/",

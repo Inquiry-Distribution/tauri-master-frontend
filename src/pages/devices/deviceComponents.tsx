@@ -2,13 +2,17 @@
 
 import { Button } from "@/src/components/ui/button";
 import { Card } from "@/src/components/ui/card";
+import { LiveDeviceMap } from "@/src/components/ui/leafletMap/LiveDeviceMap";
 import ButtonLoader from "@/src/components/ui/loader/buttonLoader";
+import CommonLoader from "@/src/components/ui/loader/loader";
 import { useBlockDevice } from "@/src/hooks/device/useBlockDevice";
+import { useGetAllDevicesLocations } from "@/src/hooks/device/useGetAllDeviceLocations";
 import { useUnblockDevice } from "@/src/hooks/device/useUnblockDevice";
 import { Device } from "@/src/types/devices";
 import { cn, formatLat, formatLng } from "@/src/utils/utils";
 import { MapPin, Shield, ShieldOff, Smartphone } from "lucide-react";
-import { useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
+import Swal from "sweetalert2";
 
 /** Left cell: device icon + name/OS */
 export function DeviceInfo({ device }: { device: Device }) {
@@ -74,11 +78,29 @@ export function DeviceToggleButton({
   const handleToggle = useCallback(async () => {
     try {
       if (isActive) {
-        await blockDevice(device.id);
-        onToggle?.(device.id, false); // now blocked
+        try {
+          await blockDevice(device.id);
+          onToggle?.(device.id, false); // now blocked
+        } catch (err) {
+          Swal.fire({
+            title: "Error",
+            text: "Failed to block device.",
+            icon: "error",
+          });
+          console.error("Error", err);
+        }
       } else {
-        await unblockDevice(device.id);
-        onToggle?.(device.id, true); // now unblocked
+        try {
+          await unblockDevice(device.id);
+          onToggle?.(device.id, true); // now unblocked
+        } catch (err) {
+          Swal.fire({
+            title: "Error",
+            text: "Failed to unblock device.",
+            icon: "error",
+          });
+          console.error("Error", err);
+        }
       }
     } catch (err) {
       // optional: toast or logging
@@ -109,7 +131,18 @@ export function CoordBadge({ lat, lng }: { lat: number; lng: number }) {
 }
 
 /** Sidebar card showing agent dot + coordinates */
-export function LiveLocationsCard({ devices }: { devices: Device[] }) {
+export function LiveLocationsCard() {
+  const { data, loading, error, getDeviceLocations } =
+    useGetAllDevicesLocations();
+
+  const [selectedDeviceId, setSelectedDeviceId] = useState<string | null>(null);
+
+  useEffect(() => {
+    getDeviceLocations();
+  }, [getDeviceLocations]);
+
+  const devices = data || []; // adjust if API shape differs
+
   return (
     <Card>
       <h3 className="font-bold mb-4 flex items-center gap-2 text-(--text)">
@@ -118,22 +151,47 @@ export function LiveLocationsCard({ devices }: { devices: Device[] }) {
       </h3>
 
       {/* Map placeholder */}
-      <div className="aspect-square rounded-xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center border border-(--border)">
-        <div className="text-center p-6">
-          <MapPin size={48} className="mx-auto mb-4 opacity-20" />
-          <p className="text-sm font-medium text-(--textSec)">
-            Interactive Map View
-          </p>
-          <p className="text-xs mt-1 text-(--textMuted)">
-            Click to expand and view all device locations in real-time.
-          </p>
+      {loading ? (
+        <div className="aspect-square rounded-xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center border border-(--border)">
+          <div className="text-center p-6">
+            <MapPin size={48} className="mx-auto mb-4 opacity-20" />
+            <p className="text-sm font-medium text-(--textSec)">
+              Interactive Map View
+            </p>
+            <p className="text-xs mt-1 text-(--textMuted)">
+              Click to expand and view all device locations in real-time.
+            </p>
+
+            {loading && (
+              <div className="text-xs mt-3 text-blue-500">
+                <CommonLoader fullScreen={false} overlay={true} />
+              </div>
+            )}
+
+            {error && <p className="text-xs mt-3 text-red-500">{error}</p>}
+          </div>
         </div>
-      </div>
+      ) : (
+        <LiveDeviceMap
+          devices={devices}
+          height="350px"
+          zoom={6}
+          selectedDeviceId={selectedDeviceId}
+          onSelectDevice={setSelectedDeviceId}
+        />
+      )}
 
       {/* Agent list */}
       <div className="mt-6 space-y-4">
         {devices.map((device) => (
-          <div key={device.id} className="flex items-center justify-between">
+          <div
+            key={device.id}
+            onClick={() => setSelectedDeviceId(device.id)}
+            className={cn(
+              "flex items-center justify-between cursor-pointer p-2 rounded",
+              selectedDeviceId === device.id && "bg-gray-100 dark:bg-gray-800",
+            )}
+          >
             <div className="flex items-center gap-2">
               <div
                 className={cn(
@@ -141,10 +199,12 @@ export function LiveLocationsCard({ devices }: { devices: Device[] }) {
                   device.isBlocked ? "bg-blue-500" : "bg-red-400",
                 )}
               />
+
               <span className="text-xs font-medium text-(--text)">
-                Agent {device.salespersonId}
+                Agent {device.salesperson?.name}
               </span>
             </div>
+
             <CoordBadge
               lat={Number(device.lastLat)}
               lng={Number(device.lastLng)}
