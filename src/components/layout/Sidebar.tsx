@@ -22,7 +22,7 @@ const menuItems = [
   { icon: Users, label: "Sales Persons", path: "/sales-persons" },
   { icon: Calendar, label: "Attendance", path: "/attendance" },
   { icon: Smartphone, label: "Devices", path: "/devices" },
-  { icon: BarChart3, label: "AI Reports", path: "/ai-reports" },
+  // { icon: BarChart3, label: "AI Reports", path: "/ai-reports" },
 ];
 
 export default function Sidebar() {
