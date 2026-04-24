@@ -28,6 +28,7 @@ import Swal from "sweetalert2";
 import ButtonLoader from "@/src/components/ui/loader/buttonLoader";
 import { Button } from "@/src/components/ui/button";
 import { exportInquiryStyled } from "@/src/xls-convert/inquiry.export";
+import EditInquiryForm from "./edit/_form";
 // import { exportInquiryExcel } from "@/src/xls-convert/inquiry.export";
 
 export default function InquiriesPage() {
@@ -44,9 +45,9 @@ export default function InquiriesPage() {
 
   const [selectedInquiry, setSelectedInquiry] = useState<any | null>(null);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
-  const { data, loading, error, getInquiries } = useGetInquiries();
+  const { data, loading, setData, error, getInquiries } = useGetInquiries();
   const { deleteInquiry, loading: deleteLoading } = useDeleteInquiry();
-
+  const [editingInquiry, setEditingInquiry] = useState<Inquiry | null>(null);
   const handleDelete = async (id: string) => {
     const result = await Swal.fire({
       title: "Are you sure?",
@@ -84,8 +85,15 @@ export default function InquiriesPage() {
         setSelectedInquiry,
         deleteLoading,
         onDelete: handleDelete,
+        setEditInquiry: setEditingInquiry,
       }),
-    [setSelectedUserId, setSelectedInquiry, handleDelete, deleteLoading],
+    [
+      setSelectedUserId,
+      setSelectedInquiry,
+      handleDelete,
+      deleteLoading,
+      setEditingInquiry,
+    ],
   );
 
   useEffect(() => {
@@ -204,6 +212,27 @@ export default function InquiriesPage() {
           <NotificationForm
             userId={selectedUserId!}
             onClose={() => setSelectedUserId(null)}
+          />
+        </Modal>
+      )}
+
+      {editingInquiry && (
+        <Modal
+          title="Edit Inquiry"
+          onClose={() => setEditingInquiry(null)}
+          width={600}
+        >
+          <EditInquiryForm
+            initialData={editingInquiry}
+            onSuccess={(updated) => {
+              setData((prev: any) => ({
+                ...prev,
+                inquiries: prev.inquiries.map((inq: Inquiry) =>
+                  inq.id === updated.id ? updated : inq,
+                ),
+              }));
+              setEditingInquiry(null);
+            }}
           />
         </Modal>
       )}

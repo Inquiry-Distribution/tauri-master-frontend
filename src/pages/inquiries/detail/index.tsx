@@ -13,70 +13,15 @@ import {
   TimelineItem,
 } from "@/src/components/ui/inquiryDetail/inquiryDetailComp";
 import Lightbox from "@/src/components/ui/lightbox";
+import { Modal } from "@/src/components/ui/modal";
 import { useTheme } from "@/src/contexts";
 import { useGetInquiryById } from "@/src/hooks/inquiry/useGetInquiryById";
 import { Inquiry, InquiryNote } from "@/src/types/inquiry";
 import { formatDateTime } from "@/src/utils/utils";
+import { Edit } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-
-// const MOCK_INQUIRY: Inquiry = {
-//   id: "602a1d67-5545-4ef4-8d02-72e379b9bb37",
-//   title: null,
-//   description: "abalsdjlk",
-//   type: "text_image",
-//   source: null,
-//   status: "assigned",
-//   priority: "medium",
-//   mobile: "1231231231",
-//   inquiryTime: "12:34",
-//   assignedToId: "a826acc6-8742-481a-b145-b6a25fd07aa4",
-//   assignedById: "1adeea63-7be7-413f-a35a-06c201610529",
-//   assignedAt: "2026-04-14T10:48:07.024Z",
-//   uploadedById: "1adeea63-7be7-413f-a35a-06c201610529",
-//   visibleUntil: "2026-04-15T10:48:07.024Z",
-//   isConverted: false,
-//   convertedAt: null,
-//   createdAt: "2026-04-14T10:48:07.029Z",
-//   updatedAt: "2026-04-14T10:48:07.029Z",
-//   assignedTo: {
-//     id: "a826acc6-8742-481a-b145-b6a25fd07aa4",
-//     name: "Sneha Joshi",
-//     email: "sneha@inquiry.com",
-//   },
-//   assignedBy: {
-//     id: "1adeea63-7be7-413f-a35a-06c201610529",
-//     name: "Rajesh Kumar",
-//   },
-//   uploadedBy: {
-//     id: "1adeea63-7be7-413f-a35a-06c201610529",
-//     name: "Rajesh Kumar",
-//   },
-//   images: [
-//     {
-//       id: "d20a92bb-567e-4d81-aca5-6af7ba01d350",
-//       inquiryId: "602a1d67-5545-4ef4-8d02-72e379b9bb37",
-//       url: "uploads\\inquiries\\5d56462f-276e-473c-92ae-7dfefdd46019.png",
-//       filename: "uploads\\inquiries\\5d56462f-276e-473c-92ae-7dfefdd46019.png",
-//       size: null,
-//       createdAt: "2026-04-14T10:48:07.029Z",
-//     },
-//   ],
-//   notes: [],
-//   statusHistory: [
-//     {
-//       id: "903869ad-e590-4ccd-858a-74656ab781f0",
-//       inquiryId: "602a1d67-5545-4ef4-8d02-72e379b9bb37",
-//       status: "assigned",
-//       changedById: "1adeea63-7be7-413f-a35a-06c201610529",
-//       changedAt: "2026-04-14T10:48:07.055Z",
-//       changedBy: {
-//         id: "1adeea63-7be7-413f-a35a-06c201610529",
-//         name: "Rajesh Kumar",
-//       },
-//     },
-//   ],
-// };
+import EditInquiryForm from "../edit/_form";
 
 const toUrl = (path: string) =>
   `${import.meta.env.VITE_PUBLIC_ASSET_URL}` + path;
@@ -88,8 +33,15 @@ export default function InquiryDetailPage() {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const [isReassignOpen, setIsReassignOpen] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
   //   const inquiry = MOCK_INQUIRY; // swap with useQuery / useFetch hook
-  const { data: inquiry, loading, error, getInquiryById } = useGetInquiryById();
+  const {
+    data: inquiry,
+    setData: setInquiry,
+    loading,
+    error,
+    getInquiryById,
+  } = useGetInquiryById();
   const shortId = inquiry?.id.slice(0, 8).toUpperCase() ?? "";
 
   useEffect(() => {
@@ -124,6 +76,11 @@ export default function InquiryDetailPage() {
             <span className="flex items-center gap-1.5">
               {Icon.refresh}
               Reassign
+            </span>
+          </Button>
+          <Button variant="secondary" onClick={() => setIsEditOpen(true)}>
+            <span className="flex items-center gap-1.5">
+              <Edit size={20} /> Edit
             </span>
           </Button>
           {/* <Button variant="primary">Mark as Closed</Button> */}
@@ -400,6 +357,28 @@ export default function InquiryDetailPage() {
             getInquiryById(inquiry.id);
           }}
         />
+      )}
+      {isEditOpen && inquiry && (
+        <Modal
+          title="Edit Inquiry"
+          onClose={() => setIsEditOpen(false)}
+          width={600}
+        >
+          <EditInquiryForm
+            initialData={inquiry}
+            onClose={() => setIsEditOpen(false)}
+            onSuccess={(updated) => {
+              setIsEditOpen(false);
+
+              // 👇 optimistic UI update
+              if (updated) {
+                // depends on your hook implementation
+                // assuming `setData` exists
+                setInquiry(updated);
+              }
+            }}
+          />
+        </Modal>
       )}
 
       <Lightbox

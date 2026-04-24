@@ -8,7 +8,7 @@ import { getPriorityStyleMap, getStatusStyleMap } from "./create/inquiryStyles";
 import { Link } from "react-router-dom";
 import { useState } from "react";
 import ButtonLoader from "@/src/components/ui/loader/buttonLoader";
-import { Trash } from "lucide-react";
+import { Edit, Trash } from "lucide-react";
 
 type ColumnDeps = {
   setSelectedUserId: (id: string) => void;
@@ -16,6 +16,7 @@ type ColumnDeps = {
   deleteLoading: boolean;
   onDelete: (id: string) => void; // 👈 add this
   tokens?: any;
+  setEditInquiry: (inquiry: Inquiry | null) => void;
 };
 
 export const getInquiryColumns = ({
@@ -23,6 +24,7 @@ export const getInquiryColumns = ({
   setSelectedInquiry,
   deleteLoading,
   onDelete,
+  setEditInquiry,
 }: ColumnDeps): TableColumn<Inquiry>[] => {
   return [
     {
@@ -147,6 +149,9 @@ export const getInquiryColumns = ({
             onClick={() => setSelectedInquiry(row)}
           >
             {row.status === "assigned" ? "Reassign" : "Assign"}
+          </Button>
+          <Button variant="secondary" onClick={() => setEditInquiry(row)}>
+            <Edit size={16} />
           </Button>
           <Button variant="danger" onClick={() => onDelete(row.id)}>
             {deleteLoading ? <ButtonLoader /> : <Trash size={16} />}
