@@ -24,7 +24,7 @@ function DynamicTable<T extends Record<string, any>>({
   onRowsPerPageChange,
   pagination = true,
   showRowsPerPage = true,
-  rowsPerPageOptions = [10, 25, 50],
+  rowsPerPageOptions = [10, 25, 50, 100],
 
   searchTerm = "",
   onSearchChange,

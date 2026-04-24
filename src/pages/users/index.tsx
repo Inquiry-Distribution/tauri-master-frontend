@@ -9,12 +9,15 @@ import {
   Mail,
   Award,
   TrendingUp,
+  Download,
 } from "lucide-react";
 import { SalesPerson } from "@/src/types/users";
 import { cn } from "../../utils/utils";
 import SalesPersonCard from "@/src/components/ui/salePerson/salesPersonCard";
 import { useSalesPerson } from "@/src/hooks/salesPerson/useSalesPerson";
 import SectionLoader from "@/src/components/ui/loader/sectionLoader";
+import { Button } from "@/src/components/ui/button";
+import { exportSalesPersonExcel } from "@/src/xls-convert/salesPerson.export";
 
 // const mockSalesPersons: SalesPerson[] = [
 //   {
@@ -117,10 +120,14 @@ export default function SalesPersonsPage() {
             Manage your sales persons and monitor their performance.
           </p>
         </div>
-        <button className="flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm text-white bg-blue-600 hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/20">
+        <Button onClick={() => exportSalesPersonExcel(salesPersons)}>
+          <Download size={18} />
+        </Button>
+
+        {/* <button className="flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm text-white bg-blue-600 hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/20">
           <Plus size={18} />
           Add Sales Person
-        </button>
+        </button> */}
       </div>
 
       {/* ❌ Error State */}

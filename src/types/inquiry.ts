@@ -8,6 +8,14 @@ export type CreateInquiryPayload = {
   source: string;
   images: File;
 };
+export type EditInquiryPayload = {
+  description: string;
+  mobile: string;
+  inquiryTime: string;
+  // salesPersonId: string;
+  source: string;
+  images: File;
+};
 
 // ===== Root Response =====
 export interface InquiryListResponse {

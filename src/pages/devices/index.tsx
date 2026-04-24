@@ -7,6 +7,7 @@ import {
   ShieldOff,
   User,
   Clock,
+  Download,
 } from "lucide-react";
 
 import { Card } from "@/src/components/ui/card";
@@ -19,6 +20,7 @@ import { LiveLocationsCard } from "./deviceComponents";
 import { mapApiToUIDevice, UIDevice } from "@/src/mappers/device.mapper";
 import { useGetAllDevices } from "@/src/hooks/device/useGetAllDevices";
 import { Device } from "@/src/types/devices";
+import { exportDeviceExcel } from "@/src/xls-convert/device.export";
 
 // ── Mock data ───────────────────────────────────────────────────────────────
 
@@ -105,8 +107,11 @@ export default function DevicesPage() {
         {/* Devices table */}
         <div className="lg:col-span-2">
           <Card className="!p-0 overflow-hidden">
-            <div className="px-6 py-4 border-b border-(--border)">
+            <div className=" flex justify-between items-center px-6 py-4 border-b border-(--border)">
               <h3 className="font-bold text-(--text)">Active Devices</h3>
+              <Button onClick={() => exportDeviceExcel(devices)}>
+                <Download size={18} />
+              </Button>
             </div>
             <div className="p-4">
               <DynamicTable<Device>

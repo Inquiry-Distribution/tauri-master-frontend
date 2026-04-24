@@ -1,7 +1,10 @@
 // src/services/inquiry.service.ts
 
 import { api } from "@/src/api/axios";
-import type { CreateInquiryPayload } from "@/src/types/inquiry";
+import type {
+  CreateInquiryPayload,
+  EditInquiryPayload,
+} from "@/src/types/inquiry";
 
 export const InquiryService = {
   getInquiries: async (query: string) => {
@@ -19,6 +22,10 @@ export const InquiryService = {
         "Content-Type": "multipart/form-data",
       },
     });
+    return data;
+  },
+  editInquiry: async (id: string, payload: FormData) => {
+    const { data } = await api.patch(`/inquiries/${id}`, payload);
     return data;
   },
   reassignInquiry: async (id: string, payload: { salesPersonId: string }) => {
