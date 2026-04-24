@@ -9,6 +9,7 @@ import {
   AlertCircle,
   CheckCircle,
   Clock,
+  Download,
 } from "lucide-react";
 import { cn } from "../../utils/utils";
 // import { Inquiry } from "../../types";
@@ -25,147 +26,10 @@ import ReassignInquiryModal from "@/src/components/ui/distributeInquiry/reassign
 import { useDeleteInquiry } from "@/src/hooks/inquiry/useDeleteInquiry";
 import Swal from "sweetalert2";
 import ButtonLoader from "@/src/components/ui/loader/buttonLoader";
+import { Button } from "@/src/components/ui/button";
+import { exportInquiryStyled } from "@/src/xls-convert/inquiry.export";
+// import { exportInquiryExcel } from "@/src/xls-convert/inquiry.export";
 
-// type InquiryRow = {
-//   id: number;
-//   customerName: string;
-//   email: string;
-//   phone: string;
-//   source: string;
-//   status: "assigned" | "unassigned";
-//   description: string;
-//   location: { lat: number; lng: number; address: string };
-//   assignedTo?: string | null;
-//   createdAt: string;
-// };
-
-// const mockInquiries: InquiryRow[] = [
-//   {
-//     id: 1,
-//     customerName: "Alice Johnson",
-//     email: "alice@example.com",
-//     phone: "+1 234 567 890",
-//     source: "Website",
-//     status: "unassigned",
-//     createdAt: "2024-03-20T10:00:00Z",
-//     description: "Interested in premium plan",
-//     location: { lat: 40.7128, lng: -74.006, address: "New York, NY" },
-//   },
-//   {
-//     id: 2,
-//     customerName: "Bob Smith",
-//     email: "bob@example.com",
-//     phone: "+1 987 654 321",
-//     source: "Referral",
-//     status: "assigned",
-//     assignedTo: "sales-1",
-//     createdAt: "2024-03-19T15:30:00Z",
-//     description: "Needs a demo of the dashboard",
-//     location: { lat: 34.0522, lng: -118.2437, address: "Los Angeles, CA" },
-//   },
-//   {
-//     id: 3,
-//     customerName: "Charlie Brown",
-//     email: "charlie@example.com",
-//     phone: "+1 555 000 111",
-//     source: "Social Media",
-//     status: "unassigned",
-//     createdAt: "2024-03-20T09:15:00Z",
-//     description: "Pricing inquiry for enterprise",
-//     location: { lat: 41.8781, lng: -87.6298, address: "Chicago, IL" },
-//   },
-// ];
-
-// const inquiryColumns: TableColumn<InquiryRow>[] = [
-//   {
-//     key: "customerName",
-//     label: "Customer",
-//     sortable: true,
-//     render: (row) => (
-//       <div className="flex items-center gap-3">
-//         <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 font-bold">
-//           {row.customerName.charAt(0)}
-//         </div>
-//         <div>
-//           <p className="font-bold text-sm text-(--text)">{row.customerName}</p>
-//           <p className="text-xs text-(--textSec)">{row.email}</p>
-//         </div>
-//       </div>
-//     ),
-//   },
-
-//   {
-//     key: "source",
-//     label: "Source",
-//     sortable: true,
-//     render: (row) => (
-//       <span className="text-sm text-(--textSec)">{row.source}</span>
-//     ),
-//   },
-
-//   {
-//     key: "status",
-//     label: "Status",
-//     sortable: true,
-//     render: (row) =>
-//       row.status === "unassigned" ? (
-//         <span className="flex w-fit items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-(--warningLight) text-(--warning)">
-//           <AlertCircle size={12} />
-//           Unassigned
-//         </span>
-//       ) : (
-//         <span className="flex w-fit items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-(--successLight) text-(--success)">
-//           <CheckCircle size={12} />
-//           Assigned
-//         </span>
-//       ),
-//   },
-
-//   {
-//     key: "assignedTo",
-//     label: "Assigned To",
-//     render: (row) =>
-//       row.assignedTo ? (
-//         <div className="flex items-center gap-2">
-//           <div className="w-6 h-6 rounded-full bg-gray-200 dark:bg-gray-700" />
-//           <span className="text-sm font-medium text-(--text)">
-//             Sales Agent {row.assignedTo.split("-")[1]}
-//           </span>
-//         </div>
-//       ) : (
-//         <button className="flex items-center gap-1.5 text-xs font-bold text-blue-600 hover:underline">
-//           <UserPlus size={14} />
-//           Assign Now
-//         </button>
-//       ),
-//   },
-
-//   {
-//     key: "createdAt",
-//     label: "Date",
-//     sortable: true,
-//     render: (row) => (
-//       <div className="flex items-center gap-1.5 text-sm text-(--textSec)">
-//         <Clock size={14} />
-//         {new Date(row.createdAt).toLocaleDateString()}
-//       </div>
-//     ),
-//   },
-
-//   {
-//     key: "actions",
-//     label: "Actions",
-//     align: "right",
-//     render: () => (
-//       <button
-//         title="More Actions"
-//         className="p-2 rounded-lg hover:bg-(--borderLight) transition-colors"
-//       >
-//         <MoreHorizontal size={18} className="text-(--textMuted)" />
-//       </button>
-//     ),
-//   },
-// ];
 export default function InquiriesPage() {
   const { tokens } = useTheme();
   const [searchTerm, setSearchTerm] = useState("");
@@ -299,6 +163,9 @@ export default function InquiriesPage() {
           <Filter size={18} />
           Filters
         </button>
+        <Button onClick={() => exportInquiryStyled(inquiries)}>
+          <Download size={18} />
+        </Button>
       </div>
 
       <Tabs

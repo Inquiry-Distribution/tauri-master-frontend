@@ -1,6 +1,13 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useTheme } from "../../contexts";
-import { Search, Filter, Plus, RefreshCcw, Calendar1 } from "lucide-react";
+import {
+  Search,
+  Filter,
+  Plus,
+  RefreshCcw,
+  Calendar1,
+  Download,
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useGetAllAttendance } from "@/src/hooks/attendance/useGetAllAttendance";
 
@@ -14,6 +21,7 @@ import { useRef } from "react";
 import Input from "@/src/components/ui/form/input";
 import { Button } from "@/src/components/ui/button";
 import { useDebounce } from "@/src/utils/utils";
+import { exportAttendanceExcel } from "@/src/xls-convert/attendance.export";
 
 const formatDate = (date: Date) => date.toISOString().split("T")[0];
 
@@ -274,8 +282,8 @@ export default function AttendancePage() {
                         setFilterMode("date"); // ✅ key
                         setPage1(1);
                         setFrom1("");
-setTo1("");
-setActiveFilter1("");
+                        setTo1("");
+                        setActiveFilter1("");
                       }}
                     />
                   </div>
@@ -285,122 +293,127 @@ setActiveFilter1("");
                   >
                     <Filter size={18} />
                   </Button>
+                  <Button onClick={() => exportAttendanceExcel(attendance1)}>
+                    <Download size={18} />
+                  </Button>
                 </div>
                 {showFilters1 && (
                   <>
-                  <div className="flex flex-wrap items-center justify-start gap-4">
-                    <div className="flex flex-wrap items-center justify-start gap-2">
-                      <div
-                        className="text-sm font-medium"
-                        style={{ color: tokens.textMuted }}
-                      >
-                        Date Range:
+                    <div className="flex flex-wrap items-center justify-start gap-4">
+                      <div className="flex flex-wrap items-center justify-start gap-2">
+                        <div
+                          className="text-sm font-medium"
+                          style={{ color: tokens.textMuted }}
+                        >
+                          Date Range:
+                        </div>
+                        <Button
+                          size="sm"
+                          variant={activeFilter1 === "7d" ? "primary" : "ghost"}
+                          onClick={() => {
+                            setActiveFilter1("7d");
+
+                            applyRange1("7d");
+                          }}
+                        >
+                          Last 7 days
+                        </Button>
+
+                        <Button
+                          size="sm"
+                          variant={
+                            activeFilter1 === "30d" ? "primary" : "ghost"
+                          }
+                          onClick={() => {
+                            setActiveFilter1("30d");
+
+                            applyRange1("30d");
+                          }}
+                        >
+                          Last 30 days
+                        </Button>
+
+                        <Button
+                          size="sm"
+                          variant={
+                            activeFilter1 === "thisMonth" ? "primary" : "ghost"
+                          }
+                          onClick={() => {
+                            setActiveFilter1("thisMonth");
+
+                            applyRange1("thisMonth");
+                          }}
+                        >
+                          This Month
+                        </Button>
+
+                        <Button
+                          size="sm"
+                          variant={
+                            activeFilter1 === "lastMonth" ? "primary" : "ghost"
+                          }
+                          onClick={() => {
+                            setActiveFilter1("lastMonth");
+
+                            applyRange1("lastMonth");
+                          }}
+                        >
+                          Last Month
+                        </Button>
                       </div>
-                      <Button
-                        size="sm"
-                        variant={activeFilter1 === "7d" ? "primary" : "ghost"}
-                        onClick={() => {
-                          setActiveFilter1("7d");
+                      {/* STATUS FILTER */}
+                      <div className="flex flex-wrap items-center gap-2">
+                        <div
+                          className="text-sm font-medium"
+                          style={{ color: tokens.textMuted }}
+                        >
+                          Status:
+                        </div>
 
-                          applyRange1("7d");
-                        }}
-                      >
-                        Last 7 days
-                      </Button>
+                        <Button
+                          size="sm"
+                          variant={status1 === null ? "primary" : "ghost"}
+                          onClick={() => {
+                            setStatus1(null);
+                            setPage1(1);
+                          }}
+                        >
+                          All
+                        </Button>
 
-                      <Button
-                        size="sm"
-                        variant={activeFilter1 === "30d" ? "primary" : "ghost"}
-                        onClick={() => {
-                          setActiveFilter1("30d");
+                        <Button
+                          size="sm"
+                          variant={status1 === "present" ? "primary" : "ghost"}
+                          onClick={() => {
+                            setStatus1("present");
+                            setPage1(1);
+                          }}
+                        >
+                          Present
+                        </Button>
 
-                          applyRange1("30d");
-                        }}
-                      >
-                        Last 30 days
-                      </Button>
+                        <Button
+                          size="sm"
+                          variant={status1 === "absent" ? "primary" : "ghost"}
+                          onClick={() => {
+                            setStatus1("absent");
+                            setPage1(1);
+                          }}
+                        >
+                          Absent
+                        </Button>
 
-                      <Button
-                        size="sm"
-                        variant={
-                          activeFilter1 === "thisMonth" ? "primary" : "ghost"
-                        }
-                        onClick={() => {
-                          setActiveFilter1("thisMonth");
-
-                          applyRange1("thisMonth");
-                        }}
-                      >
-                        This Month
-                      </Button>
-
-                      <Button
-                        size="sm"
-                        variant={
-                          activeFilter1 === "lastMonth" ? "primary" : "ghost"
-                        }
-                        onClick={() => {
-                          setActiveFilter1("lastMonth");
-
-                          applyRange1("lastMonth");
-                        }}
-                      >
-                        Last Month
-                      </Button>
-                    </div>
-                    {/* STATUS FILTER */}
-                    <div className="flex flex-wrap items-center gap-2">
-                      <div
-                        className="text-sm font-medium"
-                        style={{ color: tokens.textMuted }}
-                      >
-                        Status:
+                        <Button
+                          size="sm"
+                          variant={status1 === "half_day" ? "primary" : "ghost"}
+                          onClick={() => {
+                            setStatus1("half_day");
+                            setPage1(1);
+                          }}
+                        >
+                          Half Day
+                        </Button>
                       </div>
-
-                      <Button
-                        size="sm"
-                        variant={status1 === null ? "primary" : "ghost"}
-                        onClick={() => {
-                          setStatus1(null);
-                          setPage1(1);
-                        }}
-                      >
-                        All
-                      </Button>
-
-                      <Button
-                        size="sm"
-                        variant={status1 === "present" ? "primary" : "ghost"}
-                        onClick={() => {
-                          setStatus1("present");
-                          setPage1(1);
-                        }}
-                      >
-                        Present
-                      </Button>
-
-                      <Button
-                        size="sm"
-                        variant={status1 === "absent" ? "primary" : "ghost"}
-                        onClick={() => {
-                          setStatus1("absent");
-                          setPage1(1);
-                        }}
-                      >
-                        Absent
-                      </Button>
-
-                      <Button
-                        size="sm"
-                        variant={status1 === "half_day" ? "primary" : "ghost"}
-                        onClick={() => {
-                          setStatus1("half_day");
-                          setPage1(1);
-                        }}
-                      >
-                        Half Day
-                      </Button>
-                    </div>
                     </div>
                     <div className=" lg:w-1/3 md:w-1/2 w-full grid lg:grid-cols-10 md:grid-cols-6 grid-cols-4 gap-2">
                       <div className="lg:col-span-4 md:col-span-2 sm:col-span-1">
@@ -493,14 +506,21 @@ setActiveFilter1("");
                     setPersonId={setPersonId}
                     setSelectedPerson={setSelectedPerson}
                   />
-
-                  <Button
-                    variant="secondary"
-                    onClick={() => setShowFilters((s) => !s)}
-                    disabled={!personId || personId === ""}
-                  >
-                    <Filter size={18} />
-                  </Button>
+                  <div className="flex items-center gap-2 justify-end">
+                    <Button
+                      variant="secondary"
+                      onClick={() => setShowFilters((s) => !s)}
+                      disabled={!personId || personId === ""}
+                    >
+                      <Filter size={18} />
+                    </Button>
+                    <Button
+                      onClick={() => exportAttendanceExcel(attendance2)}
+                      disabled={!personId || personId === ""}
+                    >
+                      <Download size={18} />
+                    </Button>
+                  </div>
                 </div>
                 {showFilters && !(!personId || personId === "") && (
                   <>

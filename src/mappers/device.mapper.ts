@@ -26,3 +26,31 @@ export function mapApiToUIDevice(api: Device): UIDevice {
     },
   };
 }
+
+export const formatDeviceForExport = (data: Device[]) => {
+  return data.map((d) => ({
+    id: d.deviceId,
+    salesperson: d.salesperson?.name || "",
+    email: d.salesperson?.email || "",
+    phone: d.salesperson?.phone || "",
+    employeeId: d.salesperson?.employeeId || "",
+
+    mobileNumber: d.mobileNumber || "",
+
+    platform: d.platform,
+    appVersion: d.appVersion,
+
+    status: d.isBlocked ? "Blocked" : "Active",
+
+    blockReason: d.blockReason || "",
+    blockedAt: d.blockedAt ? new Date(d.blockedAt).toLocaleString() : "",
+
+    lastSeen: d.lastSeen ? new Date(d.lastSeen).toLocaleString() : "",
+
+    location: `${d.lastLat || ""}, ${d.lastLng || ""}`,
+
+    address: d.lastAddress || "",
+
+    createdAt: new Date(d.createdAt).toLocaleDateString(),
+  }));
+};

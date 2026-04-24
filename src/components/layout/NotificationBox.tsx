@@ -256,14 +256,14 @@ export default function NotificationBox({ onClose }: any) {
       </div>
 
       {/* FOOTER */}
-      <div
+      {/* <div
         className="p-3 border-t text-center"
         style={{ borderColor: tokens.border }}
       >
         <button className="text-xs font-bold" style={{ color: tokens.accent }}>
           View all notifications
         </button>
-      </div>
+      </div> */}
     </div>
   );
 }
