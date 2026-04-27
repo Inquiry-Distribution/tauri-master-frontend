@@ -2,8 +2,8 @@ import { api } from "@/src/api/axios";
 import { UpdateUser } from "../types/users";
 
 export const UserService = {
-  getAllSalesPerson: async () => {
-    const { data } = await api.get("/users/sales");
+  getAllSalesPerson: async (query: string) => {
+    const { data } = await api.get(`/users/sales?${query}`);
     return data;
   },
   getAllSalesPerson1: async () => {

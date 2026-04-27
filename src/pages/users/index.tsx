@@ -55,7 +55,7 @@ import { exportSalesPersonExcel } from "@/src/xls-convert/salesPerson.export";
 //   },
 // ];
 
-const mapSalesPerson = (sp: any): SalesPerson => {
+export const mapSalesPerson = (sp: any): SalesPerson => {
   return {
     id: sp.id,
     name: sp.name,

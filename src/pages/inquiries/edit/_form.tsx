@@ -2,6 +2,7 @@ import { Button } from "@/src/components/ui/button";
 import { InquiryDistributor } from "@/src/components/ui/distributeInquiry/inquiryDistribution";
 import FileInput from "@/src/components/ui/form/fileUpload";
 import Input from "@/src/components/ui/form/input";
+import Select from "@/src/components/ui/form/select";
 import TextArea from "@/src/components/ui/form/textArea";
 import FullPageLoader from "@/src/components/ui/loader/fullPageLoader";
 import { useCreateInquiry } from "@/src/hooks/inquiry/useCreateInquiry";
@@ -11,6 +12,7 @@ import { Inquiry } from "@/src/types/inquiry";
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
+import { SOURCE_OPTIONS } from "../create/_form";
 
 type Props = {
   initialData?: Partial<Inquiry>;
@@ -132,11 +134,12 @@ const EditInquiryForm = ({ initialData, onClose, onSuccess }: Props) => {
             inputValue={form.mobile}
             onChange={handleChange}
           />
-          <Input
+          <Select
             label="Source"
-            inputName="source"
+            options={SOURCE_OPTIONS}
+            selectName="source"
             placeholder="Enter Source..."
-            inputValue={form.source}
+            value={form.source}
             onChange={handleChange}
           />
           <Input

@@ -210,7 +210,7 @@ export default function InquiriesPage() {
           width={520}
         >
           <NotificationForm
-            userId={selectedUserId!}
+            recipientIds={selectedUserId!}
             onClose={() => setSelectedUserId(null)}
           />
         </Modal>

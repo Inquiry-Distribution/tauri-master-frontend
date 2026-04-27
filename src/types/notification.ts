@@ -1,5 +1,5 @@
 export type Notification = {
-  userId: string;
+  recipientIds: string[];
   title: string;
   body: string;
   data: any;

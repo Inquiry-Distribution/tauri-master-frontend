@@ -8,12 +8,12 @@ export const useSalesPerson1 = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const getAllSalesPerson = async () => {
+  const getAllSalesPerson = async (query: string) => {
     try {
       setLoading(true);
       setError(null);
 
-      const response = await UserService.getAllSalesPerson();
+      const response = await UserService.getAllSalesPerson(query);
 
       return response;
     } catch (err: any) {

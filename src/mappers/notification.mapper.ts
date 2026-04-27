@@ -5,14 +5,14 @@ export const mapNotificationFormToPayload = (
 ) => {
   if (formValues instanceof FormData) {
     return {
-      userId: formValues.get("userId"),
+      recipientIds: formValues.get("recipientIds"),
       title: formValues.get("title"),
       body: formValues.get("body"),
       data: formValues.get("data"),
     };
   } else {
     return {
-      userId: formValues.userId,
+      recipientIds: formValues.recipientIds,
       title: formValues.title,
       body: formValues.body,
       data: formValues.data,

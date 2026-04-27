@@ -875,7 +875,7 @@ export function InquiryDistributor({
           type="button"
           size="xl"
           onClick={() => setModalPerson(selectedPerson)}
-          disabled={!selectedPerson}
+          disabled={!selectedPerson || defaultSelectedId === selectedPerson.id}
           // className={`px-5 py-2 rounded-lg text-sm font-semibold transition ${
           //   selectedPerson
           //     ? "bg-blue-600 text-white hover:opacity-90"

@@ -1,12 +1,24 @@
 import { InquiryDistributor } from "@/src/components/ui/distributeInquiry/inquiryDistribution";
 import FileInput from "@/src/components/ui/form/fileUpload";
 import Input from "@/src/components/ui/form/input";
+import Select from "@/src/components/ui/form/select";
 import TextArea from "@/src/components/ui/form/textArea";
 import FullPageLoader from "@/src/components/ui/loader/fullPageLoader";
 import { useCreateInquiry } from "@/src/hooks/inquiry/useCreateInquiry";
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
+
+export const SOURCE_OPTIONS = [
+  { label: "Walk-in", value: "Walk-in" },
+  { label: "Phone Call", value: "Phone Call" },
+  { label: "Email", value: "Email" },
+  { label: "Referral", value: "Referral" },
+  { label: "Social Media", value: "Social Media" },
+  { label: "Website", value: "Website" },
+  { label: "Whatsapp", value: "Whatsapp" },
+  { label: "Other", value: "Other" },
+];
 
 const InquiryForm = () => {
   const { createInquiry, loading, error } = useCreateInquiry();
@@ -15,14 +27,14 @@ const InquiryForm = () => {
     description: string;
     mobile: string;
     inquiryTime: string;
-    source:string;
+    source: string;
     // salesPersonId: string;
     images: File[];
   }>({
     description: "",
     mobile: "",
     inquiryTime: "",
-    source:"",
+    source: "",
     // salesPersonId: "",
     images: [],
   });
@@ -73,7 +85,7 @@ const InquiryForm = () => {
         description: "",
         mobile: "",
         inquiryTime: "",
-        source:"",
+        source: "",
         images: [],
       });
       navigate("/inquiries");
@@ -110,11 +122,19 @@ const InquiryForm = () => {
             inputValue={form.mobile}
             onChange={handleChange}
           />
-          <Input
+          {/* <Input
             label="Source"
             inputName="source"
             placeholder="Enter Source..."
             inputValue={form.source}
+            onChange={handleChange}
+          /> */}
+          <Select
+            label="Source"
+            options={SOURCE_OPTIONS}
+            selectName="source"
+            placeholder="Enter Source..."
+            value={form.source}
             onChange={handleChange}
           />
           <Input

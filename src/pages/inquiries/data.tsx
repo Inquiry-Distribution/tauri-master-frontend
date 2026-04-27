@@ -143,7 +143,7 @@ export const getInquiryColumns = ({
       key: "actions",
       label: "Action",
       render: (row) => (
-        <div className="flex w-full items-center justify-end gap-2">
+        <div className="flex w-full items-center justify-start gap-2">
           <Button
             variant={row.status === "assigned" ? "secondary" : "primary"}
             onClick={() => setSelectedInquiry(row)}
