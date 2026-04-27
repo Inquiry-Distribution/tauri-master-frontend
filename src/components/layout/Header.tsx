@@ -46,7 +46,6 @@ export default function Header() {
         </button> */}
         <button
           onClick={() => {
-            console.log("Toggling sidebar. Current state: CLICK", sidebarOpen);
             toggleSidebar();
           }}
           className="p-2 rounded-lg transition-colors hover:bg-opacity-10 cursor-pointer"
