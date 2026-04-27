@@ -2,6 +2,8 @@ import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 import { SalesPerson } from "../types/users";
 import { formatSalesPerson } from "../mappers/salesPerson.mapper";
+import { save } from "@tauri-apps/plugin-dialog";
+import { writeFile } from "@tauri-apps/plugin-fs";
 
 export const exportSalesPersonExcel = async (data: SalesPerson[]) => {
   const workbook = new ExcelJS.Workbook();
@@ -188,10 +190,33 @@ export const exportSalesPersonExcel = async (data: SalesPerson[]) => {
   // 📤 EXPORT
   // =========================
   const buffer = await workbook.xlsx.writeBuffer();
+  const uint8Array = new Uint8Array(buffer as ArrayBuffer);
 
-  const blob = new Blob([buffer], {
-    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-  });
+  // ✅ Check for Tauri environment correctly
+  const isTauri = "__TAURI_INTERNALS__" in window;
 
-  saveAs(blob, "salesperson_report.xlsx");
+  if (isTauri) {
+    const filePath = await save({
+      defaultPath: "salesperson_report.xlsx",
+      filters: [{ name: "Excel", extensions: ["xlsx"] }],
+    });
+
+    // User cancelled the dialog
+    if (!filePath) return;
+
+    // ✅ Tauri v2: writeFile(path, data)
+    await writeFile(filePath, uint8Array);
+  } else {
+    const blob = new Blob([uint8Array], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "salesperson_report.xlsx";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url); // ✅ Clean up the object URL
+  }
 };

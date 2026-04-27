@@ -1,13 +1,16 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "enables the default permissions",
+  "description": "Default capabilities",
   "windows": ["main"],
   "permissions": [
     "core:default",
-    "fs:default",
-    "fs:allow-read-file",
-    "fs:allow-read",
-    "fs:allow-stat"
+    "dialog:allow-save",
+    "fs:allow-write-file",
+    "fs:allow-app-write",
+    "fs:allow-home-write",
+    "fs:allow-download-write",
+    "fs:scope-download-recursive",
+    "fs:scope-home-recursive"
   ]
 }

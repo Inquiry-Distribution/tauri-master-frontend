@@ -2,6 +2,8 @@ import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 import { Device } from "../types/devices";
 import { formatDeviceForExport } from "../mappers/device.mapper";
+import { writeFile } from "@tauri-apps/plugin-fs";
+import { save } from "@tauri-apps/plugin-dialog";
 
 export const exportDeviceExcel = async (data: Device[]) => {
   const workbook = new ExcelJS.Workbook();
@@ -139,10 +141,32 @@ export const exportDeviceExcel = async (data: Device[]) => {
   // 📤 EXPORT
   // =========================
   const buffer = await workbook.xlsx.writeBuffer();
+  const uint8Array = new Uint8Array(buffer);
 
-  const blob = new Blob([buffer], {
-    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-  });
+  // ✅ Check for Tauri environment correctly
+  const isTauri = "__TAURI_INTERNALS__" in window;
+  if (isTauri) {
+    const filePath = await save({
+      defaultPath: "device_report.xlsx",
+      filters: [{ name: "Excel", extensions: ["xlsx"] }],
+    });
 
-  saveAs(blob, "device_report.xlsx");
+    // User cancelled the dialog
+    if (!filePath) return;
+
+    // ✅ Tauri v2: writeFile(path, data)
+    await writeFile(filePath, uint8Array);
+  } else {
+    const blob = new Blob([uint8Array], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "device_report.xlsx";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url); // ✅ Clean up the object URL
+  }
 };
