@@ -7,14 +7,14 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 
-const CreateUserForm = () => {
+const CreateUserForm = ({ onSuccess }: { onSuccess: (res: any) => void }) => {
   const { createUser, loading } = useCreateSalesPerson();
 
   const [form, setForm] = useState<CreateUser>({
     name: "",
     email: "",
     password: "",
-    role: "salesperson",
+    role: "sales",
     employeeId: "",
     pin: "",
   });
@@ -79,7 +79,8 @@ const CreateUserForm = () => {
     if (!validate()) return;
 
     try {
-      await createUser(form);
+      const res = await createUser(form);
+      onSuccess?.(res.data);
 
       Swal.fire({
         icon: "success",
@@ -91,6 +92,7 @@ const CreateUserForm = () => {
       Swal.fire({
         icon: "error",
         title: "Error Creating Sales Person.",
+        text: err instanceof Error ? err.message : "An error occurred",
       });
     }
   };
@@ -100,7 +102,7 @@ const CreateUserForm = () => {
       name: "",
       email: "",
       password: "",
-      role: "salesperson",
+      role: "sales",
       employeeId: "",
       pin: "",
     });
@@ -133,6 +135,7 @@ const CreateUserForm = () => {
           label="Email"
           showLabel={false}
           inputName="email"
+          inputType="email"
           inputValue={form.email}
           placeholder="Enter email"
           onChange={handleChange}

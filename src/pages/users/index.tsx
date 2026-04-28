@@ -10,6 +10,7 @@ import {
   Award,
   TrendingUp,
   Download,
+  RefreshCcw,
 } from "lucide-react";
 import { SalesPerson } from "@/src/types/users";
 import { cn } from "../../utils/utils";
@@ -63,15 +64,32 @@ export const mapSalesPerson = (sp: any): SalesPerson => {
     name: sp.name,
     email: sp.email,
 
-    // ❌ not in API → fallback dummy
     phone: sp.phone || "",
     employeeId: sp.employeeId || "",
     assignedArea: sp.assignedArea || "Unassigned",
 
-    isActive: sp.isActive,
+    isActive: sp.isActive ?? true,
 
-    inquiries: sp.inquiries,
-    attendance: sp.attendance,
+    profileImage: sp.profileImage || "",
+
+    // ✅ fallback defaults for new users
+    inquiries: sp.inquiries || {
+      total: 0,
+      assigned: 0,
+      inProgress: 0,
+      followUp: 0,
+      closed: 0,
+      converted: 0,
+      conversionRate: "0%",
+      closeRate: "0%",
+    },
+
+    attendance: sp.attendance || {
+      present: 0,
+      halfDay: 0,
+      absent: 0,
+      totalDays: 0,
+    },
   };
 };
 export default function SalesPersonsPage() {
@@ -124,6 +142,9 @@ export default function SalesPersonsPage() {
           </p>
         </div>
         <div className="flex gap-3">
+          <Button onClick={() => {}} variant="ghost" title="Sync Data">
+            <RefreshCcw size={18} />
+          </Button>
           <Button onClick={() => exportSalesPersonExcel(salesPersons)}>
             <Download size={18} />
           </Button>
@@ -173,7 +194,18 @@ export default function SalesPersonsPage() {
           title="Create Sales Person"
           onClose={() => setCreateSalesPersonOpen(false)}
         >
-          <CreateUserForm />
+          <CreateUserForm
+            onSuccess={(user: any) => {
+              const mappedUser = mapSalesPerson(user);
+
+              setSalesPersons((prev) => {
+                const exists = prev.some((p) => p.id === mappedUser.id);
+                if (exists) return prev;
+                return [mappedUser, ...prev];
+              });
+              setCreateSalesPersonOpen(false);
+            }}
+          />
         </Modal>
       )}
     </div>

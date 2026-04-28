@@ -33,7 +33,7 @@ export const StatCard = ({
         </div>
 
         {/* TREND */}
-        {trend && (
+        {/* {trend && (
           <span
             className={cn(
               "text-xs font-bold px-2 py-1 rounded-lg",
@@ -46,7 +46,7 @@ export const StatCard = ({
           >
             {trend}
           </span>
-        )}
+        )} */}
       </div>
 
       {/* CONTENT */}

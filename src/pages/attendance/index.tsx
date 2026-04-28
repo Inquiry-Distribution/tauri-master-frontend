@@ -287,6 +287,7 @@ export default function AttendancePage() {
                       }}
                     />
                   </div>
+
                   <Button
                     variant="secondary"
                     onClick={() => setShowFilters1((s) => !s)}
@@ -506,7 +507,7 @@ export default function AttendancePage() {
                     setPersonId={setPersonId}
                     setSelectedPerson={setSelectedPerson}
                   />
-                  <div className="flex items-center gap-2 justify-end">
+                  <div className="flex items-center gap-2 justify-end ">
                     <Button
                       variant="secondary"
                       onClick={() => setShowFilters((s) => !s)}

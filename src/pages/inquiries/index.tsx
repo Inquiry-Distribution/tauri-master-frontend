@@ -11,7 +11,7 @@ import {
   Clock,
   Download,
 } from "lucide-react";
-import { cn } from "../../utils/utils";
+import { cn, useDebounce } from "../../utils/utils";
 // import { Inquiry } from "../../types";
 import { TableColumn } from "@/src/components/ui/table/types";
 import DynamicTable from "@/src/components/ui/table/dynamicTable";
@@ -29,8 +29,42 @@ import ButtonLoader from "@/src/components/ui/loader/buttonLoader";
 import { Button } from "@/src/components/ui/button";
 import { exportInquiryStyled } from "@/src/xls-convert/inquiry.export";
 import EditInquiryForm from "./edit/_form";
+import Input from "@/src/components/ui/form/input";
 // import { exportInquiryExcel } from "@/src/xls-convert/inquiry.export";
 
+const formatDate = (date: Date) => date.toISOString().split("T")[0];
+
+const getDateRange = (type: string) => {
+  const today = new Date();
+
+  switch (type) {
+    case "7d": {
+      const from = new Date();
+      from.setDate(today.getDate() - 7);
+      return { from, to: today };
+    }
+
+    case "30d": {
+      const from = new Date();
+      from.setDate(today.getDate() - 30);
+      return { from, to: today };
+    }
+
+    case "thisMonth": {
+      const from = new Date(today.getFullYear(), today.getMonth(), 1);
+      return { from, to: today };
+    }
+
+    case "lastMonth": {
+      const from = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+      const to = new Date(today.getFullYear(), today.getMonth(), 0);
+      return { from, to };
+    }
+
+    default:
+      return { from: today, to: today };
+  }
+};
 export default function InquiriesPage() {
   const { tokens } = useTheme();
   const [searchTerm, setSearchTerm] = useState("");
@@ -40,8 +74,19 @@ export default function InquiriesPage() {
 
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
-  const [status, setStatus] = useState<string>("all");
-  const [search, setSearch] = useState("");
+
+  const [showFilters, setShowFilters] = useState(false);
+  const [filterMode, setFilterMode] = useState<"range" | "none">("none");
+  const [activeRange, setActiveRange] = useState<string>("30d");
+
+  const today = new Date();
+  const oneMonthAgo = new Date();
+  oneMonthAgo.setMonth(today.getMonth() - 1);
+
+  const [from, setFrom] = useState(formatDate(oneMonthAgo));
+  const [to, setTo] = useState(formatDate(today));
+
+  const [priority, setPriority] = useState<string | null>(null);
 
   const [selectedInquiry, setSelectedInquiry] = useState<any | null>(null);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
@@ -95,20 +140,41 @@ export default function InquiriesPage() {
       setEditingInquiry,
     ],
   );
-
+  const debouncedSearch = useDebounce(searchTerm, 500);
   useEffect(() => {
     const selected = tabFilters.find((t) => t.key === activeTab);
 
-    const query =
-      `page=${page}&limit=${limit}` +
-      (selected?.status ? `&status=${selected.status}` : "") +
-      (searchTerm ? `&search=${searchTerm}` : "");
+    const queryObj: Record<string, string> = {
+      page: String(page),
+      limit: String(limit),
+
+      ...(selected?.status ? { status: selected.status } : {}),
+
+      ...(debouncedSearch ? { search: debouncedSearch } : {}),
+
+      ...(priority ? { priority } : {}),
+
+      ...(filterMode === "range" && from && to ? { from, to } : {}),
+    };
+
+    const query = new URLSearchParams(queryObj).toString();
 
     getInquiries(query);
-  }, [activeTab, page, limit, searchTerm]);
+  }, [activeTab, page, limit, debouncedSearch, priority, from, to]);
 
   const handlePageChange = (newPage: number) => {
     getInquiries(`page=${newPage}&limit=${limit}`);
+  };
+
+  const applyRange = (type: string) => {
+    const { from, to } = getDateRange(type);
+
+    setFrom(formatDate(from));
+    setTo(formatDate(to));
+
+    setActiveRange(type);
+    setFilterMode("range");
+    setPage(1);
   };
 
   const inquiries = data?.inquiries || [];
@@ -159,22 +225,153 @@ export default function InquiriesPage() {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        <button
-          type="button"
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl border font-bold text-sm transition-all"
-          style={{
-            backgroundColor: tokens.surface,
-            borderColor: tokens.border,
-            color: tokens.text,
-          }}
-        >
+        <Button variant="secondary" onClick={() => setShowFilters((s) => !s)}>
           <Filter size={18} />
-          Filters
-        </button>
+        </Button>
         <Button onClick={() => exportInquiryStyled(inquiries)}>
           <Download size={18} />
         </Button>
       </div>
+      {showFilters && (
+        <>
+          <div className="flex flex-wrap items-center gap-4">
+            {/* DATE RANGE */}
+            <div className="flex flex-wrap items-center gap-2">
+              <div
+                className="text-sm font-medium"
+                style={{ color: tokens.textMuted }}
+              >
+                Date Range:
+              </div>
+
+              <Button
+                size="sm"
+                variant={activeRange === "7d" ? "primary" : "ghost"}
+                onClick={() => applyRange("7d")}
+              >
+                Last 7 days
+              </Button>
+
+              <Button
+                size="sm"
+                variant={activeRange === "30d" ? "primary" : "ghost"}
+                onClick={() => applyRange("30d")}
+              >
+                Last 30 days
+              </Button>
+
+              <Button
+                size="sm"
+                variant={activeRange === "thisMonth" ? "primary" : "ghost"}
+                onClick={() => applyRange("thisMonth")}
+              >
+                This Month
+              </Button>
+
+              <Button
+                size="sm"
+                variant={activeRange === "lastMonth" ? "primary" : "ghost"}
+                onClick={() => applyRange("lastMonth")}
+              >
+                Last Month
+              </Button>
+            </div>
+
+            {/* PRIORITY FILTER */}
+            <div className="flex items-center gap-2">
+              <div
+                className="text-sm font-medium"
+                style={{ color: tokens.textMuted }}
+              >
+                Priority:
+              </div>
+
+              <Button
+                size="sm"
+                variant={priority === null ? "primary" : "ghost"}
+                onClick={() => {
+                  setPriority(null);
+                  setPage(1);
+                }}
+              >
+                All
+              </Button>
+
+              <Button
+                size="sm"
+                variant={priority === "high" ? "primary" : "ghost"}
+                onClick={() => {
+                  setPriority("high");
+                  setPage(1);
+                }}
+              >
+                High
+              </Button>
+
+              <Button
+                size="sm"
+                variant={priority === "medium" ? "primary" : "ghost"}
+                onClick={() => {
+                  setPriority("medium");
+                  setPage(1);
+                }}
+              >
+                Medium
+              </Button>
+
+              <Button
+                size="sm"
+                variant={priority === "low" ? "primary" : "ghost"}
+                onClick={() => {
+                  setPriority("low");
+                  setPage(1);
+                }}
+              >
+                Low
+              </Button>
+            </div>
+          </div>
+
+          {/* CUSTOM RANGE */}
+          <div className=" lg:w-1/3 md:w-1/2 w-full grid lg:grid-cols-10 md:grid-cols-6 grid-cols-4 gap-2">
+            <div className="lg:col-span-4 md:col-span-2 sm:col-span-1">
+              <Input
+                label="From"
+                inputName="from"
+                inputType="date"
+                inputValue={from}
+                onChange={(e) => {
+                  setFrom(e.target.value);
+                  setFilterMode("range"); // ✅ key
+                  setActiveRange("");
+                  setPage(1);
+                }}
+                placeholder="From date"
+                showLabel={false}
+              />
+            </div>
+            <div className="text-text font-semibold text-2xl w-full flex items-center justify-center col-span-1">
+              →
+            </div>
+            <div className="lg:col-span-4 md:col-span-2 sm:col-span-1">
+              <Input
+                label="To"
+                inputName="to"
+                inputType="date"
+                inputValue={to}
+                onChange={(e) => {
+                  setTo(e.target.value);
+                  setFilterMode("range"); // ✅ key
+                  setActiveRange("");
+                  setPage(1);
+                }}
+                placeholder="To date"
+                showLabel={false}
+              />
+            </div>
+          </div>
+        </>
+      )}
 
       <Tabs
         variant="solid"

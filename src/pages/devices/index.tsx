@@ -86,6 +86,8 @@ export default function DevicesPage() {
   );
 
   const columns = buildColumns(handleToggle);
+  const userData = JSON.parse(localStorage.getItem("userData") || "{}");
+  const isSuperUser = userData?.role === "superuser";
 
   return (
     <div className="space-y-6">
@@ -105,7 +107,7 @@ export default function DevicesPage() {
       {/* Main layout */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Devices table */}
-        <div className="lg:col-span-2">
+        <div className={`${!isSuperUser ? "lg:col-span-3" : "lg:col-span-2"}`}>
           <Card className="!p-0 overflow-hidden">
             <div className=" flex justify-between items-center px-6 py-4 border-b border-(--border)">
               <h3 className="font-bold text-(--text)">Active Devices</h3>
@@ -148,7 +150,7 @@ export default function DevicesPage() {
         </div>
 
         {/* Sidebar */}
-        <LiveLocationsCard />
+        {isSuperUser && <LiveLocationsCard />}
       </div>
     </div>
   );

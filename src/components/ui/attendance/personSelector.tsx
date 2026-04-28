@@ -17,7 +17,7 @@ export const PersonSelector = ({
 
   useEffect(() => {
     (async () => {
-      const res = await getAllSalesPerson();
+      const res = await getAllSalesPerson("");
       setPersons(res?.data || []);
     })();
   }, []);
@@ -48,7 +48,7 @@ export const PersonSelector = ({
 
             setSelectedPerson(person);
           }}
-          className="w-full appearance-none rounded-xl px-3 py-2.5 text-sm outline-none transition-all"
+          className="w-full appearance-none rounded-xl px-3 py-3 text-sm outline-none transition-all"
           style={{
             backgroundColor: tokens.surface,
             border: `1px solid ${tokens.border}`,

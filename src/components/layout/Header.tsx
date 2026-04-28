@@ -1,5 +1,18 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Bell, Search, Sun, Moon, User, Menu, X } from "lucide-react";
+import {
+  Bell,
+  Search,
+  Sun,
+  Moon,
+  User,
+  Menu,
+  X,
+  PanelLeft,
+  PanelLeftClose,
+  PanelLeftOpen,
+  TextAlignStart,
+  ChevronLeft,
+} from "lucide-react";
 import { useTheme } from "@/src/contexts/index";
 import { useLayout } from "@/src/hooks/useLayout";
 import NotificationBox from "./NotificationBox";
@@ -52,7 +65,11 @@ export default function Header() {
           style={{ color: tokens.textSec, backgroundColor: tokens.borderLight }}
         >
           {/* <Menu size={20} /> */}
-          {sidebarOpen === true ? <X size={20} /> : <Menu size={20} />}
+          {sidebarOpen === true ? (
+            <ChevronLeft size={20} />
+          ) : (
+            <Menu size={20} />
+          )}
         </button>
 
         <div className="relative w-full group hidden sm:block">

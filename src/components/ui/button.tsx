@@ -11,6 +11,7 @@ export function Button({
   style: sx,
   className = "",
   type = "button",
+  title,
 }: {
   children: React.ReactNode;
   variant?: "primary" | "secondary" | "danger" | "ghost" | "dashed";
@@ -21,6 +22,7 @@ export function Button({
   style?: React.CSSProperties;
   className?: string;
   type?: "button" | "submit" | "reset";
+  title?: string;
 }) {
   const ctx = useContext(ThemeContext);
   const [hovered, setHovered] = useState(false);
@@ -86,6 +88,7 @@ export function Button({
 
   return (
     <button
+      title={title || ""}
       type={type}
       disabled={disabled}
       onClick={!disabled ? onClick : undefined}

@@ -137,9 +137,15 @@ export function LiveLocationsCard() {
 
   const [selectedDeviceId, setSelectedDeviceId] = useState<string | null>(null);
 
+  // 👇 Get role from localStorage
+  const userData = JSON.parse(localStorage.getItem("userData") || "{}");
+  const isSuperUser = userData?.role === "superuser";
+
   useEffect(() => {
-    getDeviceLocations();
-  }, [getDeviceLocations]);
+    if (isSuperUser) {
+      getDeviceLocations();
+    }
+  }, [getDeviceLocations, isSuperUser]);
 
   const devices = data || []; // adjust if API shape differs
 
@@ -151,25 +157,16 @@ export function LiveLocationsCard() {
       </h3>
 
       {/* Map placeholder */}
-      {loading ? (
+      {/* 👇 Permission check */}
+      {!isSuperUser ? (
         <div className="aspect-square rounded-xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center border border-(--border)">
-          <div className="text-center p-6">
-            <MapPin size={48} className="mx-auto mb-4 opacity-20" />
-            <p className="text-sm font-medium text-(--textSec)">
-              Interactive Map View
-            </p>
-            <p className="text-xs mt-1 text-(--textMuted)">
-              Click to expand and view all device locations in real-time.
-            </p>
-
-            {loading && (
-              <div className="text-xs mt-3 text-blue-500">
-                <CommonLoader fullScreen={false} overlay={true} />
-              </div>
-            )}
-
-            {error && <p className="text-xs mt-3 text-red-500">{error}</p>}
-          </div>
+          <p className="text-sm text-center text-(--textMuted)">
+            You don’t have permission to access live locations.
+          </p>
+        </div>
+      ) : loading ? (
+        <div className="aspect-square rounded-xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center border border-(--border)">
+          <CommonLoader fullScreen={false} overlay={true} />
         </div>
       ) : (
         <LiveDeviceMap
@@ -182,36 +179,39 @@ export function LiveLocationsCard() {
       )}
 
       {/* Agent list */}
-      <div className="mt-6 space-y-4">
-        {devices.map((device) => (
-          <div
-            key={device.id}
-            onClick={() => setSelectedDeviceId(device.id)}
-            className={cn(
-              "flex items-center justify-between cursor-pointer p-2 rounded",
-              selectedDeviceId === device.id && "bg-gray-100 dark:bg-gray-800",
-            )}
-          >
-            <div className="flex items-center gap-2">
-              <div
-                className={cn(
-                  "w-2 h-2 rounded-full",
-                  device.isBlocked ? "bg-blue-500" : "bg-red-400",
-                )}
+      {/* 👇 Show list only if allowed */}
+      {isSuperUser && (
+        <div className="mt-6 space-y-4">
+          {devices.map((device) => (
+            <div
+              key={device.id}
+              onClick={() => setSelectedDeviceId(device.id)}
+              className={cn(
+                "flex items-center justify-between cursor-pointer p-2 rounded",
+                selectedDeviceId === device.id &&
+                  "bg-gray-100 dark:bg-gray-800",
+              )}
+            >
+              <div className="flex items-center gap-2">
+                <div
+                  className={cn(
+                    "w-2 h-2 rounded-full",
+                    device.isBlocked ? "bg-blue-500" : "bg-red-400",
+                  )}
+                />
+                <span className="text-xs font-medium text-(--text)">
+                  Agent {device.salesperson?.name}
+                </span>
+              </div>
+
+              <CoordBadge
+                lat={Number(device.lastLat)}
+                lng={Number(device.lastLng)}
               />
-
-              <span className="text-xs font-medium text-(--text)">
-                Agent {device.salesperson?.name}
-              </span>
             </div>
-
-            <CoordBadge
-              lat={Number(device.lastLat)}
-              lng={Number(device.lastLng)}
-            />
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </Card>
   );
 }
