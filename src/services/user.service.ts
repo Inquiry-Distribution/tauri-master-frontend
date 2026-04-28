@@ -1,7 +1,11 @@
 import { api } from "@/src/api/axios";
-import { UpdateUser } from "../types/users";
+import { CreateUser, UpdateUser } from "../types/users";
 
 export const UserService = {
+  createUser: async (payload: CreateUser) => {
+    const { data } = await api.post("/users", payload);
+    return data;
+  },
   getAllSalesPerson: async (query: string) => {
     const { data } = await api.get(`/users/sales?${query}`);
     return data;

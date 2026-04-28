@@ -18,6 +18,8 @@ import { useSalesPerson } from "@/src/hooks/salesPerson/useSalesPerson";
 import SectionLoader from "@/src/components/ui/loader/sectionLoader";
 import { Button } from "@/src/components/ui/button";
 import { exportSalesPersonExcel } from "@/src/xls-convert/salesPerson.export";
+import { Modal } from "@/src/components/ui/modal";
+import CreateUserForm from "./create/_form";
 
 // const mockSalesPersons: SalesPerson[] = [
 //   {
@@ -77,6 +79,7 @@ export default function SalesPersonsPage() {
   const { getAllSalesPerson, loading, error } = useSalesPerson();
 
   const [salesPersons, setSalesPersons] = useState<SalesPerson[]>([]);
+  const [createSalesPersonOpen, setCreateSalesPersonOpen] = useState(false);
 
   // ✅ Fetch data on mount
   useEffect(() => {
@@ -120,14 +123,19 @@ export default function SalesPersonsPage() {
             Manage your sales persons and monitor their performance.
           </p>
         </div>
-        <Button onClick={() => exportSalesPersonExcel(salesPersons)}>
-          <Download size={18} />
-        </Button>
+        <div className="flex gap-3">
+          <Button onClick={() => exportSalesPersonExcel(salesPersons)}>
+            <Download size={18} />
+          </Button>
 
-        {/* <button className="flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm text-white bg-blue-600 hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/20">
-          <Plus size={18} />
-          Add Sales Person
-        </button> */}
+          <button
+            onClick={() => setCreateSalesPersonOpen(true)}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm text-white bg-blue-600 hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/20"
+          >
+            <Plus size={18} />
+            Add Sales Person
+          </button>
+        </div>
       </div>
 
       {/* ❌ Error State */}
@@ -157,6 +165,16 @@ export default function SalesPersonsPage() {
                 )}
           </div>
         </>
+      )}
+
+      {/* ✅ Create Sales Person Modal */}
+      {createSalesPersonOpen && (
+        <Modal
+          title="Create Sales Person"
+          onClose={() => setCreateSalesPersonOpen(false)}
+        >
+          <CreateUserForm />
+        </Modal>
       )}
     </div>
   );

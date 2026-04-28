@@ -7,6 +7,14 @@
 //   assignedArea: string;
 // };
 
+export type CreateUser = {
+  name: string;
+  email: string;
+  password: string;
+  role: string;
+  employeeId: string;
+  pin: string;
+};
 export type SalesPerson = {
   id: string;
   name: string;

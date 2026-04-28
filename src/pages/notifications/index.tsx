@@ -2,10 +2,6 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useTheme } from "../../contexts";
 import { Plus, Radio, Speaker } from "lucide-react";
 
-import { useNavigate } from "react-router-dom";
-
-import { useGetInquiries } from "@/src/hooks/inquiry/useGetAllInquiry";
-import { Inquiry } from "@/src/types/inquiry";
 import { NotificationForm } from "@/src/components/ui/notification/notificationForm";
 import { Modal } from "@/src/components/ui/modal";
 
@@ -27,9 +23,8 @@ import { useDebounce } from "@/src/utils/utils";
 export default function NotificationsPage() {
   const { tokens } = useTheme();
   const [searchTerm, setSearchTerm] = useState("");
-  const navigate = useNavigate();
+
   const [selectedRows, setSelectedRows] = useState<any[]>([]);
-  const [activeTab, setActiveTab] = useState("all");
 
   const [notificationOpen, setNotificationOpen] = useState(false);
   const [multiNotificationOpen, setMultiNotificationOpen] = useState(false);
@@ -38,11 +33,7 @@ export default function NotificationsPage() {
 
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
-  const [status, setStatus] = useState<string>("all");
-  const [search, setSearch] = useState("");
 
-  const [selectedInquiry, setSelectedInquiry] = useState<any | null>(null);
-  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const { getAllSalesPerson, loading, error } = useSalesPerson1();
   const [salesPersons, setSalesPersons] = useState<SalesPerson[]>([]);
 
@@ -63,7 +54,7 @@ export default function NotificationsPage() {
       (debouncedSearchTerm ? `&search=${debouncedSearchTerm}` : "");
 
     getAllSalesPerson(query);
-  }, [activeTab, page, limit, debouncedSearchTerm]);
+  }, [page, limit, debouncedSearchTerm]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -117,7 +108,7 @@ export default function NotificationsPage() {
           <button
             type="button"
             className="flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm text-white bg-blue-600 hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/20"
-            // onClick={() => navigate("/inquiries/create")}
+            onClick={() => setShowBroadcastModal(true)}
           >
             <Radio size={18} />
             Broadcast Notification
@@ -182,7 +173,7 @@ export default function NotificationsPage() {
       />
       {notificationOpen && (
         <Modal
-          title="Send Notification"
+          title={`Send Notification to ${selectedUser ? selectedUser.name : ""}`}
           onClose={() => {
             setNotificationOpen(false);
             setSelectedUser(null);
