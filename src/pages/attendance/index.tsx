@@ -60,8 +60,6 @@ const getDateRange = (type: string) => {
 export default function AttendancePage() {
   const { tokens } = useTheme();
 
-  const navigate = useNavigate();
-
   const [activeTab, setActiveTab] = useState("byDate");
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]); // default to today
   const [personId, setPersonId] = useState<string | null>(null);
@@ -78,54 +76,23 @@ export default function AttendancePage() {
   const [totalPages1, setTotalPages1] = useState(1);
   const [search1, setSearch1] = useState("");
 
-  const [showFilters, setShowFilters] = useState(false);
   const [activeFilter, setActiveFilter] = useState("30d");
-  const [status2, setStatus2] = useState<string | null>(null);
-  const [page2, setPage2] = useState(1);
-  const [limit2, setLimit2] = useState(10);
-  const [totalPagesPerson2, setTotalPagesPerson2] = useState(1);
 
-  const lastQueryRef = useRef<string | null>(null);
-  const lastPersonIdRef = useRef<string | null>(null);
-  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
-  const shouldFetch = Boolean(date || personId);
   const [attendance1, setAttendance1] = useState([]);
-  const [attendance2, setAttendance2] = useState([]);
+
   // ✅ default dates
   const today = new Date();
   const oneMonthAgo = new Date();
   oneMonthAgo.setMonth(today.getMonth() - 1);
   const [from1, setFrom1] = useState(formatDate(oneMonthAgo));
   const [to1, setTo1] = useState(formatDate(today));
-  const [from, setFrom] = useState(formatDate(oneMonthAgo));
-  const [to, setTo] = useState(formatDate(today));
 
-  const columns = useMemo(
-    () =>
-      getAttendanceColumns({
-        setSelectedUserId,
-      }),
-    [setSelectedUserId],
-  );
-  const columns2 = useMemo(
-    () =>
-      getAttendancePersonColumns({
-        setSelectedUserId,
-        selectedPerson,
-      }),
-    [setSelectedUserId, selectedPerson],
-  );
+  const columns = useMemo(() => getAttendanceColumns(), []);
+
   const { data, loading, error, getAllAttendance } = useGetAllAttendance();
-  const {
-    getAttendancePerson,
-    data: personData,
-    loading: loading2,
-  } = useGetAttendanceById();
 
   const debouncedSearch = useDebounce(search1, 400);
   useEffect(() => {
-    if (activeTab !== "byDate") return;
-
     const queryObj: Record<string, string> = {
       ...(filterMode === "date" && date ? { date } : {}),
       ...(filterMode === "range" ? { from: from1, to: to1 } : {}),
@@ -133,6 +100,7 @@ export default function AttendancePage() {
       ...(debouncedSearch ? { search: debouncedSearch } : {}),
       ...(page1 ? { page: String(page1) } : {}),
       ...(limit1 ? { limit: String(limit1) } : {}),
+      ...(personId ? { salespersonId: personId } : {}),
     };
 
     const query = new URLSearchParams(queryObj).toString();
@@ -153,58 +121,8 @@ export default function AttendancePage() {
     debouncedSearch,
     page1,
     limit1,
+    personId,
   ]);
-
-  // useEffect(() => {
-  //   if (activeTab !== "byPerson") return;
-  //   if (!personId) return;
-
-  //   const queryObj = {
-  //     ...(fromDate ? { fromDate } : {}),
-  //     ...(toDate ? { toDate } : {}),
-  //   };
-
-  //   const queryString = new URLSearchParams(queryObj).toString();
-
-  //   // prevent duplicate refetch for same person + same filters
-  //   const cacheKey = `${personId}-${queryString}`;
-  //   if (lastQueryRef.current === cacheKey) return;
-
-  //   getAttendancePerson(`${personId}?${queryString}`).then((res) => {
-  //     setAttendance2(res?.data || []);
-  //     lastQueryRef.current = cacheKey;
-  //   });
-  // }, [personId, activeTab, fromDate, toDate]);
-
-  useEffect(() => {
-    if (activeTab !== "byPerson") return;
-    if (!personId) return;
-
-    const queryObj: Record<string, string> = {
-      ...(from ? { from } : {}),
-      ...(to ? { to } : {}),
-      ...(status2 ? { status: status2 } : {}),
-      ...(page2 ? { page: String(page2) } : {}),
-      ...(limit2 ? { limit: String(limit2) } : {}),
-    };
-
-    const queryString = new URLSearchParams(queryObj).toString();
-
-    const cacheKey = `${personId}-${queryString}`;
-    if (lastQueryRef.current === cacheKey) return;
-
-    getAttendancePerson(personId, queryString).then((res) => {
-      setAttendance2(res?.data?.records || []);
-
-      // ✅ IMPORTANT: update total pages
-      const total = res?.data?.total || 0;
-      const lim = limit2;
-
-      setTotalPagesPerson2(Math.ceil(total / lim));
-
-      lastQueryRef.current = cacheKey;
-    });
-  }, [personId, activeTab, from, to, status2, page2, limit2]);
 
   const applyRange1 = (type: string) => {
     const { from, to } = getDateRange(type);
@@ -224,9 +142,9 @@ export default function AttendancePage() {
     const f = formatDate(fromDateObj);
     const t = formatDate(toDateObj);
 
-    setFrom(f);
-    setTo(t);
-    setPage2(1); // ✅ reset pagination
+    setFrom1(f);
+    setTo1(t);
+    setPage1(1); // ✅ reset pagination
   };
 
   useEffect(() => {
@@ -251,208 +169,199 @@ export default function AttendancePage() {
           </p>
         </div>
       </div>
-      <Tabs
-        value={activeTab}
-        onChange={setActiveTab}
-        tabs={[
-          {
-            label: "By Date",
-            key: "byDate",
-            content: (
-              <div className="space-y-4">
-                <div className="flex flex-col md:flex-row gap-4">
-                  <div className="relative flex-1">
-                    <Calendar1
-                      size={18}
-                      className="absolute left-3 top-1/2 -translate-y-1/2"
-                      style={{ color: tokens.textMuted }}
-                    />
-                    <input
-                      type="date"
-                      placeholder="Search by date..."
-                      className="w-full pl-10 pr-4 py-2.5 rounded-xl border outline-none transition-all"
-                      style={{
-                        backgroundColor: tokens.surface,
-                        borderColor: tokens.border,
-                        color: tokens.text,
-                      }}
-                      value={date}
-                      onChange={(e) => {
-                        setDate(e.target.value);
-                        setFilterMode("date"); // ✅ key
-                        setPage1(1);
-                        setFrom1("");
-                        setTo1("");
-                        setActiveFilter1("");
-                      }}
-                    />
-                  </div>
 
-                  <Button
-                    variant="secondary"
-                    onClick={() => setShowFilters1((s) => !s)}
-                  >
-                    <Filter size={18} />
-                  </Button>
-                  <Button onClick={() => exportAttendanceExcel(attendance1)}>
-                    <Download size={18} />
-                  </Button>
+      <div className="space-y-4">
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="relative flex-1">
+            <Calendar1
+              size={18}
+              className="absolute left-3 top-1/2 -translate-y-1/2"
+              style={{ color: tokens.textMuted }}
+            />
+            <input
+              type="date"
+              placeholder="Search by date..."
+              className="w-full pl-10 pr-4 py-2.5 rounded-xl border outline-none transition-all"
+              style={{
+                backgroundColor: tokens.surface,
+                borderColor: tokens.border,
+                color: tokens.text,
+              }}
+              value={date}
+              onChange={(e) => {
+                setDate(e.target.value);
+                setFilterMode("date"); // ✅ key
+                setPage1(1);
+                setFrom1("");
+                setTo1("");
+                setActiveFilter1("");
+              }}
+            />
+          </div>
+          <PersonSelector
+            setPersonId={setPersonId}
+            setSelectedPerson={setSelectedPerson}
+          />
+
+          <Button
+            variant="secondary"
+            onClick={() => setShowFilters1((s) => !s)}
+          >
+            <Filter size={18} />
+          </Button>
+          <Button onClick={() => exportAttendanceExcel(attendance1)}>
+            <Download size={18} />
+          </Button>
+        </div>
+        {showFilters1 && (
+          <>
+            <div className="flex flex-wrap items-center justify-start gap-4">
+              <div className="flex flex-wrap items-center justify-start gap-2">
+                <div
+                  className="text-sm font-medium"
+                  style={{ color: tokens.textMuted }}
+                >
+                  Date Range:
                 </div>
-                {showFilters1 && (
-                  <>
-                    <div className="flex flex-wrap items-center justify-start gap-4">
-                      <div className="flex flex-wrap items-center justify-start gap-2">
-                        <div
-                          className="text-sm font-medium"
-                          style={{ color: tokens.textMuted }}
-                        >
-                          Date Range:
-                        </div>
-                        <Button
-                          size="sm"
-                          variant={activeFilter1 === "7d" ? "primary" : "ghost"}
-                          onClick={() => {
-                            setActiveFilter1("7d");
+                <Button
+                  size="sm"
+                  variant={activeFilter1 === "7d" ? "primary" : "ghost"}
+                  onClick={() => {
+                    setActiveFilter1("7d");
 
-                            applyRange1("7d");
-                          }}
-                        >
-                          Last 7 days
-                        </Button>
+                    applyRange1("7d");
+                  }}
+                >
+                  Last 7 days
+                </Button>
 
-                        <Button
-                          size="sm"
-                          variant={
-                            activeFilter1 === "30d" ? "primary" : "ghost"
-                          }
-                          onClick={() => {
-                            setActiveFilter1("30d");
+                <Button
+                  size="sm"
+                  variant={activeFilter1 === "30d" ? "primary" : "ghost"}
+                  onClick={() => {
+                    setActiveFilter1("30d");
 
-                            applyRange1("30d");
-                          }}
-                        >
-                          Last 30 days
-                        </Button>
+                    applyRange1("30d");
+                  }}
+                >
+                  Last 30 days
+                </Button>
 
-                        <Button
-                          size="sm"
-                          variant={
-                            activeFilter1 === "thisMonth" ? "primary" : "ghost"
-                          }
-                          onClick={() => {
-                            setActiveFilter1("thisMonth");
+                <Button
+                  size="sm"
+                  variant={activeFilter1 === "thisMonth" ? "primary" : "ghost"}
+                  onClick={() => {
+                    setActiveFilter1("thisMonth");
 
-                            applyRange1("thisMonth");
-                          }}
-                        >
-                          This Month
-                        </Button>
+                    applyRange1("thisMonth");
+                  }}
+                >
+                  This Month
+                </Button>
 
-                        <Button
-                          size="sm"
-                          variant={
-                            activeFilter1 === "lastMonth" ? "primary" : "ghost"
-                          }
-                          onClick={() => {
-                            setActiveFilter1("lastMonth");
+                <Button
+                  size="sm"
+                  variant={activeFilter1 === "lastMonth" ? "primary" : "ghost"}
+                  onClick={() => {
+                    setActiveFilter1("lastMonth");
 
-                            applyRange1("lastMonth");
-                          }}
-                        >
-                          Last Month
-                        </Button>
-                      </div>
-                      {/* STATUS FILTER */}
-                      <div className="flex flex-wrap items-center gap-2">
-                        <div
-                          className="text-sm font-medium"
-                          style={{ color: tokens.textMuted }}
-                        >
-                          Status:
-                        </div>
+                    applyRange1("lastMonth");
+                  }}
+                >
+                  Last Month
+                </Button>
+              </div>
+              {/* STATUS FILTER */}
+              <div className="flex flex-wrap items-center gap-2">
+                <div
+                  className="text-sm font-medium"
+                  style={{ color: tokens.textMuted }}
+                >
+                  Status:
+                </div>
 
-                        <Button
-                          size="sm"
-                          variant={status1 === null ? "primary" : "ghost"}
-                          onClick={() => {
-                            setStatus1(null);
-                            setPage1(1);
-                          }}
-                        >
-                          All
-                        </Button>
+                <Button
+                  size="sm"
+                  variant={status1 === null ? "primary" : "ghost"}
+                  onClick={() => {
+                    setStatus1(null);
+                    setPage1(1);
+                  }}
+                >
+                  All
+                </Button>
 
-                        <Button
-                          size="sm"
-                          variant={status1 === "present" ? "primary" : "ghost"}
-                          onClick={() => {
-                            setStatus1("present");
-                            setPage1(1);
-                          }}
-                        >
-                          Present
-                        </Button>
+                <Button
+                  size="sm"
+                  variant={status1 === "present" ? "primary" : "ghost"}
+                  onClick={() => {
+                    setStatus1("present");
+                    setPage1(1);
+                  }}
+                >
+                  Present
+                </Button>
 
-                        <Button
-                          size="sm"
-                          variant={status1 === "absent" ? "primary" : "ghost"}
-                          onClick={() => {
-                            setStatus1("absent");
-                            setPage1(1);
-                          }}
-                        >
-                          Absent
-                        </Button>
+                <Button
+                  size="sm"
+                  variant={status1 === "absent" ? "primary" : "ghost"}
+                  onClick={() => {
+                    setStatus1("absent");
+                    setPage1(1);
+                  }}
+                >
+                  Absent
+                </Button>
 
-                        <Button
-                          size="sm"
-                          variant={status1 === "half_day" ? "primary" : "ghost"}
-                          onClick={() => {
-                            setStatus1("half_day");
-                            setPage1(1);
-                          }}
-                        >
-                          Half Day
-                        </Button>
-                      </div>
-                    </div>
-                    <div className=" lg:w-1/3 md:w-1/2 w-full grid lg:grid-cols-10 md:grid-cols-6 grid-cols-4 gap-2">
-                      <div className="lg:col-span-4 md:col-span-2 sm:col-span-1">
-                        <Input
-                          label="From"
-                          inputName="from"
-                          inputType="date"
-                          inputValue={from1}
-                          onChange={(e) => {
-                            setFrom1(e.target.value);
-                            setFilterMode("range"); // ✅ key
-                            setActiveFilter1("");
-                            setPage1(1);
-                          }}
-                          placeholder="From date"
-                          showLabel={false}
-                        />
-                      </div>
-                      <div className="text-text font-semibold text-2xl w-full flex items-center justify-center col-span-1">
-                        →
-                      </div>
-                      <div className="lg:col-span-4 md:col-span-2 sm:col-span-1">
-                        <Input
-                          label="To"
-                          inputName="to"
-                          inputType="date"
-                          inputValue={to1}
-                          onChange={(e) => {
-                            setTo1(e.target.value);
-                            setFilterMode("range"); // ✅ key
-                            setActiveFilter1("");
-                            setPage1(1);
-                          }}
-                          placeholder="To date"
-                          showLabel={false}
-                        />
-                      </div>
-                      {/* <div className="col-span-1 flex items-end justify-end">
+                <Button
+                  size="sm"
+                  variant={status1 === "half_day" ? "primary" : "ghost"}
+                  onClick={() => {
+                    setStatus1("half_day");
+                    setPage1(1);
+                  }}
+                >
+                  Half Day
+                </Button>
+              </div>
+            </div>
+            <div className=" lg:w-1/3 md:w-1/2 w-full grid lg:grid-cols-10 md:grid-cols-6 grid-cols-4 gap-2">
+              <div className="lg:col-span-4 md:col-span-2 sm:col-span-1">
+                <Input
+                  label="From"
+                  inputName="from"
+                  inputType="date"
+                  inputValue={from1}
+                  onChange={(e) => {
+                    setFrom1(e.target.value);
+                    setFilterMode("range"); // ✅ key
+                    setActiveFilter1("");
+                    setPage1(1);
+                  }}
+                  placeholder="From date"
+                  showLabel={false}
+                />
+              </div>
+              <div className="text-text font-semibold text-2xl w-full flex items-center justify-center col-span-1">
+                →
+              </div>
+              <div className="lg:col-span-4 md:col-span-2 sm:col-span-1">
+                <Input
+                  label="To"
+                  inputName="to"
+                  inputType="date"
+                  inputValue={to1}
+                  onChange={(e) => {
+                    setTo1(e.target.value);
+                    setFilterMode("range"); // ✅ key
+                    setActiveFilter1("");
+                    setPage1(1);
+                  }}
+                  placeholder="To date"
+                  showLabel={false}
+                />
+              </div>
+              {/* <div className="col-span-1 flex items-end justify-end">
                         <Button
                           size="sm"
                           variant="primary"
@@ -467,245 +376,33 @@ export default function AttendancePage() {
                           />
                         </Button>
                       </div> */}
-                    </div>
-                  </>
-                )}
+            </div>
+          </>
+        )}
 
-                <DynamicTable
-                  currentPage={page1}
-                  rowsPerPage={limit1}
-                  totalPages={totalPages1}
-                  columns={columns}
-                  data={attendance1}
-                  loading={loading}
-                  pagination={true}
-                  searchable={true}
-                  showSerialNumber
-                  searchTerm={search1}
-                  onSearchChange={(val) => {
-                    setSearch1(val);
-                    setPage1(1);
-                  }}
-                  onPageChange={(p) => setPage1(p)}
-                  onRowsPerPageChange={(l) => {
-                    setLimit1(l);
-                    setPage1(1);
-                  }}
-                  // onRowClick={(row) => setPersonId(row.salespersonId)}
-                />
-              </div>
-            ),
-          },
-
-          {
-            label: "By Person",
-            key: "byPerson",
-            content: (
-              <div className="space-y-4">
-                <div className="flex items-center justify-between gap-3">
-                  <PersonSelector
-                    setPersonId={setPersonId}
-                    setSelectedPerson={setSelectedPerson}
-                  />
-                  <div className="flex items-center gap-2 justify-end ">
-                    <Button
-                      variant="secondary"
-                      onClick={() => setShowFilters((s) => !s)}
-                      disabled={!personId || personId === ""}
-                    >
-                      <Filter size={18} />
-                    </Button>
-                    <Button
-                      onClick={() => exportAttendanceExcel(attendance2)}
-                      disabled={!personId || personId === ""}
-                    >
-                      <Download size={18} />
-                    </Button>
-                  </div>
-                </div>
-                {showFilters && !(!personId || personId === "") && (
-                  <>
-                    <div className="flex flex-wrap items-center justify-start gap-4">
-                      <div className="flex flex-wrap items-center justify-start gap-2">
-                        <div
-                          className="text-sm font-medium"
-                          style={{ color: tokens.textMuted }}
-                        >
-                          Date Range:
-                        </div>
-                        <Button
-                          size="sm"
-                          variant={activeFilter === "7d" ? "primary" : "ghost"}
-                          onClick={() => {
-                            if (!personId) return; // ✅ guard
-                            setActiveFilter("7d");
-
-                            applyRange("7d");
-                          }}
-                        >
-                          Last 7 days
-                        </Button>
-
-                        <Button
-                          size="sm"
-                          variant={activeFilter === "30d" ? "primary" : "ghost"}
-                          onClick={() => {
-                            if (!personId) return; // ✅ guard
-                            setActiveFilter("30d");
-
-                            applyRange("30d");
-                          }}
-                        >
-                          Last 30 days
-                        </Button>
-
-                        <Button
-                          size="sm"
-                          variant={
-                            activeFilter === "thisMonth" ? "primary" : "ghost"
-                          }
-                          onClick={() => {
-                            if (!personId) return; // ✅ guard
-                            setActiveFilter("thisMonth");
-
-                            applyRange("thisMonth");
-                          }}
-                        >
-                          This Month
-                        </Button>
-
-                        <Button
-                          size="sm"
-                          variant={
-                            activeFilter === "lastMonth" ? "primary" : "ghost"
-                          }
-                          onClick={() => {
-                            if (!personId) return; // ✅ guard
-                            setActiveFilter("lastMonth");
-
-                            applyRange("lastMonth");
-                          }}
-                        >
-                          Last Month
-                        </Button>
-                      </div>
-                      <div className="flex flex-wrap items-center justify-start gap-2">
-                        <div
-                          className="text-sm font-medium"
-                          style={{ color: tokens.textMuted }}
-                        >
-                          Status:
-                        </div>
-                        <Button
-                          size="sm"
-                          variant={status2 === null ? "primary" : "ghost"}
-                          onClick={() => setStatus2(null)}
-                        >
-                          All
-                        </Button>
-
-                        <Button
-                          size="sm"
-                          variant={status2 === "present" ? "primary" : "ghost"}
-                          onClick={() => setStatus2("present")}
-                        >
-                          Present
-                        </Button>
-
-                        <Button
-                          size="sm"
-                          variant={status2 === "absent" ? "primary" : "ghost"}
-                          onClick={() => setStatus2("absent")}
-                        >
-                          Absent
-                        </Button>
-
-                        <Button
-                          size="sm"
-                          variant={status2 === "half_day" ? "primary" : "ghost"}
-                          onClick={() => setStatus2("half_day")}
-                        >
-                          Half Day
-                        </Button>
-                      </div>
-                    </div>
-                    <div className=" lg:w-1/3 md:w-1/2 w-full grid lg:grid-cols-10 md:grid-cols-6 grid-cols-4 gap-2">
-                      <div className="lg:col-span-4 md:col-span-2 sm:col-span-1">
-                        <Input
-                          label="From"
-                          inputName="from"
-                          inputType="date"
-                          inputValue={from}
-                          onChange={(e) => {
-                            if (!personId) return;
-                            setFrom(e.target.value);
-                            setActiveFilter(""); // ✅ unset preset
-                            setPage2(1);
-                          }}
-                          placeholder="From date"
-                          showLabel={false}
-                        />
-                      </div>
-                      <div className="text-text font-semibold text-2xl w-full flex items-center justify-center col-span-1">
-                        →
-                      </div>
-                      <div className="lg:col-span-4 md:col-span-2 sm:col-span-1">
-                        <Input
-                          label="To"
-                          inputName="to"
-                          inputType="date"
-                          inputValue={to}
-                          onChange={(e) => {
-                            if (!personId) return;
-                            setTo(e.target.value);
-                            setActiveFilter(""); // ✅ unset preset
-                            setPage2(1);
-                          }}
-                          placeholder="To date"
-                          showLabel={false}
-                        />
-                      </div>
-                      {/* <div className="col-span-1 flex items-end justify-end">
-                        <Button
-                          size="sm"
-                          variant="primary"
-                          onClick={() => {
-                            setPage2(1); // trigger refetch
-                          }}
-                          disabled={loading}
-                        >
-                          
-                          <RefreshCcw
-                            className={loading ? "animate-spin" : ""}
-                          />
-                        </Button>
-                      </div> */}
-                    </div>
-                  </>
-                )}
-
-                <DynamicTable
-                  currentPage={page2}
-                  rowsPerPage={limit2}
-                  totalPages={totalPagesPerson2}
-                  columns={columns2}
-                  data={attendance2}
-                  loading={loading2}
-                  pagination={true}
-                  searchable={false}
-                  showSerialNumber
-                  onRowClick={(row) => setPersonId(row.salespersonId)}
-                  onPageChange={(p) => setPage2(p)} // ✅ important
-                  onRowsPerPageChange={(l) => {
-                    setLimit2(l);
-                    setPage2(1); // reset page
-                  }}
-                />
-              </div>
-            ),
-          },
-        ]}
-      />
+        <DynamicTable
+          currentPage={page1}
+          rowsPerPage={limit1}
+          totalPages={totalPages1}
+          columns={columns}
+          data={attendance1}
+          loading={loading}
+          pagination={true}
+          searchable={true}
+          showSerialNumber
+          searchTerm={search1}
+          onSearchChange={(val) => {
+            setSearch1(val);
+            setPage1(1);
+          }}
+          onPageChange={(p) => setPage1(p)}
+          onRowsPerPageChange={(l) => {
+            setLimit1(l);
+            setPage1(1);
+          }}
+          // onRowClick={(row) => setPersonId(row.salespersonId)}
+        />
+      </div>
     </div>
   );
 }

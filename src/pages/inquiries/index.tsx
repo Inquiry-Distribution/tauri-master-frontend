@@ -30,6 +30,7 @@ import { Button } from "@/src/components/ui/button";
 import { exportInquiryStyled } from "@/src/xls-convert/inquiry.export";
 import EditInquiryForm from "./edit/_form";
 import Input from "@/src/components/ui/form/input";
+import { PersonSelector } from "@/src/components/ui/attendance/personSelector";
 // import { exportInquiryExcel } from "@/src/xls-convert/inquiry.export";
 
 const formatDate = (date: Date) => date.toISOString().split("T")[0];
@@ -78,6 +79,9 @@ export default function InquiriesPage() {
   const [showFilters, setShowFilters] = useState(false);
   const [filterMode, setFilterMode] = useState<"range" | "none">("none");
   const [activeRange, setActiveRange] = useState<string>("30d");
+
+  const [personId, setPersonId] = useState<string | null>(null);
+  const [selectedPerson, setSelectedPerson] = useState<any>(null);
 
   const today = new Date();
   const oneMonthAgo = new Date();
@@ -149,6 +153,7 @@ export default function InquiriesPage() {
       limit: String(limit),
 
       ...(selected?.status ? { status: selected.status } : {}),
+      ...(personId ? { assignedToId: personId } : {}),
 
       ...(debouncedSearch ? { search: debouncedSearch } : {}),
 
@@ -160,7 +165,7 @@ export default function InquiriesPage() {
     const query = new URLSearchParams(queryObj).toString();
 
     getInquiries(query);
-  }, [activeTab, page, limit, debouncedSearch, priority, from, to]);
+  }, [activeTab, page, limit, debouncedSearch, priority, from, to, personId]);
 
   const handlePageChange = (newPage: number) => {
     getInquiries(`page=${newPage}&limit=${limit}`);
@@ -235,6 +240,10 @@ export default function InquiriesPage() {
       {showFilters && (
         <>
           <div className="flex flex-wrap items-center gap-4">
+            <PersonSelector
+              setPersonId={setPersonId}
+              setSelectedPerson={setSelectedPerson}
+            />
             {/* DATE RANGE */}
             <div className="flex flex-wrap items-center gap-2">
               <div

@@ -6,17 +6,13 @@ import { Link } from "react-router-dom";
 import { getAttendanceStatusStyleMap } from "./attendanceStyles";
 import { SalesPerson } from "@/src/types/users";
 
-type ColumnDeps = {
-  setSelectedUserId: (id: string) => void;
-};
+type ColumnDeps = {};
 type ColumnDeps2 = {
   setSelectedUserId: (id: string) => void;
   selectedPerson: SalesPerson | null;
 };
 
-export const getAttendanceColumns = ({
-  setSelectedUserId,
-}: ColumnDeps): TableColumn<Attendance>[] => {
+export const getAttendanceColumns = (): TableColumn<Attendance>[] => {
   return [
     {
       key: "id",
