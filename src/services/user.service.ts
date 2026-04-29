@@ -27,4 +27,9 @@ export const UserService = {
     const { data } = await api.patch(`/users/${id}/pin`, payload);
     return data;
   },
+
+  syncUsers: async () => {
+    const { data } = await api.post("/users/sync");
+    return data;
+  },
 };
