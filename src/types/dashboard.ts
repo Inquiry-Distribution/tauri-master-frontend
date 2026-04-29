@@ -14,3 +14,22 @@ export type InquiryReportByStatus = {
   };
   status: string;
 };
+
+export type RecentActivityLog = {
+  id: string;
+  action: string;
+  performedById: string;
+  targetId: string;
+  targetModel: string;
+  meta: {
+    role: string;
+  };
+  ipAddress: string | null;
+  createdAt: string;
+  performedBy: {
+    id: string;
+    name: string;
+    email: string;
+    role: string;
+  };
+};

@@ -30,6 +30,7 @@ import { BroadcastForm } from "@/src/components/ui/notification/broadcastForm";
 import { Modal } from "@/src/components/ui/modal";
 import { Card } from "@/src/components/ui/card";
 import InquiryAnalytics from "@/src/components/ui/dashboard/inquiryAnalytics";
+import RecentActivity from "@/src/components/ui/dashboard/recentActivity";
 
 // const stats = [
 //   {
@@ -340,7 +341,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <div
+        {/* <div
           className="p-6 rounded-2xl border"
           style={{
             backgroundColor: tokens.surface,
@@ -379,7 +380,8 @@ export default function DashboardPage() {
           >
             View All Activity
           </button>
-        </div>
+        </div> */}
+        <RecentActivity />
       </div>
       {/* Broadcast Modal */}
       {showBroadcastModal && (
