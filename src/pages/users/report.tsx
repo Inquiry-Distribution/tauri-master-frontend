@@ -1,134 +1,271 @@
-import React from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { useTheme } from '../../contexts';
-import { ChevronLeft, Mail, Phone, Calendar, Award, TrendingUp, PieChart as PieChartIcon, MapPin } from 'lucide-react';
-import { 
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell
-} from 'recharts';
+import React, { useEffect, useState } from "react";
+import { useParams, Link } from "react-router-dom";
+import {
+  ChevronLeft,
+  Mail,
+  Phone,
+  Calendar,
+  TrendingUp,
+  PieChart as PieChartIcon,
+  MapPin,
+} from "lucide-react";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+} from "recharts";
 
-const data = [
-  { name: 'Jan', closed: 40, lost: 10 },
-  { name: 'Feb', closed: 30, lost: 15 },
-  { name: 'Mar', closed: 45, lost: 8 },
-];
+import type { SalesPersonId, SalesPersonReport } from "@/src/types/users";
+import { useGetSalesPersonById } from "@/src/hooks/salesPerson/useGetSalesPerson";
+import { useGetSalesPersonReport } from "@/src/hooks/salesPerson/useGetSalesPersonReport";
+import InquiriesTable from "@/src/components/ui/salePerson/inquiryTable.tsx/inquiryTable";
+import { Card } from "@/src/components/ui/card";
 
-const pieData = [
-  { name: 'Website', value: 400 },
-  { name: 'Referral', value: 300 },
-  { name: 'Social', value: 300 },
-];
-
-const COLORS = ['#4F7DF3', '#34D399', '#FB923C'];
+const COLORS = ["#4F7DF3", "#34D399", "#FB923C"];
 
 export default function SalesPersonReportPage() {
   const { id } = useParams();
-  const { tokens } = useTheme();
+
+  const { getSalesPersonById, loading: userLoading } = useGetSalesPersonById();
+  const { getSalesPersonReport, loading: reportLoading } =
+    useGetSalesPersonReport();
+
+  const [user, setUser] = useState<SalesPersonId | null>(null);
+  const [report, setReport] = useState<SalesPersonReport | null>(null);
+
+  useEffect(() => {
+    if (!id) return;
+
+    const fetchData = async () => {
+      try {
+        const userRes = await getSalesPersonById(id);
+        const reportRes = await getSalesPersonReport(id, "");
+
+        setUser(userRes.data);
+        setReport(reportRes.data);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    fetchData();
+  }, [id]);
+
+  const loading = userLoading || reportLoading;
+
+  const barData = [
+    { name: "Closed", value: report?.closed || 0 },
+    { name: "In Progress", value: report?.inProgress || 0 },
+    { name: "Follow Up", value: report?.followUp || 0 },
+  ];
+
+  const pieData = [
+    { name: "Converted", value: report?.converted || 0 },
+    {
+      name: "Remaining",
+      value: (report?.total || 0) - (report?.converted || 0),
+    },
+  ];
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64 text-sm text-textSec">
+        Loading report...
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="text-center text-danger">
+        Failed to load salesperson data.
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex items-center gap-4">
-        <Link to="/sales-persons" className="p-2 rounded-lg hover:bg-opacity-10" style={{ backgroundColor: tokens.borderLight, color: tokens.textSec }}>
+        <Link
+          to="/sales-persons"
+          className="p-2 rounded-lg bg-borderLight hover:opacity-80"
+        >
           <ChevronLeft size={20} />
         </Link>
+
         <div>
-          <h1 className="text-2xl font-bold tracking-tight" style={{ color: tokens.text }}>Agent Report</h1>
-          <p className="text-sm" style={{ color: tokens.textSec }}>Detailed performance analysis for Agent {id}</p>
+          <h1 className="text-2xl font-bold text-text">Agent Report</h1>
+          <p className="text-sm text-textSec">
+            Detailed performance for {user.name}
+          </p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* LEFT PANEL */}
         <div className="space-y-6">
-          <div className="p-6 rounded-2xl border" style={{ backgroundColor: tokens.surface, borderColor: tokens.border }}>
+          {/* Profile */}
+          <div className="p-6 rounded-2xl border border-border bg-surface">
             <div className="flex flex-col items-center text-center">
-              <img 
-                src={`https://picsum.photos/seed/${id}/200/200`} 
-                alt="Agent" 
-                className="w-24 h-24 rounded-2xl object-cover mb-4 border-2" 
-                style={{ borderColor: tokens.border }}
-                referrerPolicy="no-referrer"
+              <img
+                src={
+                  user.profileImage ||
+                  `https://picsum.photos/seed/${id}/200/200`
+                }
+                className="w-24 h-24 rounded-2xl object-cover mb-4 border border-border"
               />
-              <h2 className="text-xl font-bold" style={{ color: tokens.text }}>Sarah Miller</h2>
-              <p className="text-sm mb-4" style={{ color: tokens.textSec }}>Senior Sales Executive</p>
-              
-              <div className="flex gap-2 mb-6">
-                <span className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-green-500/10 text-green-500">Active</span>
-                <span className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-blue-500/10 text-blue-500">Top Performer</span>
-              </div>
 
-              <div className="w-full space-y-3">
-                <div className="flex items-center gap-3 text-sm" style={{ color: tokens.textSec }}>
+              <h2 className="text-xl font-bold text-text">{user.name}</h2>
+
+              {user.company && (
+                <p className="text-xs text-textMuted">{user.company.name}</p>
+              )}
+
+              <span
+                className={`px-3 py-1 text-xs rounded-full font-semibold ${
+                  user.isActive
+                    ? "bg-successLight text-success"
+                    : "bg-dangerLight text-danger"
+                }`}
+              >
+                {user.isActive ? "Active" : "Inactive"}
+              </span>
+
+              <div className="w-full mt-6 space-y-3 text-sm">
+                <div className="flex items-center gap-2 text-text">
                   <Mail size={16} />
-                  <span>sarah.m@company.com</span>
+                  <span>{user.email}</span>
                 </div>
-                <div className="flex items-center gap-3 text-sm" style={{ color: tokens.textSec }}>
+
+                <div className="flex items-center gap-2 text-text">
                   <Phone size={16} />
-                  <span>+1 234 567 001</span>
+                  <span>{user.phone || "N/A"}</span>
                 </div>
-                <div className="flex items-center gap-3 text-sm" style={{ color: tokens.textSec }}>
+
+                <div className="flex items-center gap-2 text-textSec">
                   <Calendar size={16} />
-                  <span>Joined Oct 2023</span>
+                  {new Date(user.createdAt).toDateString()}
                 </div>
+
+                {user.assignedArea && (
+                  <div className="flex items-center gap-2 text-textSec">
+                    <MapPin size={16} />
+                    {user.assignedArea}
+                  </div>
+                )}
               </div>
             </div>
           </div>
 
-          <div className="p-6 rounded-2xl border" style={{ backgroundColor: tokens.surface, borderColor: tokens.border }}>
-            <h3 className="font-bold mb-4" style={{ color: tokens.text }}>Key Metrics</h3>
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <span className="text-sm" style={{ color: tokens.textSec }}>Conversion Rate</span>
-                <span className="font-bold text-green-500">82.4%</span>
+          {/* Device Info */}
+          <div className="p-6 rounded-2xl border border-border bg-surface">
+            <h3 className="font-bold mb-4 text-text">Device Info</h3>
+
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-textSec">Platform</span>
+                <span className="text-text">
+                  {user.device?.platform || "—"}
+                </span>
               </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm" style={{ color: tokens.textSec }}>Avg. Response Time</span>
-                <span className="font-bold" style={{ color: tokens.text }}>14 mins</span>
+
+              <div className="flex justify-between">
+                <span className="text-textSec">App Version</span>
+                <span className="text-text">
+                  {user.device?.appVersion || "—"}
+                </span>
               </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm" style={{ color: tokens.textSec }}>Customer Satisfaction</span>
-                <span className="font-bold text-blue-500">4.8/5</span>
+
+              <div className="flex justify-between">
+                <span className="text-textSec">Last Seen</span>
+                <span className="text-text">
+                  {user.device?.lastSeen
+                    ? new Date(user.device.lastSeen).toLocaleString()
+                    : "—"}
+                </span>
+              </div>
+
+              <div className="flex justify-between">
+                <span className="text-textSec">Status</span>
+                <span
+                  className={
+                    user.device?.isBlocked ? "text-danger" : "text-success"
+                  }
+                >
+                  {user.device?.isBlocked ? "Blocked" : "Active"}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Metrics */}
+          <div className="p-6 rounded-2xl border border-border bg-surface">
+            <h3 className="font-bold mb-4 text-text">Key Metrics</h3>
+
+            <div className="space-y-3 text-sm">
+              <div className="flex justify-between">
+                <span className="text-textSec">Conversion Rate</span>
+                <span className="text-success font-semibold">
+                  {report?.conversionRate || "0%"}
+                </span>
+              </div>
+
+              <div className="flex justify-between">
+                <span className="text-textSec">Close Rate</span>
+                <span className="text-text">{report?.closeRate || "0%"}</span>
+              </div>
+
+              <div className="flex justify-between">
+                <span className="text-textSec">Total Leads</span>
+                <span className="text-text">{report?.total || 0}</span>
               </div>
             </div>
           </div>
         </div>
 
+        {/* RIGHT PANEL */}
         <div className="lg:col-span-2 space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="p-6 rounded-2xl border" style={{ backgroundColor: tokens.surface, borderColor: tokens.border }}>
-              <h3 className="font-bold mb-6 flex items-center gap-2" style={{ color: tokens.text }}>
-                <TrendingUp size={18} className="text-blue-500" />
-                Monthly Closures
+          {/* Charts */}
+          <div className="grid md:grid-cols-2 gap-6">
+            {/* Bar Chart */}
+            <div className="p-6 rounded-2xl border border-border bg-surface">
+              <h3 className="font-bold mb-4 flex items-center gap-2 text-text">
+                <TrendingUp size={18} /> Performance
               </h3>
-              <div className="h-[200px]">
+
+              <div className="h-52">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={data}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={tokens.chartGrid} />
-                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: tokens.textMuted, fontSize: 12 }} />
-                    <YAxis axisLine={false} tickLine={false} tick={{ fill: tokens.textMuted, fontSize: 12 }} />
-                    <Tooltip contentStyle={{ backgroundColor: tokens.tooltipBg, border: 'none', borderRadius: '8px', color: '#fff' }} />
-                    <Bar dataKey="closed" fill={tokens.accent} radius={[4, 4, 0, 0]} />
+                  <BarChart data={barData}>
+                    <CartesianGrid stroke="var(--chartGrid)" />
+                    <XAxis dataKey="name" />
+                    <YAxis />
+                    <Tooltip />
+                    <Bar dataKey="value" fill="var(--accent)" />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
             </div>
 
-            <div className="p-6 rounded-2xl border" style={{ backgroundColor: tokens.surface, borderColor: tokens.border }}>
-              <h3 className="font-bold mb-6 flex items-center gap-2" style={{ color: tokens.text }}>
-                <PieChartIcon size={18} className="text-purple-500" />
-                Lead Sources
+            {/* Pie Chart */}
+            <div className="p-6 rounded-2xl border border-border bg-surface">
+              <h3 className="font-bold mb-4 flex items-center gap-2 text-text">
+                <PieChartIcon size={18} /> Conversion Split
               </h3>
-              <div className="h-[200px]">
-                <ResponsiveContainer width="100%" height="100%">
+
+              <div className="h-52">
+                <ResponsiveContainer>
                   <PieChart>
-                    <Pie
-                      data={pieData}
-                      innerRadius={60}
-                      outerRadius={80}
-                      paddingAngle={5}
-                      dataKey="value"
-                    >
-                      {pieData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    <Pie data={pieData} dataKey="value">
+                      {pieData.map((_, i) => (
+                        <Cell key={i} fill={COLORS[i % COLORS.length]} />
                       ))}
                     </Pie>
                     <Tooltip />
@@ -138,25 +275,10 @@ export default function SalesPersonReportPage() {
             </div>
           </div>
 
-          <div className="p-6 rounded-2xl border" style={{ backgroundColor: tokens.surface, borderColor: tokens.border }}>
-            <h3 className="font-bold mb-6" style={{ color: tokens.text }}>Recent Closed Inquiries</h3>
-            <div className="space-y-4">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="flex items-center justify-between p-4 rounded-xl" style={{ backgroundColor: tokens.bg }}>
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center text-green-600">
-                      <Award size={20} />
-                    </div>
-                    <div>
-                      <p className="text-sm font-bold" style={{ color: tokens.text }}>Enterprise Solution Deal</p>
-                      <p className="text-xs" style={{ color: tokens.textSec }}>Closed on March {20 - i}, 2024</p>
-                    </div>
-                  </div>
-                  <span className="text-sm font-bold" style={{ color: tokens.text }}>$12,400</span>
-                </div>
-              ))}
-            </div>
-          </div>
+          {/* Table */}
+          <Card>
+            <InquiriesTable personId={id || ""} />
+          </Card>
         </div>
       </div>
     </div>

@@ -10,6 +10,15 @@ export const UserService = {
     const { data } = await api.get(`/users/sales?${query}`);
     return data;
   },
+  getSalesPersonById: async (id: string) => {
+    const { data } = await api.get(`/users/${id}`);
+    return data;
+  },
+
+  getSalesPersonReport: async (id: string, query: string) => {
+    const { data } = await api.get(`/reports/salesperson/${id}?${query}`);
+    return data;
+  },
   getAllSalesPerson1: async () => {
     const { data } = await api.get("/reports/salespersons");
     return data;

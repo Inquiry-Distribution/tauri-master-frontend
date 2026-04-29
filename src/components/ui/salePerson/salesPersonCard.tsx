@@ -16,6 +16,7 @@ import ButtonLoader from "../loader/buttonLoader";
 import SetResetPinForm from "./setResetPinForm";
 import Swal from "sweetalert2";
 import { Card } from "../card";
+import { Link } from "react-router-dom";
 
 interface Props {
   person: SalesPerson;
@@ -246,6 +247,12 @@ export default function SalesPersonCard({
             )}
           </div>
         </div>
+        <Link
+          to={`/sales-persons/${person.id}`}
+          className="text-sm text-blue-500 hover:underline"
+        >
+          View Details
+        </Link>
       </div>
       {/* Divider */}
       <div className="h-px bg-border mx-5" />
