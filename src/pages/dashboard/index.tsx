@@ -31,6 +31,8 @@ import { Modal } from "@/src/components/ui/modal";
 import { Card } from "@/src/components/ui/card";
 import InquiryAnalytics from "@/src/components/ui/dashboard/inquiryAnalytics";
 import RecentActivity from "@/src/components/ui/dashboard/recentActivity";
+import { Live } from "@google/genai";
+import { LiveLocationsCard } from "../devices/deviceComponents";
 
 // const stats = [
 //   {
@@ -77,6 +79,9 @@ export default function DashboardPage() {
   const { tokens } = useTheme();
   const navigate = useNavigate();
   const [showBroadcastModal, setShowBroadcastModal] = useState<boolean>(false);
+
+  const userData = JSON.parse(localStorage.getItem("userData") || "{}");
+  const isSuperUser = userData?.role === "superuser";
   const { data, loading, error, getDashboardSummary } =
     useGetDashboardSummary();
 
@@ -339,7 +344,8 @@ export default function DashboardPage() {
             </div>
           </div> */}
 
-        <RecentActivity />
+        {isSuperUser && <RecentActivity />}
+        {isSuperUser && <LiveLocationsCard />}
       </div>
       {/* Broadcast Modal */}
       {showBroadcastModal && (
