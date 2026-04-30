@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import {
   ChevronLeft,
@@ -33,6 +33,8 @@ import { useTheme } from "@/src/contexts";
 import { Button } from "@/src/components/ui/button";
 import Input from "@/src/components/ui/form/input";
 import Swal from "sweetalert2";
+import { useGetAttendanceById } from "@/src/hooks/attendance/useGetAttendanceById";
+import { AttendanceResponse } from "@/src/types/attendance";
 
 const formatDate = (date: Date) => date.toISOString().split("T")[0];
 
@@ -82,9 +84,12 @@ export default function SalesPersonReportPage() {
   const { getSalesPersonById, loading: userLoading } = useGetSalesPersonById();
   const { getSalesPersonReport, loading: reportLoading } =
     useGetSalesPersonReport();
+  const { getAttendancePerson, loading: attendanceLoading } =
+    useGetAttendanceById();
 
   const [user, setUser] = useState<SalesPersonId | null>(null);
   const [report, setReport] = useState<SalesPersonReport | null>(null);
+  const [attendance, setAttendance] = useState<AttendanceResponse | null>(null);
 
   const [filterMode, setFilterMode] = useState<"range" | "">("range");
   const [page, setPage] = useState(1);
@@ -102,14 +107,24 @@ export default function SalesPersonReportPage() {
 
     const fetchData = async () => {
       try {
-        const userRes = await getSalesPersonById(id);
-        const reportRes = await getSalesPersonReport(
-          id,
-          `from=${from}&to=${to}`,
-        );
+        // const userRes = await getSalesPersonById(id);
+        // const reportRes = await getSalesPersonReport(
+        //   id,
+        //   `from=${from}&to=${to}`,
+        // );
+        // const attendanceRes = await getAttendancePerson(
+        //   id,
+        //   `from=${from}&to=${to}`,
+        // );
+        const [userRes, reportRes, attendanceRes] = await Promise.all([
+          getSalesPersonById(id),
+          getSalesPersonReport(id, `from=${from}&to=${to}`),
+          getAttendancePerson(id, `from=${from}&to=${to}`),
+        ]);
 
         setUser(userRes.data);
         setReport(reportRes.data);
+        setAttendance(attendanceRes);
         // setReport({
         //   total: 6,
 
@@ -139,12 +154,20 @@ export default function SalesPersonReportPage() {
 
     const fetchData = async () => {
       try {
-        const reportRes = await getSalesPersonReport(
-          id,
-          `from=${from}&to=${to}`,
-        );
-
+        // const reportRes = await getSalesPersonReport(
+        //   id,
+        //   `from=${from}&to=${to}`,
+        // );
+        // const attendanceRes = await getAttendancePerson(
+        //   id,
+        //   `from=${from}&to=${to}`,
+        // );
+        const [reportRes, attendanceRes] = await Promise.all([
+          getSalesPersonReport(id, `from=${from}&to=${to}`),
+          getAttendancePerson(id, `from=${from}&to=${to}`),
+        ]);
         setReport(reportRes.data);
+        setAttendance(attendanceRes);
         // setReport({
         //   total: 6,
 
@@ -175,6 +198,24 @@ export default function SalesPersonReportPage() {
     setFilterMode("range");
     setPage(1);
   };
+
+  const attendanceStats = useMemo(() => {
+    if (!attendance?.records) return null;
+
+    return {
+      total: attendance.total,
+      presentDays: attendance.records.filter((r) => r.status === "present")
+        .length,
+      sessions: attendance.records.reduce(
+        (a, r) => a + (r.sessionsCount || 0),
+        0,
+      ),
+      minutes: attendance.records.reduce(
+        (a, r) => a + (r.totalMinutes || 0),
+        0,
+      ),
+    };
+  }, [attendance]);
 
   const barData = [
     { name: "Closed", value: report?.closed || 0 },
@@ -329,7 +370,7 @@ export default function SalesPersonReportPage() {
           </div>
 
           {/* Metrics */}
-          <div className="p-6 rounded-2xl border border-border bg-surface">
+          {/* <div className="p-6 rounded-2xl border border-border bg-surface">
             <h3 className="font-bold mb-4 text-text">Key Metrics</h3>
 
             <div className="space-y-3 text-sm">
@@ -348,6 +389,51 @@ export default function SalesPersonReportPage() {
               <div className="flex justify-between">
                 <span className="text-textSec">Total Leads</span>
                 <span className="text-text">{report?.total || 0}</span>
+              </div>
+            </div>
+          </div> */}
+
+          {/* Attendance */}
+          <div className="relative p-6 rounded-2xl border border-border bg-surface">
+            <h3 className="font-bold mb-4 text-text">Attendance Summary</h3>
+
+            {/* Loader Overlay */}
+            {attendanceLoading && (
+              <CommonLoader
+                fullScreen={false}
+                className="absolute inset-0 z-10"
+              />
+            )}
+
+            <div className={attendanceLoading ? "opacity-40" : ""}>
+              <div className="space-y-3 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-textSec">Total Days</span>
+                  <span className="text-text">
+                    {attendanceStats?.total ?? 0}
+                  </span>
+                </div>
+
+                <div className="flex justify-between">
+                  <span className="text-textSec">Present Days</span>
+                  <span className="text-success font-semibold">
+                    {attendanceStats?.presentDays ?? 0}
+                  </span>
+                </div>
+
+                <div className="flex justify-between">
+                  <span className="text-textSec">Sessions</span>
+                  <span className="text-text">
+                    {attendanceStats?.sessions ?? 0}
+                  </span>
+                </div>
+
+                <div className="flex justify-between">
+                  <span className="text-textSec">Working Time</span>
+                  <span className="text-text">
+                    {attendanceStats?.minutes ?? 0} min
+                  </span>
+                </div>
               </div>
             </div>
           </div>

@@ -239,7 +239,7 @@ export default function DashboardPage() {
       </div>
 
       {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 xl:grid-cols-7"> */}
-      <div className="flex flex-wrap gap-6 w-full justify-center items-start">
+      <div className="flex flex-wrap gap-6 w-full justify-start items-start">
         {loading ? (
           <CommonLoader fullScreen={true} overlay={true} />
         ) : (
@@ -252,11 +252,10 @@ export default function DashboardPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 lg:grid-cols-5 md:grid-cols-3 gap-6 grid">
-          <Card className="lg:col-span-2 md:col-span-3 sm:col-span-3">
-            <InquiryAnalytics />
-          </Card>
-          <div
+        <Card>
+          <InquiryAnalytics />
+        </Card>
+        {/* <div
             className="lg:col-span-3 md:col-span-3 sm:col-span-3 grid p-6 rounded-2xl border"
             style={{
               backgroundColor: tokens.surface,
@@ -338,49 +337,8 @@ export default function DashboardPage() {
                 </AreaChart>
               </ResponsiveContainer>
             </div>
-          </div>
-        </div>
+          </div> */}
 
-        {/* <div
-          className="p-6 rounded-2xl border"
-          style={{
-            backgroundColor: tokens.surface,
-            borderColor: tokens.border,
-          }}
-        >
-          <h3 className="font-bold text-lg mb-6" style={{ color: tokens.text }}>
-            Recent Activity
-          </h3>
-          <div className="space-y-6">
-            {[1, 2, 3, 4, 5].map((i) => (
-              <div key={i} className="flex gap-4">
-                <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0">
-                  <FileText size={18} className="text-blue-600" />
-                </div>
-                <div>
-                  <p
-                    className="text-sm font-bold"
-                    style={{ color: tokens.text }}
-                  >
-                    New Inquiry Received
-                  </p>
-                  <p className="text-xs" style={{ color: tokens.textSec }}>
-                    Customer: John Doe • 2 mins ago
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-          <button
-            className="w-full mt-6 py-2 text-sm font-bold rounded-xl transition-colors"
-            style={{
-              backgroundColor: tokens.borderLight,
-              color: tokens.accent,
-            }}
-          >
-            View All Activity
-          </button>
-        </div> */}
         <RecentActivity />
       </div>
       {/* Broadcast Modal */}

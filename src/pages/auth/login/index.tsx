@@ -91,7 +91,7 @@ export default function LoginPage() {
       style={{ backgroundColor: tokens.bg }}
     >
       <div className="w-full max-w-md">
-        <motion.div
+        {/* <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-8"
@@ -108,7 +108,7 @@ export default function LoginPage() {
           <p className="text-sm mt-2" style={{ color: tokens.textSec }}>
             Please enter your details to sign in.
           </p>
-        </motion.div>
+        </motion.div> */}
 
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
@@ -120,6 +120,24 @@ export default function LoginPage() {
             borderColor: tokens.border,
           }}
         >
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center mb-8"
+          >
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-blue-600 text-white shadow-xl shadow-blue-500/20 mb-4">
+              <BarChart3 size={32} />
+            </div>
+            <h1
+              className="text-3xl font-bold tracking-tight"
+              style={{ color: tokens.text }}
+            >
+              Welcome Back
+            </h1>
+            <p className="text-sm mt-2" style={{ color: tokens.textSec }}>
+              Please enter your details to sign in.
+            </p>
+          </motion.div>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
               <label
@@ -158,14 +176,14 @@ export default function LoginPage() {
                 >
                   Password
                 </label>
-                <Link
+                {/* <Link
                   to="/forgot-password"
                   title="Forgot Password"
                   style={{ color: tokens.accent }}
                   className="text-xs font-bold hover:underline"
                 >
                   Forgot Password?
-                </Link>
+                </Link> */}
               </div>
               <div className="relative">
                 <Lock
@@ -197,7 +215,7 @@ export default function LoginPage() {
               </div>
             </div>
 
-            <div className="flex items-center gap-2 px-1">
+            {/* <div className="flex items-center gap-2 px-1">
               <input
                 type="checkbox"
                 id="remember"
@@ -210,7 +228,7 @@ export default function LoginPage() {
               >
                 Remember me for 30 days
               </label>
-            </div>
+            </div> */}
 
             <button
               type="submit"
@@ -228,7 +246,7 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <div
+          {/* <div
             className="mt-8 pt-6 border-t text-center"
             style={{ borderColor: tokens.border }}
           >
@@ -242,12 +260,12 @@ export default function LoginPage() {
                 Create an account
               </Link>
             </p>
-          </div>
+          </div> */}
         </motion.div>
 
         <div className="mt-8 text-center">
           <p className="text-xs" style={{ color: tokens.textMuted }}>
-            &copy; 2024 InquiryHub Distribution System. All rights reserved.
+            &copy; 2026 InquiryHub Distribution System. All rights reserved.
           </p>
         </div>
       </div>
