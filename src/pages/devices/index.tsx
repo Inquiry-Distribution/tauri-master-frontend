@@ -144,6 +144,7 @@ export default function DevicesPage() {
                 }}
                 showSerialNumber={false}
                 emptyMessage="No devices found."
+                striped
               />
             </div>
           </Card>

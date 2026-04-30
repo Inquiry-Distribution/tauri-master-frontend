@@ -400,6 +400,7 @@ export default function AttendancePage() {
             setLimit1(l);
             setPage1(1);
           }}
+          striped
           // onRowClick={(row) => setPersonId(row.salespersonId)}
         />
       </div>

@@ -5,7 +5,7 @@ import Layout from "../components/layout/Layout";
 import DashboardPage from "../pages/dashboard";
 import InquiriesPage from "../pages/inquiries";
 import SalesPersonsPage from "../pages/users";
-import SalesPersonReportPage from "../pages/users/report";
+
 import DevicesPage from "../pages/devices";
 import AIReportsPage from "../pages/ai-reports";
 import NotFound from "../components/layout/NotFound";
@@ -16,6 +16,7 @@ import ForgotPasswordPage from "../pages/auth/forgot-password";
 import InquiryDetailPage from "../pages/inquiries/detail";
 import AttendancePage from "../pages/attendance";
 import NotificationsPage from "../pages/notifications";
+import SalesPersonReportPage from "../pages/users/detail";
 
 export default function AppRoutes() {
   return useRoutes([

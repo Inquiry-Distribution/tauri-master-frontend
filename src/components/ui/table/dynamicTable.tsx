@@ -268,8 +268,11 @@ function DynamicTable<T extends Record<string, any>>({
                     onClick={() => onRowClick?.(row)}
                     className={cn(
                       onRowClick && "cursor-pointer",
-                      striped && ri % 2 !== 0 && "bg-(--surface)/40",
-                      selected && "bg-(--primary)/5",
+                      striped === true && ri % 2 !== 0 ? "bg-(--bg)/40!" : "",
+                      striped === true && ri % 2 === 0
+                        ? "bg-(--surface)/40!"
+                        : "",
+                      selected && "bg-(--primary)/5!",
                     )}
                   >
                     {/* Checkbox cell */}

@@ -405,6 +405,7 @@ export default function InquiriesPage() {
                 setPage(1);
               }}
               loading={loading}
+              striped={true}
             />
           ),
         }))}

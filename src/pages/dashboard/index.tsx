@@ -119,7 +119,7 @@ export default function DashboardPage() {
           },
           {
             label: "Total Sales",
-            value: `₹${data.totalSales}`,
+            value: `${data.totalSales}`,
             icon: TrendingUp,
             color: "bg-indigo-500",
             trend: "+10.3%",

@@ -151,7 +151,7 @@ export const getInquiryColumns = ({
             {row.status === "assigned" ? "Reassign" : "Assign"}
           </Button>
           <Button variant="secondary" onClick={() => setEditInquiry(row)}>
-            <Edit size={16} />
+            <Edit size={16} />s
           </Button>
           <Button variant="danger" onClick={() => onDelete(row.id)}>
             {deleteLoading ? <ButtonLoader /> : <Trash size={16} />}
@@ -164,8 +164,8 @@ export const getInquiryColumns = ({
 
 export const tabFilters = [
   { key: "all", label: "All", status: "" },
-  { key: "assigned", label: "Assigned", status: "assigned" },
   { key: "unassigned", label: "Unassigned", status: "unassigned" },
+  { key: "assigned", label: "Assigned", status: "assigned" },
   { key: "in_progress", label: "In Progress", status: "in_progress" },
   { key: "closed", label: "Closed", status: "closed" },
 ];

@@ -150,7 +150,7 @@ export const getInquiryColumns = (): TableColumn<Inquiry>[] => {
 export const tabFilters = [
   { key: "all", label: "All", status: "" },
   { key: "assigned", label: "Assigned", status: "assigned" },
-  { key: "unassigned", label: "Unassigned", status: "unassigned" },
+  // { key: "unassigned", label: "Unassigned", status: "unassigned" },
   { key: "in_progress", label: "In Progress", status: "in_progress" },
   { key: "closed", label: "Closed", status: "closed" },
 ];
