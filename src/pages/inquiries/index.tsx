@@ -210,8 +210,8 @@ export default function InquiriesPage() {
         </div>
       </div>
 
-      <div className="flex flex-col md:flex-row gap-4">
-        <div className="relative flex-1">
+      <div className="flex  md:flex-row gap-4">
+        <div className="relative flex grow">
           <Search
             size={18}
             className="absolute left-3 top-1/2 -translate-y-1/2"

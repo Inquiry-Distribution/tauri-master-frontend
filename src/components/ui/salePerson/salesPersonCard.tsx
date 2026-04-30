@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Mail, Phone, Edit } from "lucide-react";
+import { Mail, Phone, Edit, ArrowUpRight, ArrowRight } from "lucide-react";
 import { SalesPerson } from "@/src/types/users";
 import { useTheme } from "@/src/contexts";
 import SalesPersonAttendance from "./salesPersonAttendance";
@@ -203,15 +203,14 @@ export default function SalesPersonCard({
   };
 
   return (
-    <Card className="p-0!">
+    <Card className="p-0! relative overflow-visible">
       {/* Header */}
-      <div className="px-5 pt-4 pb-3.5 flex items-center gap-3.5">
+      <div className="px-5 pt-4 pb-3.5 flex items-center gap-3.5 relative">
         <img
           src={avatar}
           alt={person.name}
           className="w-13 h-13 rounded-xl object-cover shrink-0"
         />
-
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
             <span className="text-[15px] font-bold text-text truncate">
@@ -247,12 +246,26 @@ export default function SalesPersonCard({
             )}
           </div>
         </div>
-        <Link
-          to={`/sales-persons/${person.id}`}
-          className="text-sm text-blue-500 hover:underline"
-        >
-          View Details
-        </Link>
+        <div className="ml-auto mb-auto">
+          <Link
+            to={`/sales-persons/${person.id}`}
+            className="group flex items-center gap-1 text-[11px] font-semibold px-3 py-1.5 rounded-full whitespace-nowrap
+               transition-all duration-200 ease-out active:scale-95 "
+            style={{
+              background: tokens.accentLight,
+              color: tokens.accent,
+            }}
+          >
+            <span className="transition-transform duration-200 group-hover:-translate-x-0.5">
+              View
+            </span>
+
+            <ArrowRight
+              size={12}
+              className="transition-all duration-200 group-hover:translate-x-1 group-hover:scale-110"
+            />
+          </Link>
+        </div>
       </div>
       {/* Divider */}
       <div className="h-px bg-border mx-5" />
