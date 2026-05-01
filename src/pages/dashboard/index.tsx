@@ -345,7 +345,7 @@ export default function DashboardPage() {
           </div> */}
 
         {isSuperUser && <RecentActivity />}
-        {isSuperUser && <LiveLocationsCard />}
+        {/* {isSuperUser && <LiveLocationsCard />} */}
       </div>
       {/* Broadcast Modal */}
       {showBroadcastModal && (
