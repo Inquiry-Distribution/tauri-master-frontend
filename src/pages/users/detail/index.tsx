@@ -35,6 +35,7 @@ import Input from "@/src/components/ui/form/input";
 import Swal from "sweetalert2";
 import { useGetAttendanceById } from "@/src/hooks/attendance/useGetAttendanceById";
 import { AttendanceResponse } from "@/src/types/attendance";
+import { SalespersonLocationHistory } from "@/src/components/ui/salePerson/report/salesPersonLocationHistory";
 
 const formatDate = (date: Date) => date.toISOString().split("T")[0];
 
@@ -437,6 +438,8 @@ export default function SalesPersonReportPage() {
               </div>
             </div>
           </div>
+
+          <SalespersonLocationHistory salespersonId={id || ""} />
         </div>
 
         {/* RIGHT PANEL */}

@@ -68,3 +68,13 @@
   display: none;
   /* Chrome, Safari */
 }
+
+.btn-theme {
+  background: var(--btn-bg);
+  color: var(--btn-color);
+  border: var(--btn-border);
+}
+
+.btn-theme:hover {
+  background: var(--btn-hover-bg);
+}

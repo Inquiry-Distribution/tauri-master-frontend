@@ -1,10 +1,8 @@
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
-import type { DeviceLocation } from "@/src/types/devices";
-import { useMap } from "react-leaflet";
 import { useEffect } from "react";
+import type { Location } from "@/src/types/locationHistory";
 
-// Fix default marker icon issue in React Leaflet
 const defaultIcon = new L.Icon({
   iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
   iconRetinaUrl:
@@ -15,145 +13,101 @@ const defaultIcon = new L.Icon({
 });
 
 type Props = {
-  devices: DeviceLocation[];
+  locations: Location[];
   height?: string;
-  center?: [number, number];
   zoom?: number;
-  selectedDeviceId: string | null;
-  onSelectDevice: (id: string) => void;
+  selectedId: string | null;
+  onSelect: (id: string) => void;
 };
 
-// function FitBounds({ devices }: { devices: DeviceLocation[] }) {
-//   const map = useMap();
-
-//   useEffect(() => {
-//     const points: [number, number][] = devices
-//       .map((d) => [Number(d.lastLat), Number(d.lastLng)])
-//       .filter(([lat, lng]) => lat && lng);
-
-//     if (points.length === 0) return;
-
-//     const bounds = L.latLngBounds(points);
-
-//     map.fitBounds(bounds, {
-//       padding: [50, 50],
-//       maxZoom: 15,
-//       animate: true,
-//     });
-//   }, [devices, map]);
-
-//   return null;
-// }
-
 export function LiveDeviceMap({
-  devices,
+  locations,
   height = "400px",
-  center = [20.5937, 78.9629], // default: India
   zoom = 5,
-  selectedDeviceId,
-  onSelectDevice,
+  selectedId,
+  onSelect,
 }: Props) {
-  function FitBounds({ devices }: { devices: DeviceLocation[] }) {
+  function FitBounds({ locations }: { locations: Location[] }) {
     const map = useMap();
 
     useEffect(() => {
-      const points: [number, number][] = devices
-        .map((d) => {
-          const lat = Number(d.lastLat);
-          const lng = Number(d.lastLng);
+      const points = locations
+        .map((l) => [l.lat, l.lng] as [number, number])
+        .filter(([lat, lng]) => lat != null && lng != null);
 
-          return [lat, lng] as [number, number];
-        })
-        .filter(([lat, lng]) => !isNaN(lat) && !isNaN(lng));
+      if (!points.length) return;
 
-      if (points.length === 0) return;
-
-      const bounds = L.latLngBounds(points);
-
-      map.fitBounds(bounds, {
+      map.fitBounds(L.latLngBounds(points), {
         padding: [50, 50],
         maxZoom: 15,
-        animate: true,
       });
-    }, [devices, map]);
+    }, [locations, map]);
 
     return null;
   }
+
   function FlyToSelected({
-    devices,
-    selectedDeviceId,
+    locations,
+    selectedId,
   }: {
-    devices: DeviceLocation[];
-    selectedDeviceId: string | null;
+    locations: Location[];
+    selectedId: string | null;
   }) {
     const map = useMap();
 
     useEffect(() => {
-      if (!selectedDeviceId) return;
+      if (!selectedId) return;
 
-      const device = devices.find((d) => d.id === selectedDeviceId);
-      if (!device) return;
+      const loc = locations.find((l) => l.salespersonId === selectedId);
 
-      const lat = Number(device.lastLat);
-      const lng = Number(device.lastLng);
+      if (!loc || loc.lat == null || loc.lng == null) return;
 
-      if (lat && lng) {
-        map.flyTo([lat, lng], 14, {
-          duration: 0.8,
-        });
-      }
-    }, [selectedDeviceId, devices, map]);
+      map.flyTo([loc.lat, loc.lng], 14, { duration: 0.8 });
+    }, [selectedId, locations, map]);
 
     return null;
   }
+
   return (
-    <div
-      style={{ height, width: "100%" }}
-      className="rounded-xl overflow-hidden"
-    >
+    <div style={{ height, width: "100%" }}>
       <MapContainer
-        center={[0, 0]}
+        center={[20.5937, 78.9629]}
         zoom={zoom}
-        scrollWheelZoom
-        className="h-full w-full z-0"
-        style={{ height: "100%", width: "100%" }}
+        className="h-full w-full"
       >
-        <FitBounds devices={devices} />
-        <FlyToSelected devices={devices} selectedDeviceId={selectedDeviceId} />
-        {/* Base map layer */}
+        <FitBounds locations={locations} />
+        <FlyToSelected locations={locations} selectedId={selectedId} />
+
         <TileLayer
           attribution="&copy; OpenStreetMap contributors"
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
 
-        {/* Device markers */}
-        {devices.map((device) => {
-          const lat = Number(device.lastLat);
-          const lng = Number(device.lastLng);
-          const isSelected = device.id === selectedDeviceId;
+        {locations.map((loc) => {
+          if (loc.lat == null || loc.lng == null) return null;
+
+          const isSelected = loc.salespersonId === selectedId;
+
           const selectedIcon = new L.Icon({
             iconUrl: "https://maps.google.com/mapfiles/ms/icons/blue-dot.png",
             iconSize: [32, 32],
           });
-          if (!lat || !lng) return null;
 
           return (
             <Marker
-              key={device.id}
-              position={[lat, lng]}
+              key={loc.salespersonId}
+              position={[loc.lat, loc.lng]}
               icon={isSelected ? selectedIcon : defaultIcon}
               eventHandlers={{
-                click: () => onSelectDevice(device.id),
+                click: () => onSelect(loc.salespersonId),
               }}
             >
               <Popup>
                 <div className="text-sm">
-                  <p className="font-semibold">
-                    Agent: {device.salesperson?.name}
-                  </p>
-                  <p>Status: {device.isBlocked ? "Blocked" : "Active"}</p>
+                  <p className="font-semibold">Agent: {loc.salespersonName}</p>
+                  <p>Status: {loc.isOnline ? "Online" : "Offline"}</p>
                   <p className="text-xs text-gray-500">
-                    {device.lastAddress || "No address"}
+                    {loc.address || "No address"}
                   </p>
                 </div>
               </Popup>
