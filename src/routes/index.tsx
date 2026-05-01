@@ -17,6 +17,7 @@ import InquiryDetailPage from "../pages/inquiries/detail";
 import AttendancePage from "../pages/attendance";
 import NotificationsPage from "../pages/notifications";
 import SalesPersonReportPage from "../pages/users/detail";
+import SettingsPage from "../pages/settings";
 
 export default function AppRoutes() {
   return useRoutes([
@@ -50,11 +51,17 @@ export default function AppRoutes() {
             { path: "notifications", element: <NotificationsPage /> },
             // { path: "ai-reports", element: <AIReportsPage /> },
             { path: "attendance", element: <AttendancePage /> },
+            {
+              element: <ProtectedRoute allowedRoles={["superuser"]} />,
+              children: [{ path: "settings", element: <SettingsPage /> }],
+            },
+
             { path: "*", element: <NotFound /> },
           ],
         },
       ],
     },
+
     { path: "*", element: <NotFound /> },
   ]);
 }
