@@ -32,7 +32,6 @@ export const NotificationForm = ({ recipientIds, onClose }: Props) => {
 
   const handleSubmit = async () => {
     try {
-      console.log("Sending notification to:", recipientIds);
       await createNotification({
         recipientIds: Array.isArray(recipientIds)
           ? recipientIds

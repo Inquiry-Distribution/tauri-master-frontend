@@ -96,7 +96,7 @@ export default function LoginLimitForm() {
     } catch (err: any) {
       Swal.fire({
         icon: "error",
-        title: err?.message || "Failed to update",
+        title: err?.response?.data?.message || "Failed to update",
       });
     }
   };
@@ -150,7 +150,7 @@ export default function LoginLimitForm() {
 
                   Swal.fire({
                     icon: "error",
-                    title: err?.message || "Failed to update",
+                    title: err?.response?.data?.message || "Failed to update",
                   });
                 }
               }}

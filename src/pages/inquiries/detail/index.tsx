@@ -387,7 +387,6 @@ export default function InquiryDetailPage() {
         initialIndex={lightboxIndex}
         onClose={() => setLightboxOpen(false)}
         // onDelete={(i) => {
-        //   console.log("delete image at index:", i);
 
         //   // optional: call API + refetch
         //   // deleteInquiryImage(inquiry.id, lightboxItems[i].id)
