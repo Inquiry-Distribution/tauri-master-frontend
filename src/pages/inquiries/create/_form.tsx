@@ -135,7 +135,12 @@ const InquiryForm = () => {
             selectName="source"
             placeholder="Enter Source..."
             value={form.source}
-            onChange={handleChange}
+            onChange={(opt) =>
+              setForm((prev) => ({
+                ...prev,
+                source: opt.value as string,
+              }))
+            }
           />
           <Input
             label="Time"
