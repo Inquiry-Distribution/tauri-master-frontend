@@ -5,8 +5,10 @@ import { useTheme } from "@/src/contexts";
 
 export const PersonSelector = ({
   setPersonId,
+  value,
   setSelectedPerson,
 }: {
+  value?: string | null;
   setPersonId: (id: string | null) => void;
   setSelectedPerson: (person: SalesPerson | null) => void;
 }) => {
@@ -40,6 +42,7 @@ export const PersonSelector = ({
           id="person-selector"
           name="person-selector"
           disabled={loading}
+          value={value ?? ""}
           onChange={(e) => {
             const id = e.target.value || null;
 

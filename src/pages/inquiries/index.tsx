@@ -15,7 +15,7 @@ import { cn, useDebounce } from "../../utils/utils";
 // import { Inquiry } from "../../types";
 import { TableColumn } from "@/src/components/ui/table/types";
 import DynamicTable from "@/src/components/ui/table/dynamicTable";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import Tabs from "@/src/components/ui/tabs";
 import { getInquiryColumns, tabFilters } from "./data";
 import { useGetInquiries } from "@/src/hooks/inquiry/useGetAllInquiry";
@@ -66,37 +66,56 @@ const getDateRange = (type: string) => {
       return { from: today, to: today };
   }
 };
-export default function InquiriesPage() {
-  const { tokens } = useTheme();
-  const [searchTerm, setSearchTerm] = useState("");
-  const navigate = useNavigate();
-
-  const [activeTab, setActiveTab] = useState("all");
-
-  const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(10);
-
-  const [showFilters, setShowFilters] = useState(false);
-  const [filterMode, setFilterMode] = useState<"range" | "none">("none");
-  const [activeRange, setActiveRange] = useState<string>("30d");
-
-  const [personId, setPersonId] = useState<string | null>(null);
-  const [selectedPerson, setSelectedPerson] = useState<any>(null);
-
+// Helper to compute default date values (used as fallback when not in URL)
+const getDefaultDates = () => {
   const today = new Date();
   const oneMonthAgo = new Date();
   oneMonthAgo.setMonth(today.getMonth() - 1);
+  return { defaultFrom: formatDate(oneMonthAgo), defaultTo: formatDate(today) };
+};
+export default function InquiriesPage() {
+  const { tokens } = useTheme();
+  const [searchParams, setSearchParams] = useSearchParams();
 
-  const [from, setFrom] = useState(formatDate(oneMonthAgo));
-  const [to, setTo] = useState(formatDate(today));
+  const navigate = useNavigate();
+  // ─── Derive ALL state directly from URL ───────────────────────────────────
+  const { defaultFrom, defaultTo } = getDefaultDates();
 
-  const [priority, setPriority] = useState<string | null>(null);
+  const activeTab = searchParams.get("tab") ?? "all";
+  const page = Number(searchParams.get("page")) || 1;
+  const limit = Number(searchParams.get("limit")) || 10;
+  const searchTerm = searchParams.get("search") ?? "";
+  const priority = searchParams.get("priority") ?? null;
+  const from = searchParams.get("from") ?? defaultFrom;
+  const to = searchParams.get("to") ?? defaultTo;
+  const filterMode =
+    (searchParams.get("filterMode") as "range" | "none") ?? "none";
+  const activeRange = searchParams.get("range") ?? "30d";
+  const personId = searchParams.get("assignedToId") ?? null;
+  const showFilters = searchParams.get("showFilters") === "true";
 
+  // ─── Helper: patch a subset of params, preserving the rest ───────────────
+  const patchParams = (patches: Record<string, string | null>) => {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      Object.entries(patches).forEach(([key, value]) => {
+        if (value === null || value === "") {
+          next.delete(key);
+        } else {
+          next.set(key, value);
+        }
+      });
+      return next;
+    });
+  };
+
+  // ─── Local-only UI state (not worth persisting) ────────────────────────
   const [selectedInquiry, setSelectedInquiry] = useState<any | null>(null);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [editingInquiry, setEditingInquiry] = useState<Inquiry | null>(null);
+  const [selectedPerson, setSelectedPerson] = useState<any>(null);
   const { data, loading, setData, error, getInquiries } = useGetInquiries();
   const { deleteInquiry, loading: deleteLoading } = useDeleteInquiry();
-  const [editingInquiry, setEditingInquiry] = useState<Inquiry | null>(null);
   const handleDelete = async (id: string) => {
     const result = await Swal.fire({
       title: "Are you sure?",
@@ -145,41 +164,43 @@ export default function InquiriesPage() {
     ],
   );
   const debouncedSearch = useDebounce(searchTerm, 500);
+  // ─── Fetch whenever URL-derived state changes ──────────────────────────
   useEffect(() => {
     const selected = tabFilters.find((t) => t.key === activeTab);
 
     const queryObj: Record<string, string> = {
       page: String(page),
       limit: String(limit),
-
       ...(selected?.status ? { status: selected.status } : {}),
       ...(personId ? { assignedToId: personId } : {}),
-
       ...(debouncedSearch ? { search: debouncedSearch } : {}),
-
       ...(priority ? { priority } : {}),
-
       ...(filterMode === "range" && from && to ? { from, to } : {}),
     };
 
-    const query = new URLSearchParams(queryObj).toString();
+    getInquiries(new URLSearchParams(queryObj).toString());
+  }, [
+    activeTab,
+    page,
+    limit,
+    debouncedSearch,
+    priority,
+    from,
+    to,
+    personId,
+    filterMode,
+  ]);
 
-    getInquiries(query);
-  }, [activeTab, page, limit, debouncedSearch, priority, from, to, personId]);
-
-  const handlePageChange = (newPage: number) => {
-    getInquiries(`page=${newPage}&limit=${limit}`);
-  };
-
+  // ─── Quick-range helper ────────────────────────────────────────────────
   const applyRange = (type: string) => {
     const { from, to } = getDateRange(type);
-
-    setFrom(formatDate(from));
-    setTo(formatDate(to));
-
-    setActiveRange(type);
-    setFilterMode("range");
-    setPage(1);
+    patchParams({
+      from: formatDate(from),
+      to: formatDate(to),
+      range: type,
+      filterMode: "range",
+      page: "1",
+    });
   };
 
   const inquiries = data?.inquiries || [];
@@ -227,10 +248,19 @@ export default function InquiriesPage() {
               color: tokens.text,
             }}
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            // onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e) =>
+              patchParams({ search: e.target.value || null, page: "1" })
+            }
           />
         </div>
-        <Button variant="secondary" onClick={() => setShowFilters((s) => !s)}>
+        <Button
+          variant="secondary"
+          onClick={() =>
+            patchParams({ showFilters: showFilters ? null : "true" })
+          }
+          // onClick={() => setShowFilters((s) => !s)}
+        >
           <Filter size={18} />
         </Button>
         <Button onClick={() => exportInquiryStyled(inquiries)}>
@@ -241,7 +271,11 @@ export default function InquiriesPage() {
         <>
           <div className="flex flex-wrap items-center gap-4">
             <PersonSelector
-              setPersonId={setPersonId}
+              value={personId}
+              // setPersonId={setPersonId}
+              setPersonId={(id) =>
+                patchParams({ assignedToId: id ?? null, page: "1" })
+              }
               setSelectedPerson={setSelectedPerson}
             />
             {/* DATE RANGE */}
@@ -253,37 +287,23 @@ export default function InquiriesPage() {
                 Date Range:
               </div>
 
-              <Button
-                size="sm"
-                variant={activeRange === "7d" ? "primary" : "ghost"}
-                onClick={() => applyRange("7d")}
-              >
-                Last 7 days
-              </Button>
-
-              <Button
-                size="sm"
-                variant={activeRange === "30d" ? "primary" : "ghost"}
-                onClick={() => applyRange("30d")}
-              >
-                Last 30 days
-              </Button>
-
-              <Button
-                size="sm"
-                variant={activeRange === "thisMonth" ? "primary" : "ghost"}
-                onClick={() => applyRange("thisMonth")}
-              >
-                This Month
-              </Button>
-
-              <Button
-                size="sm"
-                variant={activeRange === "lastMonth" ? "primary" : "ghost"}
-                onClick={() => applyRange("lastMonth")}
-              >
-                Last Month
-              </Button>
+              {(["7d", "30d", "thisMonth", "lastMonth"] as const).map((r) => (
+                <Button
+                  key={r}
+                  size="sm"
+                  variant={activeRange === r ? "primary" : "ghost"}
+                  onClick={() => applyRange(r)}
+                >
+                  {
+                    {
+                      "7d": "Last 7 days",
+                      "30d": "Last 30 days",
+                      thisMonth: "This Month",
+                      lastMonth: "Last Month",
+                    }[r]
+                  }
+                </Button>
+              ))}
             </div>
 
             {/* PRIORITY FILTER */}
@@ -295,49 +315,16 @@ export default function InquiriesPage() {
                 Priority:
               </div>
 
-              <Button
-                size="sm"
-                variant={priority === null ? "primary" : "ghost"}
-                onClick={() => {
-                  setPriority(null);
-                  setPage(1);
-                }}
-              >
-                All
-              </Button>
-
-              <Button
-                size="sm"
-                variant={priority === "high" ? "primary" : "ghost"}
-                onClick={() => {
-                  setPriority("high");
-                  setPage(1);
-                }}
-              >
-                High
-              </Button>
-
-              <Button
-                size="sm"
-                variant={priority === "medium" ? "primary" : "ghost"}
-                onClick={() => {
-                  setPriority("medium");
-                  setPage(1);
-                }}
-              >
-                Medium
-              </Button>
-
-              <Button
-                size="sm"
-                variant={priority === "low" ? "primary" : "ghost"}
-                onClick={() => {
-                  setPriority("low");
-                  setPage(1);
-                }}
-              >
-                Low
-              </Button>
+              {([null, "high", "medium", "low"] as const).map((p) => (
+                <Button
+                  key={p ?? "all"}
+                  size="sm"
+                  variant={priority === p ? "primary" : "ghost"}
+                  onClick={() => patchParams({ priority: p, page: "1" })}
+                >
+                  {p ? p.charAt(0).toUpperCase() + p.slice(1) : "All"}
+                </Button>
+              ))}
             </div>
           </div>
 
@@ -349,12 +336,20 @@ export default function InquiriesPage() {
                 inputName="from"
                 inputType="date"
                 inputValue={from}
-                onChange={(e) => {
-                  setFrom(e.target.value);
-                  setFilterMode("range"); // ✅ key
-                  setActiveRange("");
-                  setPage(1);
-                }}
+                // onChange={(e) => {
+                //   setFrom(e.target.value);
+                //   setFilterMode("range"); // ✅ key
+                //   setActiveRange("");
+                //   setPage(1);
+                // }}
+                onChange={(e) =>
+                  patchParams({
+                    from: e.target.value,
+                    filterMode: "range",
+                    range: "",
+                    page: "1",
+                  })
+                }
                 placeholder="From date"
                 showLabel={false}
               />
@@ -368,12 +363,20 @@ export default function InquiriesPage() {
                 inputName="to"
                 inputType="date"
                 inputValue={to}
-                onChange={(e) => {
-                  setTo(e.target.value);
-                  setFilterMode("range"); // ✅ key
-                  setActiveRange("");
-                  setPage(1);
-                }}
+                // onChange={(e) => {
+                //   setTo(e.target.value);
+                //   setFilterMode("range"); // ✅ key
+                //   setActiveRange("");
+                //   setPage(1);
+                // }}
+                onChange={(e) =>
+                  patchParams({
+                    to: e.target.value,
+                    filterMode: "range",
+                    range: "",
+                    page: "1",
+                  })
+                }
                 placeholder="To date"
                 showLabel={false}
               />
@@ -384,10 +387,12 @@ export default function InquiriesPage() {
 
       <Tabs
         variant="solid"
-        onChange={(key) => {
-          setActiveTab(key);
-          setPage(1); // reset pagination on tab change
-        }}
+        value={activeTab}
+        // onChange={(key) => {
+        //   setActiveTab(key);
+        //   setPage(1); // reset pagination on tab change
+        // }}
+        onChange={(key) => patchParams({ tab: key, page: "1" })}
         tabs={tabFilters.map((tab) => ({
           key: tab.key,
           label: tab.label,
@@ -399,11 +404,15 @@ export default function InquiriesPage() {
               rowsPerPage={limit}
               searchable={false}
               totalPages={Math.ceil((data?.total || 0) / limit)}
-              onPageChange={(p) => setPage(p)}
-              onRowsPerPageChange={(r) => {
-                setLimit(r);
-                setPage(1);
-              }}
+              // onPageChange={(p) => setPage(p)}
+              // onRowsPerPageChange={(r) => {
+              //   setLimit(r);
+              //   setPage(1);
+              // }}
+              onPageChange={(p) => patchParams({ page: String(p) })}
+              onRowsPerPageChange={(r) =>
+                patchParams({ limit: String(r), page: "1" })
+              }
               loading={loading}
               striped={true}
             />
