@@ -33,3 +33,16 @@ export type RecentActivityLog = {
     role: string;
   };
 };
+
+export type AuditLogUser = {
+  id: string;
+  action: string;
+  performedById: string;
+  targetId: string;
+  targetModel: string;
+  meta: {
+    role: string;
+  };
+  ipAddress: string | null;
+  createdAt: string;
+};

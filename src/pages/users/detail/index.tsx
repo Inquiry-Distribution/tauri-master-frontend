@@ -36,6 +36,7 @@ import Swal from "sweetalert2";
 import { useGetAttendanceById } from "@/src/hooks/attendance/useGetAttendanceById";
 import { AttendanceResponse } from "@/src/types/attendance";
 import { SalespersonLocationHistory } from "@/src/components/ui/salePerson/report/salesPersonLocationHistory";
+import UserAuditLogTable from "@/src/components/ui/salePerson/report/auditLogTable";
 
 const formatDate = (date: Date) => date.toISOString().split("T")[0];
 
@@ -686,6 +687,9 @@ export default function SalesPersonReportPage() {
           {/* Table */}
           <Card>
             <InquiriesTable personId={id || ""} />
+          </Card>
+          <Card>
+            <UserAuditLogTable userId={id || ""} />
           </Card>
         </div>
       </div>

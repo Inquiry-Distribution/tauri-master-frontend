@@ -13,4 +13,9 @@ export const DashboardService = {
     const { data } = await api.get(`/audit?${query}`);
     return data;
   },
+
+  getRecentActivityLogsByUser: async (id: string, query: string) => {
+    const { data } = await api.get(`/audit/user/${id}?${query}`);
+    return data;
+  },
 };
