@@ -113,8 +113,9 @@ const EditInquiryForm = ({ initialData, onClose, onSuccess }: Props) => {
     <form encType="multipart/form-data">
       <div className="space-y-4 ">
         <FileInput
-          maxSizeMB={5}
+          maxSizeMB={25}
           limit={10}
+          accept=".jpg,.jpeg,.png,.pdf,.xlsx,.xls,.docx,.doc,.ppt,.pptx,.mp4,.mkv"
           label="Upload Inquiry"
           inputName="images"
           onChange={(files) => setForm((prev) => ({ ...prev, images: files }))}
@@ -140,7 +141,12 @@ const EditInquiryForm = ({ initialData, onClose, onSuccess }: Props) => {
             selectName="source"
             placeholder="Enter Source..."
             value={form.source}
-            onChange={handleChange}
+            onChange={(opt) => {
+              setForm((prev) => ({
+                ...prev,
+                source: opt.value as string,
+              }));
+            }}
           />
           <Input
             label="Time"
