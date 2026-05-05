@@ -17,6 +17,14 @@ export const InquiryService = {
     return data;
   },
   createInquiry: async (payload: FormData) => {
+    const { data } = await api.post("/inquiries/", payload, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+    return data;
+  },
+  createShareInquiry: async (payload: FormData) => {
     const { data } = await api.post("/inquiries/share", payload, {
       headers: {
         "Content-Type": "multipart/form-data",

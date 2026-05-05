@@ -5,6 +5,7 @@ import Select from "@/src/components/ui/form/select";
 import TextArea from "@/src/components/ui/form/textArea";
 import FullPageLoader from "@/src/components/ui/loader/fullPageLoader";
 import { useCreateInquiry } from "@/src/hooks/inquiry/useCreateInquiry";
+import { useCreateShareInquiry } from "@/src/hooks/inquiry/useCreateShareInquiry";
 import { getCurrentTime } from "@/src/utils/utils";
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -22,7 +23,19 @@ export const SOURCE_OPTIONS = [
 ];
 
 const InquiryForm = () => {
-  const { createInquiry, loading, error } = useCreateInquiry();
+  const {
+    createInquiry,
+    loading: inquiryLoading,
+    error: inquiryError,
+  } = useCreateInquiry();
+  const {
+    createShareInquiry,
+    loading: shareLoading,
+    error: shareError,
+  } = useCreateShareInquiry();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
   const navigate = useNavigate();
   const [form, setForm] = useState<{
     description: string;
@@ -114,7 +127,13 @@ const InquiryForm = () => {
           formData.append("images", file); // important: same key "images"
         });
       }
-      await createInquiry(formData);
+      if (salesPersonIdFromDistributor) {
+        console.log("share");
+        await createShareInquiry(formData);
+      } else {
+        console.log("create");
+        await createInquiry(formData);
+      }
       Swal.fire({
         icon: "success",
         title: "Inquiry Created.",
@@ -136,6 +155,13 @@ const InquiryForm = () => {
       });
     }
   };
+
+  useEffect(() => {
+    setLoading(inquiryLoading || shareLoading);
+  }, [inquiryLoading, shareLoading]);
+  useEffect(() => {
+    setError(inquiryError ? inquiryError : shareError ? shareError : null);
+  }, [inquiryError, shareError]);
   return (
     <form encType="multipart/form-data">
       <div className="space-y-4 ">
