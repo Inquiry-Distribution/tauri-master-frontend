@@ -42,9 +42,9 @@ export interface PersonWorkload {
 //   onConfirm: (person: UISalesPerson) => void;
 // }
 export interface ShareInquiryModalProps {
-  person: ShareInquiryPerson;
+  person?: ShareInquiryPerson | null;
   onClose: () => void;
-  onConfirm: (person: ShareInquiryPerson) => void;
+  onConfirm: (person: ShareInquiryPerson | null) => void;
   loading?: boolean;
 }
 // export type ShareInquiryPerson = {

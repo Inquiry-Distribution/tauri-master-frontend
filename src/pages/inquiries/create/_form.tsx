@@ -5,6 +5,7 @@ import Select from "@/src/components/ui/form/select";
 import TextArea from "@/src/components/ui/form/textArea";
 import FullPageLoader from "@/src/components/ui/loader/fullPageLoader";
 import { useCreateInquiry } from "@/src/hooks/inquiry/useCreateInquiry";
+import { getCurrentTime } from "@/src/utils/utils";
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
@@ -33,16 +34,50 @@ const InquiryForm = () => {
   }>({
     description: "",
     mobile: "",
-    inquiryTime: "",
+    inquiryTime: getCurrentTime(),
     source: "",
     // salesPersonId: "",
     images: [],
   });
 
+  const [errors, setErrors] = useState<{
+    description?: string;
+    source?: string;
+    images?: string;
+  }>({});
+
+  const validateForm = () => {
+    const newErrors: typeof errors = {};
+
+    if (!form.images || form.images.length === 0) {
+      newErrors.images = "Please upload at least one image.";
+    }
+
+    if (!form.description.trim()) {
+      newErrors.description = "Description is required.";
+    } else if (form.description.trim().length < 10) {
+      newErrors.description = "Minimum 10 characters required.";
+    }
+
+    if (!form.source) {
+      newErrors.source = "Please select a source.";
+    }
+
+    setErrors(newErrors);
+
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleChange = (e: any) => {
+    const { name, value } = e.target;
     setForm((prev) => ({
       ...prev,
       [e.target.name]: e.target.value,
+    }));
+
+    setErrors((prev) => ({
+      ...prev,
+      [name]: "",
     }));
   };
 
@@ -58,15 +93,19 @@ const InquiryForm = () => {
   //     images: formData.getAll("images") as File[],
   //   });
   // };
-  const handleSubmit = async (salesPersonIdFromDistributor: string) => {
+  const handleSubmit = async (salesPersonIdFromDistributor: string | null) => {
     // e.preventDefault();
+    if (!validateForm()) return;
+
     try {
       const formData = new FormData();
 
       formData.append("description", form.description);
       formData.append("mobile", form.mobile);
       formData.append("inquiryTime", form.inquiryTime);
-      formData.append("salesPersonId", salesPersonIdFromDistributor);
+      if (salesPersonIdFromDistributor) {
+        formData.append("salesPersonId", salesPersonIdFromDistributor);
+      }
       formData.append("source", form.source);
 
       // ✅ append files correctly
@@ -106,6 +145,7 @@ const InquiryForm = () => {
           label="Upload Inquiry"
           inputName="images"
           onChange={(files) => setForm((prev) => ({ ...prev, images: files }))}
+          error={errors.images}
         />
         <TextArea
           label="Inquiry Description"
@@ -113,6 +153,7 @@ const InquiryForm = () => {
           placeholder="Description"
           inputValue={form.description}
           onChange={handleChange}
+          error={errors.description}
         />
         <div className="grid grid-cols-3  gap-4">
           <Input
@@ -135,12 +176,17 @@ const InquiryForm = () => {
             selectName="source"
             placeholder="Enter Source..."
             value={form.source}
-            onChange={(opt) =>
+            onChange={(opt) => {
               setForm((prev) => ({
                 ...prev,
                 source: opt.value as string,
-              }))
-            }
+              }));
+              setErrors((prev) => ({
+                ...prev,
+                source: "",
+              }));
+            }}
+            error={errors.source}
           />
           <Input
             label="Time"

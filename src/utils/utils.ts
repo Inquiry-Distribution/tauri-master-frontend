@@ -62,3 +62,10 @@ export const formatLat = (lat: number) =>
 
 export const formatLng = (lng: number) =>
   `${Math.abs(lng).toFixed(2)}° ${lng >= 0 ? "E" : "W"}`;
+
+export const getCurrentTime = () => {
+  const now = new Date();
+  const hours = String(now.getHours()).padStart(2, "0");
+  const minutes = String(now.getMinutes()).padStart(2, "0");
+  return `${hours}:${minutes}`;
+};

@@ -684,6 +684,7 @@ export function InquiryDistributor({
   const [modalPerson, setModalPerson] = useState<ShareInquiryPerson | null>(
     null,
   );
+  const [modalPersonOpen, setModalPersonOpen] = useState<boolean>(false);
   // on the Share Inquiry button:
 
   const ctx = useContext(ThemeContext);
@@ -777,10 +778,10 @@ export function InquiryDistributor({
   // };
 
   const onConfirm = async () => {
-    if (!selectedPerson) return;
+    // if (!selectedPerson) return;
 
     try {
-      await onConfirmShare?.(selectedPerson.id);
+      await onConfirmShare?.(selectedPerson?.id || null);
       setModalPerson(null);
     } catch (err) {
       console.error(err);
@@ -874,8 +875,11 @@ export function InquiryDistributor({
         <Button
           type="button"
           size="xl"
-          onClick={() => setModalPerson(selectedPerson)}
-          disabled={!selectedPerson || defaultSelectedId === selectedPerson.id}
+          onClick={() => {
+            setModalPerson(selectedPerson);
+            setModalPersonOpen(true);
+          }}
+          disabled={defaultSelectedId === selectedPerson?.id}
           // className={`px-5 py-2 rounded-lg text-sm font-semibold transition ${
           //   selectedPerson
           //     ? "bg-blue-600 text-white hover:opacity-90"
@@ -886,14 +890,20 @@ export function InquiryDistributor({
         </Button>
       </div>
 
-      {modalPerson && (
+      {modalPersonOpen && (
         <Modal
           title="Share Inquiry"
-          onClose={() => setModalPerson(null)}
+          onClose={() => {
+            setModalPerson(null);
+            setModalPersonOpen(false);
+          }}
           width={400}
         >
           <ShareInquiry
-            onClose={() => setModalPerson(null)}
+            onClose={() => {
+              setModalPerson(null);
+              setModalPersonOpen(false);
+            }}
             onConfirm={() => {
               onConfirm();
             }}
