@@ -15,23 +15,46 @@ export type InquiryReportByStatus = {
   status: string;
 };
 
+// export type RecentActivityLog = {
+//   id: string;
+//   action: string;
+//   performedById: string;
+//   targetId: string;
+//   targetModel: string;
+//   meta: {
+//     role: string;
+//   };
+//   ipAddress: string | null;
+//   createdAt: string;
+//   performedBy: {
+//     id: string;
+//     name: string;
+//     email: string;
+//     role: string;
+//   };
+// };
+
 export type RecentActivityLog = {
   id: string;
   action: string;
-  performedById: string;
+
+  performedById: string | null;
+
   targetId: string;
   targetModel: string;
-  meta: {
-    role: string;
-  };
+
+  meta: Record<string, any> | null;
+
   ipAddress: string | null;
+
   createdAt: string;
+
   performedBy: {
     id: string;
     name: string;
     email: string;
     role: string;
-  };
+  } | null;
 };
 
 export type AuditLogUser = {

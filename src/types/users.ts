@@ -14,6 +14,7 @@ export type CreateUser = {
   role: string;
   employeeId: string;
   pin: string;
+  company: string;
 };
 
 export type SalesPersonId = {

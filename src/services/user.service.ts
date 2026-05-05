@@ -6,8 +6,8 @@ export const UserService = {
     const { data } = await api.post("/users", payload);
     return data;
   },
-  getAllSalesPerson: async (query: string) => {
-    const { data } = await api.get(`/users/sales?${query}`);
+  getAllSalesPerson: async () => {
+    const { data } = await api.get(`/users/sales`);
     return data;
   },
   getSalesPersonById: async (id: string) => {

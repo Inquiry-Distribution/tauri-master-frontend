@@ -30,7 +30,7 @@ export function AttendanceDetails({
       tabs={tabs}
       defaultValue="timeline"
       isPadded={false}
-      variant="card" // 👈 change to "timeline" if you want step UI
+      variant="underline" // 👈 change to "timeline" if you want step UI
     />
   );
 }

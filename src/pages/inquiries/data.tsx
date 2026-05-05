@@ -151,7 +151,7 @@ export const getInquiryColumns = ({
             {row.status === "assigned" ? "Reassign" : "Assign"}
           </Button>
           <Button variant="secondary" onClick={() => setEditInquiry(row)}>
-            <Edit size={16} />s
+            <Edit size={16} />
           </Button>
           <Button variant="danger" onClick={() => onDelete(row.id)}>
             {deleteLoading ? <ButtonLoader /> : <Trash size={16} />}

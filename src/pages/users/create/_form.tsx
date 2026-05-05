@@ -1,9 +1,11 @@
 import { Button } from "@/src/components/ui/button";
 import Input from "@/src/components/ui/form/input";
+import Select from "@/src/components/ui/form/select";
 import ButtonLoader from "@/src/components/ui/loader/buttonLoader";
+import { useGetCompanies } from "@/src/hooks/company/useGetCompanies";
 import { useCreateSalesPerson } from "@/src/hooks/salesPerson/useCreateSalesPerson";
 import { CreateUser } from "@/src/types/users";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 
@@ -17,10 +19,16 @@ const CreateUserForm = ({ onSuccess }: { onSuccess: (res: any) => void }) => {
     role: "sales",
     employeeId: "",
     pin: "",
+    company: "",
   });
 
   const [confirmPassword, setConfirmPassword] = useState("");
   const [confirmPin, setConfirmPin] = useState("");
+  const {
+    data: companies,
+    getCompanies,
+    loading: companiesLoading,
+  } = useGetCompanies();
 
   const [errors, setErrors] = useState<any>({});
 
@@ -37,6 +45,10 @@ const CreateUserForm = ({ onSuccess }: { onSuccess: (res: any) => void }) => {
       [name]: "",
     }));
   };
+
+  useEffect(() => {
+    getCompanies();
+  }, []);
 
   const validate = () => {
     let newErrors: any = {};
@@ -105,6 +117,7 @@ const CreateUserForm = ({ onSuccess }: { onSuccess: (res: any) => void }) => {
       role: "sales",
       employeeId: "",
       pin: "",
+      company: "",
     });
     setConfirmPassword("");
     setConfirmPin("");
@@ -131,6 +144,25 @@ const CreateUserForm = ({ onSuccess }: { onSuccess: (res: any) => void }) => {
             onChange={handleChange}
           />
         </div>
+        <Select
+          label="Company"
+          showLabel={false}
+          options={
+            companies?.map((item) => ({
+              label: item.name,
+              value: item.id,
+            })) || []
+          }
+          selectName="company"
+          value={form.company}
+          placeholder="Select company"
+          onChange={(opt) => {
+            setForm((prev) => ({
+              ...prev,
+              company: opt.value as string,
+            }));
+          }}
+        />
         <Input
           label="Email"
           showLabel={false}

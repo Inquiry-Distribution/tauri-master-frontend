@@ -48,18 +48,18 @@ export default function NotificationsPage() {
     [],
   );
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
-  useEffect(() => {
-    const query =
-      `page=${page}&limit=${limit}` +
-      (debouncedSearchTerm ? `&search=${debouncedSearchTerm}` : "");
+  // useEffect(() => {
+  //   const query =
+  //     `page=${page}&limit=${limit}` +
+  //     (debouncedSearchTerm ? `&search=${debouncedSearchTerm}` : "");
 
-    getAllSalesPerson(query);
-  }, [page, limit, debouncedSearchTerm]);
+  //   getAllSalesPerson(query);
+  // }, [page, limit, debouncedSearchTerm]);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const data = await getAllSalesPerson(`page=${page}&limit=${limit}`);
+        const data = await getAllSalesPerson();
 
         setSalesPersons(data.data);
 
@@ -164,12 +164,12 @@ export default function NotificationsPage() {
         searchTerm={searchTerm}
         onSearchChange={(term) => setSearchTerm(term)}
         striped
-        pagination
         currentPage={page}
         rowsPerPage={limit}
         onPageChange={(p) => setPage(p)}
         onRowsPerPageChange={(r) => setLimit(r)}
         loading={loading}
+        pagination={false}
       />
       {notificationOpen && (
         <Modal
