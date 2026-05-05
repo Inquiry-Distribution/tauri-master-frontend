@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useTheme } from "../../contexts";
 import { Filter, Calendar1, Download } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
@@ -10,6 +10,9 @@ import { Button } from "@/src/components/ui/button";
 import Input from "@/src/components/ui/form/input";
 import { useDebounce } from "@/src/utils/utils";
 import { exportAttendanceExcel } from "@/src/xls-convert/attendance.export";
+import { Attendance } from "@/src/types/attendance";
+import { Modal } from "@/src/components/ui/modal";
+import { AttendanceDetails } from "@/src/components/ui/attendance/attendanceDetails";
 
 const formatDate = (date: Date) => date.toISOString().split("T")[0];
 
@@ -50,6 +53,8 @@ const getDefaultDates = () => {
 export default function AttendancePage() {
   const { tokens } = useTheme();
   const [searchParams, setSearchParams] = useSearchParams();
+  const [selectedAttendance, setSelectedAttendance] =
+    useState<Attendance | null>(null);
 
   // ─── All state derived from URL ───────────────────────────────────────────
   const { defaultFrom, defaultTo } = getDefaultDates();
@@ -82,7 +87,10 @@ export default function AttendancePage() {
     });
   };
 
-  const columns = useMemo(() => getAttendanceColumns(), []);
+  const columns = useMemo(
+    () => getAttendanceColumns({ selectedAttendance, setSelectedAttendance }),
+    [selectedAttendance, setSelectedAttendance],
+  );
   const { data, loading, getAllAttendance } = useGetAllAttendance();
 
   const debouncedSearch = useDebounce(search, 400);
@@ -326,6 +334,15 @@ export default function AttendancePage() {
           striped
         />
       </div>
+      {selectedAttendance && (
+        <Modal
+          title={`Attendance - ${selectedAttendance.salesperson.name}`}
+          onClose={() => setSelectedAttendance(null)}
+          width={700} // 👈 increase for better layout
+        >
+          <AttendanceDetails sessions={selectedAttendance.sessions} />
+        </Modal>
+      )}
     </div>
   );
 }

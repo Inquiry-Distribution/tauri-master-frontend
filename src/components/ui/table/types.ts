@@ -68,4 +68,9 @@ export interface DynamicTableProps<T> {
   striped?: boolean;
   /** Show a serial-number column as the first column */
   showSerialNumber?: boolean;
+
+  renderExpandedRow?: (row: T) => React.ReactNode;
+  expandedRowId?: string | number | null;
+  onToggleExpand?: (row: T) => void;
+  getRowId?: (row: T) => string | number;
 }
