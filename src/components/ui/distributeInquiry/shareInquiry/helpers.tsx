@@ -38,12 +38,10 @@ export function statusColor(status: WorkloadStatus) {
       ? "#FB923C"
       : "#F87171";
 }
-export function statusUserColor(status: string) {
-  return status === "active"
-    ? "#34D399"
-    : status === "inactive"
-      ? "#FB923C"
-      : "#F87171";
+export function statusUserColor(status: string, dark: boolean) {
+  if (status === "active") return dark ? "#34D399" : "#16A34A";
+  if (status === "inactive") return dark ? "#FB923C" : "#C2410C";
+  return dark ? "#F87171" : "#DC2626";
 }
 
 export function statusBg(status: WorkloadStatus) {
@@ -52,11 +50,10 @@ export function statusBg(status: WorkloadStatus) {
   if (status === "Busy") return dark ? "#2D1500" : "#FFF7ED";
   return dark ? "#2D0A0A" : "#FEF2F2";
 }
-export function statusUserBg(status: string) {
-  const dark = useTheme();
-  if (status === "active") return dark ? "#052E1C" : "#ECFDF5";
-  if (status === "inactive") return dark ? "#2D1500" : "#FFF7ED";
-  return dark ? "#2D0A0A" : "#FEF2F2";
+export function statusUserBg(status: string, dark: boolean) {
+  if (status === "active") return dark ? "#052E1C" : "#DCFCE7";
+  if (status === "inactive") return dark ? "#2D1500" : "#FFEDD5";
+  return dark ? "#2D0A0A" : "#FEE2E2";
 }
 
 /* ---------------- Progress Bar ---------------- */

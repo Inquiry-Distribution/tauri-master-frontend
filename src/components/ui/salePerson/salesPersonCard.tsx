@@ -155,7 +155,7 @@ export default function SalesPersonCard({
   onToggleStatus,
   onUpdated,
 }: Props) {
-  const { tokens } = useTheme();
+  const { tokens, isDark: dark } = useTheme();
   const [updateUserModal, setUpdateUserModal] = useState(false);
   const [setResetPinModal, setSetResetPinModal] = useState(false);
   const [status, setStatus] = useState(person.isActive ? "active" : "inactive");
@@ -371,8 +371,8 @@ export default function SalesPersonCard({
           variant="ghost"
           onClick={handleToggleStatus}
           style={{
-            background: statusUserBg(!toggleLoading ? status : ""),
-            color: statusUserColor(!toggleLoading ? status : ""),
+            background: statusUserBg(!toggleLoading ? status : "", dark),
+            color: statusUserColor(!toggleLoading ? status : "", dark),
           }}
         >
           {toggleLoading ? (

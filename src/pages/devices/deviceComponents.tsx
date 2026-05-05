@@ -15,18 +15,24 @@ import { cn, formatLat, formatLng } from "@/src/utils/utils";
 import { MapPin, Shield, ShieldOff, Smartphone } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Swal from "sweetalert2";
+import { STATUS_STYLES } from "./data";
 
 /** Left cell: device icon + name/OS */
 export function DeviceInfo({ device }: { device: Device }) {
+  const { isDark: dark } = useTheme();
+  const status = device.isBlocked ? "blocked" : "active";
+  const s = STATUS_STYLES[status];
   return (
     <div className="flex items-center gap-3">
       <div
         className={cn(
           "w-10 h-10 rounded-xl flex items-center justify-center shrink-0",
-          device.isBlocked
-            ? "bg-blue-100 text-blue-600 dark:bg-blue-900/30"
-            : "bg-red-100 text-red-600 dark:bg-red-900/30",
         )}
+        style={{
+          backgroundColor: s.bg[dark ? "dark" : "light"],
+          color: s.text[dark ? "dark" : "light"],
+          // border: `1px solid ${s.dot}`,
+        }}
       >
         <Smartphone size={20} />
       </div>
@@ -126,7 +132,7 @@ export function DeviceToggleButton({
 /** Coordinate badge used in the map sidebar */
 export function CoordBadge({ lat, lng }: { lat: number; lng: number }) {
   return (
-    <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-800 text-(--textMuted) tabular-nums">
+    <span className="text-[10px] font-bold px-2 py-0.5 text-text tabular-nums">
       {formatLat(lat)},{formatLng(lng)}
     </span>
   );
