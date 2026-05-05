@@ -145,10 +145,10 @@ export const getInquiryColumns = ({
       render: (row) => (
         <div className="flex w-full items-center justify-start gap-2">
           <Button
-            variant={row.status === "assigned" ? "secondary" : "primary"}
+            variant={row.status !== "unassigned" ? "secondary" : "primary"}
             onClick={() => setSelectedInquiry(row)}
           >
-            {row.status === "assigned" ? "Reassign" : "Assign"}
+            {row.status !== "unassigned" ? "Reassign" : "Assign"}
           </Button>
           <Button variant="secondary" onClick={() => setEditInquiry(row)}>
             <Edit size={16} />
