@@ -4,6 +4,7 @@ import { FileText } from "lucide-react";
 import { RecentActivityLog } from "@/src/types/dashboard";
 import { useGetRecentActivityLogs } from "@/src/hooks/dashboard/useGetRecentAct";
 import { useTheme } from "@/src/contexts";
+import { formatDateTime } from "@/src/utils/utils";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -62,7 +63,8 @@ const RecentActivity = () => {
 
                 <p className="text-xs" style={{ color: tokens.textSec }}>
                   {item.performedBy?.name || "System"} •{" "}
-                  {formatTime(item.createdAt)}
+                  {/* {formatTime(item.createdAt)} */}
+                  {formatDateTime(item.createdAt)}
                 </p>
               </div>
             </div>

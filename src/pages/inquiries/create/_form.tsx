@@ -6,7 +6,7 @@ import TextArea from "@/src/components/ui/form/textArea";
 import FullPageLoader from "@/src/components/ui/loader/fullPageLoader";
 import { useCreateInquiry } from "@/src/hooks/inquiry/useCreateInquiry";
 import { getCurrentTime } from "@/src/utils/utils";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 
@@ -140,8 +140,9 @@ const InquiryForm = () => {
     <form encType="multipart/form-data">
       <div className="space-y-4 ">
         <FileInput
-          maxSizeMB={5}
+          maxSizeMB={25}
           limit={10}
+          accept=".jpg,.jpeg,.png,.pdf,.xlsx,.xls,.docx,.doc,.ppt,.pptx,.mp4,.mkv"
           label="Upload Inquiry"
           inputName="images"
           onChange={(files) => setForm((prev) => ({ ...prev, images: files }))}
