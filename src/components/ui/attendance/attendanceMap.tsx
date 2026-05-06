@@ -41,24 +41,11 @@ export default function AttendanceMap({
   sessions: AttendanceSessions[];
 }) {
   const { tokens: t } = useTheme();
+  const checkOutIcon = (i: number) => createMarker(t.danger, `${i + 1}`); // Number matches session
   const validSessions = sessions.filter((s) => s.checkInLat && s.checkInLng);
 
-  if (!validSessions.length) {
-    return <div>No location data</div>;
-  }
+  if (!validSessions.length) return <div>No location data</div>;
 
-  // 🔹 Custom Icons
-  // const checkInIcon = new L.Icon({
-  //   iconUrl: "https://maps.google.com/mapfiles/ms/icons/green-dot.png",
-  //   iconSize: [32, 32],
-  // });
-
-  // const checkOutIcon = new L.Icon({
-  //   iconUrl: "https://maps.google.com/mapfiles/ms/icons/red-dot.png",
-  //   iconSize: [32, 32],
-  // });
-
-  // 🔹 Build path (only check-ins for now)
   const path = validSessions.map((s) => [
     parseFloat(s.checkInLat!),
     parseFloat(s.checkInLng!),
@@ -68,7 +55,6 @@ export default function AttendanceMap({
 
   const checkInIcon = (i: number) => createMarker(t.success, `${i + 1}`);
 
-  const checkOutIcon = () => createMarker(t.danger, "•");
   return (
     <MapContainer
       center={center as any}
@@ -80,10 +66,10 @@ export default function AttendanceMap({
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
 
-      {/* 🔵 Movement Path */}
+      {/* Movement Path */}
       <Polyline positions={path as any} color={t.accent} weight={3} />
 
-      {/* 🟢 Check-in Markers */}
+      {/* Check-in Markers */}
       {validSessions.map((s, i) => {
         const checkIn = new Date(s.checkInTime).toLocaleTimeString();
         const checkOut = s.checkOutTime
@@ -101,37 +87,16 @@ export default function AttendanceMap({
             position={[parseFloat(s.checkInLat!), parseFloat(s.checkInLng!)]}
           >
             <Popup className="bg-bg! rounded-2xl!">
-              <div
-                // className="bg-surface"
-                style={{
-                  minWidth: 200,
-                  fontSize: 12,
-                  color: t.text,
-                }}
-              >
-                {/* Title */}
-                <div
-                  style={{
-                    fontWeight: 600,
-                    marginBottom: 6,
-                  }}
-                >
-                  Session {i + 1}
+              <div style={{ minWidth: 200, fontSize: 12, color: t.text }}>
+                <div style={{ fontWeight: 600, marginBottom: 6 }}>
+                  Session {i + 1} (Check-in)
                 </div>
-
-                {/* Time */}
-                <div style={{ marginBottom: 6 }}>
-                  <div style={{ color: t.textSec }}>
-                    ⏱ {checkIn} → {checkOut}
-                  </div>
+                <div style={{ marginBottom: 6, color: t.textSec }}>
+                  ⏱ {checkIn} → {checkOut}
                 </div>
-
-                {/* Duration */}
                 <div style={{ color: t.textMuted, marginBottom: 6 }}>
                   Duration: {duration}
                 </div>
-
-                {/* Address */}
                 <div style={{ fontSize: 11, marginBottom: 6 }}>
                   <MapPin
                     className="inline-block text-md text-success"
@@ -139,8 +104,6 @@ export default function AttendanceMap({
                   />{" "}
                   {s.checkInAddress || "No address"}
                 </div>
-
-                {/* Flags */}
                 <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                   {s.isLate && (
                     <span
@@ -155,7 +118,6 @@ export default function AttendanceMap({
                       Late
                     </span>
                   )}
-
                   {s.isEarlyExit && (
                     <span
                       style={{
@@ -176,25 +138,30 @@ export default function AttendanceMap({
         );
       })}
 
-      {/* 🔴 Check-out markers */}
+      {/* Check-out Markers */}
       {validSessions
         .filter((s) => s.checkOutLat && s.checkOutLng)
-        .map((s) => (
+        .map((s, i) => (
           <Marker
             key={`out-${s.id}`}
-            icon={checkOutIcon()}
+            icon={checkOutIcon(i)} // Numbered to match session
             position={[parseFloat(s.checkOutLat!), parseFloat(s.checkOutLng!)]}
           >
-            <Popup>
-              <div style={{ fontSize: 12 }}>
-                <Clock className="inline-block text-md text-danger" size={14} />{" "}
-                Check-out: {new Date(s.checkOutTime!).toLocaleTimeString()}
-                <br />
-                <MapPin
-                  className="inline-block text-md text-danger"
-                  size={14}
-                />{" "}
-                Check-out: {s.checkOutAddress || "No address"}
+            <Popup className="bg-bg! rounded-2xl!">
+              <div style={{ fontSize: 12, color: t.text }}>
+                <div style={{ fontWeight: 600, marginBottom: 6 }}>
+                  Session {i + 1} (Check-out)
+                </div>
+                <div style={{ color: t.textSec, marginBottom: 6 }}>
+                  ⏱ {new Date(s.checkOutTime!).toLocaleTimeString()}
+                </div>
+                <div style={{ fontSize: 11 }}>
+                  <MapPin
+                    className="inline-block text-md text-danger"
+                    size={14}
+                  />{" "}
+                  {s.checkOutAddress || "No address"}
+                </div>
               </div>
             </Popup>
           </Marker>

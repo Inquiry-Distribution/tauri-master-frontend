@@ -44,6 +44,11 @@ export default function ResetPasswordModal({
         oldPassword: form.oldPassword,
         password: form.password,
       });
+      Swal.fire({
+        icon: "success",
+        title: "Password Updated.",
+        text: "Your password has been updated successfully",
+      });
       onClose();
     } catch (err: any) {
       Swal.fire({
