@@ -551,7 +551,7 @@ export default function InquiriesPage() {
               searchable={false}
               totalPages={Math.ceil((data?.total || 0) / limit)}
               rowKey={(row) => row.id}
-              selectable
+              selectable={isSuperUser}
               selectedRows={selectedRows}
               onSelectChange={(rows) => setSelectedRows(rows)}
               // onPageChange={(p) => setPage(p)}
