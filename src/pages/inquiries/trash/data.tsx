@@ -8,7 +8,7 @@ import { Inquiry } from "@/src/types/inquiry";
 import { Link } from "react-router-dom";
 import { useState } from "react";
 import ButtonLoader from "@/src/components/ui/loader/buttonLoader";
-import { Edit, Trash } from "lucide-react";
+import { Edit, Recycle, Trash } from "lucide-react";
 import {
   getPriorityStyleMap,
   getStatusStyleMap,
@@ -20,6 +20,10 @@ type ColumnDeps = {
   setSelectedInquiry: (inquiry: Inquiry | null) => void;
   deleteLoading: boolean;
   onDelete: (inquiry: Inquiry) => Promise<void>; // 👈 add this
+  deletingId: string | null;
+  restoringId: string | null;
+  restoreLoading: boolean;
+  onRestore: (inquiry: Inquiry) => Promise<void>; // 👈 add this
   tokens?: any;
   setEditInquiry: (inquiry: Inquiry | null) => void;
 };
@@ -30,6 +34,10 @@ export const getInquiryColumns = ({
   deleteLoading,
   onDelete,
   setEditInquiry,
+  deletingId,
+  restoringId,
+  restoreLoading,
+  onRestore,
 }: ColumnDeps): TableColumn<Inquiry>[] => {
   const userData = JSON.parse(localStorage.getItem("userData") || "{}");
   const isSuperUser = userData?.role === "superuser";
@@ -161,8 +169,17 @@ export const getInquiryColumns = ({
             <Edit size={16} />
           </Button> */}
           {isSuperUser && (
+            <Button variant="success" onClick={() => onRestore(row)}>
+              {restoringId === row.id ? (
+                <ButtonLoader />
+              ) : (
+                <Recycle size={16} />
+              )}
+            </Button>
+          )}
+          {isSuperUser && (
             <Button variant="danger" onClick={() => onDelete(row)}>
-              {deleteLoading ? <ButtonLoader /> : <Trash size={16} />}
+              {deletingId === row.id ? <ButtonLoader /> : <Trash size={16} />}
             </Button>
           )}
         </div>

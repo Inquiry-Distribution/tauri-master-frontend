@@ -17,6 +17,11 @@ export type CreateUser = {
   company: string;
 };
 
+export type ResetPassword = {
+  oldPassword: string;
+  password: string;
+};
+
 export type SalesPersonId = {
   id: string;
   name: string;

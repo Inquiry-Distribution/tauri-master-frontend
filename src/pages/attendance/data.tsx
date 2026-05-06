@@ -114,6 +114,10 @@ export const getAttendanceColumns = ({
             bg: t.dangerLight,
             color: t.danger,
           },
+          half_day: {
+            bg: t.accentLight,
+            color: t.accent,
+          },
           late: {
             bg: t.warningLight,
             color: t.warning,

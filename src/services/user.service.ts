@@ -1,5 +1,5 @@
 import { api } from "@/src/api/axios";
-import { CreateUser, UpdateUser } from "../types/users";
+import { CreateUser, ResetPassword, UpdateUser } from "../types/users";
 
 export const UserService = {
   createUser: async (payload: CreateUser) => {

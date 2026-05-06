@@ -17,11 +17,17 @@ import { useTheme } from "@/src/contexts/index";
 import { useLayout } from "@/src/hooks/useLayout";
 import NotificationBox from "./NotificationBox";
 import { useAuth } from "@/src/contexts/authContext";
+import ClickMenu from "../ui/contextMenu";
+import ResetPasswordModal from "../ui/auth/resetPasswordModal";
+import ContextMenu from "../ui/contextMenu2";
 
 export default function Header() {
   const { tokens, isDark, toggleTheme } = useTheme();
   const { toggleSidebar, sidebarOpen } = useLayout();
   const [showNotifications, setShowNotifications] = useState(false);
+
+  const [showMenu, setShowMenu] = useState(false);
+  const [showResetModal, setShowResetModal] = useState(false);
   const notificationRef = useRef<HTMLDivElement>(null);
 
   const { user } = useAuth();
@@ -126,24 +132,55 @@ export default function Header() {
           className="h-8 w-px mx-1 md:mx-2"
           style={{ backgroundColor: tokens.border }}
         ></div>
+        <div className="relative">
+          <div
+            className="flex items-center gap-3 pl-1 md:pl-2 cursor-pointer"
+            onClick={() => setShowMenu((prev) => !prev)}
+          >
+            <div className="text-right hidden md:block">
+              <p className="text-sm font-bold" style={{ color: tokens.text }}>
+                {user?.name || "Guest"}
+              </p>
+              <p
+                className="text-[10px] font-medium uppercase tracking-wider"
+                style={{ color: tokens.textMuted }}
+              >
+                {user?.role || "—"}
+              </p>
+            </div>
 
-        <div className="flex items-center gap-3 pl-1 md:pl-2">
-          <div className="text-right hidden md:block">
-            <p className="text-sm font-bold" style={{ color: tokens.text }}>
-              {user?.name || "Guest"}
-            </p>
-            <p
-              className="text-[10px] font-medium uppercase tracking-wider"
-              style={{ color: tokens.textMuted }}
-            >
-              {user?.role || "—"}
-            </p>
+            <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white font-bold shadow-md shrink-0">
+              {user?.name?.charAt(0).toUpperCase() || "G"}
+            </div>
           </div>
-          <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white font-bold shadow-md shrink-0">
-            {user?.name?.charAt(0).toUpperCase() || "G"}
-          </div>
+
+          {showMenu && (
+            <ContextMenu
+              onClose={() => setShowMenu(false)}
+              items={[
+                {
+                  label: "Reset Password",
+                  onClick: () => setShowResetModal(true),
+                },
+              ]}
+            />
+          )}
         </div>
+        {/* {showMenu && (
+          <ContextMenu
+            onClose={() => setShowMenu(false)}s
+            items={[
+              {
+                label: "Reset Password",
+                onClick: () => setShowResetModal(true),
+              },
+            ]}
+          />
+        )} */}
       </div>
+      {showResetModal && (
+        <ResetPasswordModal onClose={() => setShowResetModal(false)} />
+      )}
     </header>
   );
 }

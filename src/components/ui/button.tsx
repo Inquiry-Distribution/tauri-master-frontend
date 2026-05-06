@@ -14,7 +14,7 @@ export function Button({
   title,
 }: {
   children: React.ReactNode;
-  variant?: "primary" | "secondary" | "danger" | "ghost" | "dashed";
+  variant?: "primary" | "secondary" | "danger" | "success" | "ghost" | "dashed";
   size?: "xs" | "sm" | "md" | "lg" | "xl";
   onClick?: () => void;
   disabled?: boolean;
@@ -67,6 +67,12 @@ export function Button({
       color: tokens.danger,
       border: `1px solid ${tokens.danger}30`,
       hoverBg: tokens.danger + "20",
+    },
+    success: {
+      bg: tokens.successLight,
+      color: tokens.success,
+      border: `1px solid ${tokens.success}30`,
+      hoverBg: tokens.success + "20",
     },
     ghost: {
       bg: "transparent",

@@ -60,4 +60,18 @@ export const InquiryService = {
     const { data } = await api.delete(`/inquiries/${id}`);
     return data;
   },
+  bulkDeleteInquiry: async (payload: { ids: string[] }) => {
+    const { data } = await api.delete(`/inquiries/bulk`, {
+      data: payload,
+    });
+    return data;
+  },
+  restoreInquiry: async (id: string) => {
+    const { data } = await api.patch(`/inquiries/${id}/restore`);
+    return data;
+  },
+  permanentlyDeleteInquiry: async (id: string) => {
+    const { data } = await api.delete(`/inquiries/${id}/permanent`);
+    return data;
+  },
 };

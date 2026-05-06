@@ -137,7 +137,7 @@ export function LocationHistoryMap({
     }
   }, [currentIndex, mode]);
   return (
-    <div className="w-full">
+    <div className="w-full z-10">
       {/* Map */}
       <div className="h-[320px] rounded-xl overflow-hidden">
         <MapContainer
@@ -170,7 +170,7 @@ export function LocationHistoryMap({
           {mode === "playback" && (
             <>
               <Polyline
-                positions={points.map((p) => [p.lat, p.lng])}
+                positions={points.map((p) => [p.lat, p.lng] as [number, number])}
                 color={tokens.textMuted}
                 weight={3}
               />
@@ -178,7 +178,7 @@ export function LocationHistoryMap({
               <Polyline
                 positions={points
                   .slice(0, currentIndex + 1)
-                  .map((p) => [p.lat, p.lng])}
+                  .map((p) => [p.lat, p.lng] as [number, number])}
                 color={tokens.success}
                 weight={5}
               />

@@ -35,6 +35,8 @@ import { PersonSelector } from "@/src/components/ui/attendance/personSelector";
 import { useTheme } from "@/src/contexts";
 import { useDebounce } from "@/src/utils/utils";
 import { useGetTrashInquiries } from "@/src/hooks/inquiry/useGetTrashInquiry";
+import { usePermanentDeleteInquiry } from "@/src/hooks/inquiry/usePermanentDeleteInquiry";
+import { useRestoreInquiry } from "@/src/hooks/inquiry/useRestoreInquiry";
 // import { exportInquiryExcel } from "@/src/xls-convert/inquiry.export";
 
 const formatDate = (date: Date) => date.toISOString().split("T")[0];
@@ -118,35 +120,15 @@ export default function TrashInquiriesPage() {
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [editingInquiry, setEditingInquiry] = useState<Inquiry | null>(null);
   const [selectedPerson, setSelectedPerson] = useState<any>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [restoringId, setRestoringId] = useState<string | null>(null);
   const { data, loading, setData, error, getTrashInquiries } =
     useGetTrashInquiries();
-  const { deleteInquiry, loading: deleteLoading } = useDeleteInquiry();
+  const { permanentlyDeleteInquiry, loading: deleteLoading } =
+    usePermanentDeleteInquiry();
+  const { restoreInquiry, loading: restoreLoading } = useRestoreInquiry();
 
   const handleDelete = async (inquiry: Inquiry) => {
-    if (inquiry.assignedToId) {
-      const result = await Swal.fire({
-        icon: "warning",
-        title: "Inquiry already assigned",
-        text: "You must reassign this inquiry before deleting it.",
-        showCancelButton: true,
-        // showDenyButton: true,
-        confirmButtonText: "Reassign",
-        // denyButtonText: "Cancel",
-        cancelButtonText: "Close",
-        confirmButtonColor: "#2563eb", // blue
-        // denyButtonColor: "#6b7280",
-        cancelButtonColor: "#d33",
-      });
-
-      // 🔁 Reassign clicked
-      if (result.isConfirmed) {
-        setSelectedInquiry(inquiry); // opens your ReassignInquiryModal
-      }
-
-      return;
-    }
-
-    // 2. Confirm delete
     const result = await Swal.fire({
       title: "Are you sure?",
       text: "This inquiry will be permanently deleted.",
@@ -160,7 +142,7 @@ export default function TrashInquiriesPage() {
     if (!result.isConfirmed) return;
 
     try {
-      await deleteInquiry(inquiry.id);
+      await permanentlyDeleteInquiry(inquiry.id);
 
       Swal.fire({
         icon: "success",
@@ -176,6 +158,36 @@ export default function TrashInquiriesPage() {
       });
     }
   };
+  const handleRestore = async (inquiry: Inquiry) => {
+    const result = await Swal.fire({
+      title: "Are you sure?",
+      text: "This inquiry will be restored.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#6b7280",
+      confirmButtonText: restoreLoading ? "Restoring..." : "Yes, restore it",
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      await restoreInquiry(inquiry.id);
+
+      Swal.fire({
+        icon: "success",
+        title: "Inquiry restored successfully",
+      });
+
+      // refresh list
+      getTrashInquiries(`page=${page}&limit=${limit}`);
+    } catch (err) {
+      Swal.fire({
+        icon: "error",
+        title: "Failed to restore inquiry",
+      });
+    }
+  };
 
   const columns = useMemo(
     () =>
@@ -184,6 +196,10 @@ export default function TrashInquiriesPage() {
         setSelectedInquiry,
         deleteLoading,
         onDelete: handleDelete,
+        restoreLoading: restoreLoading,
+        deletingId,
+        restoringId,
+        onRestore: handleRestore,
         setEditInquiry: setEditingInquiry,
       }),
     [
@@ -191,6 +207,10 @@ export default function TrashInquiriesPage() {
       setSelectedInquiry,
       handleDelete,
       deleteLoading,
+      deletingId,
+      restoringId,
+      restoreLoading,
+      handleRestore,
       setEditingInquiry,
     ],
   );

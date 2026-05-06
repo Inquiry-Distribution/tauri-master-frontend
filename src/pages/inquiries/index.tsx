@@ -11,6 +11,7 @@ import {
   Clock,
   Download,
   Trash2,
+  Trash,
 } from "lucide-react";
 import { cn, useDebounce } from "../../utils/utils";
 // import { Inquiry } from "../../types";
@@ -32,6 +33,7 @@ import { exportInquiryStyled } from "@/src/xls-convert/inquiry.export";
 import EditInquiryForm from "./edit/_form";
 import Input from "@/src/components/ui/form/input";
 import { PersonSelector } from "@/src/components/ui/attendance/personSelector";
+import { useBulkDeleteInquiry } from "@/src/hooks/inquiry/useBulkDeleteInquiry";
 // import { exportInquiryExcel } from "@/src/xls-convert/inquiry.export";
 
 const formatDate = (date: Date) => date.toISOString().split("T")[0];
@@ -83,6 +85,7 @@ export default function InquiriesPage() {
   const navigate = useNavigate();
   // ─── Derive ALL state directly from URL ───────────────────────────────────
   const { defaultFrom, defaultTo } = getDefaultDates();
+  const [selectedRows, setSelectedRows] = useState<Inquiry[]>([]);
 
   const activeTab = searchParams.get("tab") ?? "all";
   const page = Number(searchParams.get("page")) || 1;
@@ -119,7 +122,73 @@ export default function InquiriesPage() {
   const [selectedPerson, setSelectedPerson] = useState<any>(null);
   const { data, loading, setData, error, getInquiries } = useGetInquiries();
   const { deleteInquiry, loading: deleteLoading } = useDeleteInquiry();
+  const {
+    bulkDeleteInquiry,
+    loading: bulkDeleteLoading,
+    error: bulkDeleteError,
+  } = useBulkDeleteInquiry();
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
+  const handleBulkDelete = async () => {
+    if (!selectedRows.length) {
+      Swal.fire({
+        icon: "warning",
+        title: "No inquiries selected",
+      });
+      return;
+    }
+
+    // ❗ Check if any inquiry is assigned
+    const assigned = selectedRows.find((inq) => inq.assignedToId);
+
+    if (assigned) {
+      const result = await Swal.fire({
+        icon: "warning",
+        title: "Some inquiries are assigned",
+        text: "Please reassign them before deleting.",
+        showCancelButton: true,
+        confirmButtonText: "Reassign",
+        cancelButtonText: "Cancel",
+      });
+
+      if (result.isConfirmed) {
+        setSelectedInquiry(assigned);
+      }
+
+      return;
+    }
+
+    const result = await Swal.fire({
+      title: "Are you sure?",
+      text: `You are deleting ${selectedRows.length} inquiries.`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      confirmButtonText: bulkDeleteLoading ? "Deleting..." : "Yes, delete all",
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      const ids = selectedRows.map((row) => row.id);
+
+      await bulkDeleteInquiry({ ids });
+
+      Swal.fire({
+        icon: "success",
+        title: "Inquiries deleted successfully",
+      });
+
+      setSelectedRows([]);
+
+      getInquiries(`page=${page}&limit=${limit}`);
+    } catch (err) {
+      Swal.fire({
+        icon: "error",
+        title: "Bulk delete failed",
+      });
+    }
+  };
   const handleDelete = async (inquiry: Inquiry) => {
     if (inquiry.assignedToId) {
       const result = await Swal.fire({
@@ -127,37 +196,35 @@ export default function InquiriesPage() {
         title: "Inquiry already assigned",
         text: "You must reassign this inquiry before deleting it.",
         showCancelButton: true,
-        // showDenyButton: true,
         confirmButtonText: "Reassign",
-        // denyButtonText: "Cancel",
         cancelButtonText: "Close",
-        confirmButtonColor: "#2563eb", // blue
-        // denyButtonColor: "#6b7280",
+        confirmButtonColor: "#2563eb",
         cancelButtonColor: "#d33",
       });
 
-      // 🔁 Reassign clicked
       if (result.isConfirmed) {
-        setSelectedInquiry(inquiry); // opens your ReassignInquiryModal
+        setSelectedInquiry(inquiry);
       }
 
       return;
     }
 
-    // 2. Confirm delete
     const result = await Swal.fire({
       title: "Are you sure?",
-      text: "This inquiry will be permanently deleted.",
+      text: "This inquiry will be deleted.",
       icon: "warning",
       showCancelButton: true,
       confirmButtonColor: "#d33",
       cancelButtonColor: "#6b7280",
-      confirmButtonText: deleteLoading ? "Deleting..." : "Yes, delete it",
+      confirmButtonText:
+        deletingId === inquiry.id ? "Deleting..." : "Yes, delete it",
     });
 
     if (!result.isConfirmed) return;
 
     try {
+      setDeletingId(inquiry.id);
+
       await deleteInquiry(inquiry.id);
 
       Swal.fire({
@@ -165,13 +232,14 @@ export default function InquiriesPage() {
         title: "Inquiry deleted successfully",
       });
 
-      // refresh list
       getInquiries(`page=${page}&limit=${limit}`);
     } catch (err) {
       Swal.fire({
         icon: "error",
         title: "Failed to delete inquiry",
       });
+    } finally {
+      setDeletingId(null);
     }
   };
   // const handleDelete = async (id: string) => {
@@ -211,6 +279,7 @@ export default function InquiriesPage() {
         setSelectedInquiry,
         deleteLoading,
         onDelete: handleDelete,
+        deletingId,
         setEditInquiry: setEditingInquiry,
       }),
     [
@@ -301,7 +370,7 @@ export default function InquiriesPage() {
         </div> */}
       </div>
 
-      <div className="flex  md:flex-row gap-4">
+      <div className="flex  md:flex-row gap-2">
         <div className="relative flex grow">
           <Search
             size={18}
@@ -335,6 +404,13 @@ export default function InquiriesPage() {
         </Button>
         <Button onClick={() => exportInquiryStyled(inquiries)}>
           <Download size={18} />
+        </Button>
+        <Button
+          variant="danger"
+          disabled={bulkDeleteLoading || !selectedRows.length}
+          onClick={() => handleBulkDelete()}
+        >
+          {bulkDeleteLoading ? <ButtonLoader /> : <Trash size={18} />}
         </Button>
       </div>
       {showFilters && (
@@ -474,6 +550,10 @@ export default function InquiriesPage() {
               rowsPerPage={limit}
               searchable={false}
               totalPages={Math.ceil((data?.total || 0) / limit)}
+              rowKey={(row) => row.id}
+              selectable
+              selectedRows={selectedRows}
+              onSelectChange={(rows) => setSelectedRows(rows)}
               // onPageChange={(p) => setPage(p)}
               // onRowsPerPageChange={(r) => {
               //   setLimit(r);

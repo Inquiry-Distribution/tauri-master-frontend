@@ -16,6 +16,7 @@ type ColumnDeps = {
   setSelectedInquiry: (inquiry: Inquiry | null) => void;
   deleteLoading: boolean;
   onDelete: (inquiry: Inquiry) => Promise<void>; // 👈 add this
+  deletingId: string | null;
   tokens?: any;
   setEditInquiry: (inquiry: Inquiry | null) => void;
 };
@@ -25,6 +26,7 @@ export const getInquiryColumns = ({
   setSelectedInquiry,
   deleteLoading,
   onDelete,
+  deletingId,
   setEditInquiry,
 }: ColumnDeps): TableColumn<Inquiry>[] => {
   const userData = JSON.parse(localStorage.getItem("userData") || "{}");
@@ -161,7 +163,7 @@ export const getInquiryColumns = ({
           </Button>
           {isSuperUser && (
             <Button variant="danger" onClick={() => onDelete(row)}>
-              {deleteLoading ? <ButtonLoader /> : <Trash size={16} />}
+              {deletingId === row.id ? <ButtonLoader /> : <Trash size={16} />}
             </Button>
           )}
         </div>
