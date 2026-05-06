@@ -13,6 +13,7 @@ import {
   getPriorityStyleMap,
   getStatusStyleMap,
 } from "../create/inquiryStyles";
+import DOMPurify from "dompurify";
 
 type ColumnDeps = {
   setSelectedUserId: (id: string) => void;
@@ -47,17 +48,17 @@ export const getInquiryColumns = ({
       key: "description",
       label: "Inquiry",
       render: (row) => (
-        <Link
-          className="max-w-[260px] cursor-pointer"
-          to={`/inquiries/${row.id}`}
-        >
-          <p className="text-sm font-medium text-(--text) line-clamp-1">
-            {row.description || "—"}
-          </p>
+        <>
+          <p
+            className="text-sm font-medium text-(--text) line-clamp-1"
+            dangerouslySetInnerHTML={{
+              __html: DOMPurify.sanitize(row.description || "—"),
+            }}
+          ></p>
           <p className="text-xs text-(--textMuted)">
             {row.mobile || "No contact"}
           </p>
-        </Link>
+        </>
       ),
     },
     {

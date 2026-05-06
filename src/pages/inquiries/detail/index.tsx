@@ -18,12 +18,13 @@ import { useTheme } from "@/src/contexts";
 import { useGetInquiryById } from "@/src/hooks/inquiry/useGetInquiryById";
 import { Inquiry, InquiryNote } from "@/src/types/inquiry";
 import { formatDateTime } from "@/src/utils/utils";
-import { Edit, UserRoundX } from "lucide-react";
+import { Download, Edit, Eye, UserRoundX } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import EditInquiryForm from "../edit/_form";
 import { useUnassignInquiry } from "@/src/hooks/inquiry/useUnassignInquiry";
 import Swal from "sweetalert2";
+import DOMPurify from "dompurify";
 
 const toUrl = (path: string) =>
   `${import.meta.env.VITE_PUBLIC_ASSET_URL}` + path;
@@ -36,6 +37,26 @@ export default function InquiryDetailPage() {
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const [isReassignOpen, setIsReassignOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
+
+  const [menu, setMenu] = useState<{
+    x: number;
+    y: number;
+    index: number | null;
+  } | null>(null);
+
+  const openAttachment = (img: any) => {
+    const url = toUrl(img.url);
+    window.open(url, "_blank"); // or use Tauri open if needed
+  };
+
+  const downloadAttachment = async (img: any) => {
+    const url = toUrl(img.url);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = img.filename || "file";
+    a.click();
+  };
   const {
     unassignInquiry,
     loading: unassignLoading,
@@ -139,7 +160,12 @@ export default function InquiryDetailPage() {
           {inquiry?.title ? (
             inquiry.title
           ) : inquiry?.description ? (
-            <div className="line-clamp-1">{inquiry.description}</div>
+            <div
+              className="line-clamp-1"
+              dangerouslySetInnerHTML={{
+                __html: DOMPurify.sanitize(inquiry.description),
+              }}
+            ></div>
           ) : (
             "Untitled Inquiry"
           )}
@@ -157,13 +183,18 @@ export default function InquiryDetailPage() {
           {/* Description */}
           <Card>
             <SectionHeading>Description</SectionHeading>
-            <p className="text-sm text-(--text) leading-relaxed whitespace-pre-wrap">
-              {inquiry?.description || (
-                <span className="text-(--textMuted) italic">
-                  No description provided.
-                </span>
-              )}
-            </p>
+            <p
+              className="text-sm text-(--text) leading-relaxed whitespace-pre-wrap"
+              dangerouslySetInnerHTML={{
+                __html: DOMPurify.sanitize(
+                  inquiry?.description || (
+                    <span className="text-(--textMuted) italic">
+                      No description provided.
+                    </span>
+                  ),
+                ),
+              }}
+            ></p>
           </Card>
 
           {/* Attached images */}
@@ -177,11 +208,19 @@ export default function InquiryDetailPage() {
                   (img: Inquiry["images"][number], i: number) => (
                     <div
                       key={img.id}
+                      className="cursor-pointer"
                       onClick={() => {
                         setLightboxIndex(i);
                         setLightboxOpen(true);
                       }}
-                      className="cursor-pointer"
+                      onContextMenu={(e) => {
+                        e.preventDefault();
+                        setMenu({
+                          x: e.clientX,
+                          y: e.clientY,
+                          index: i,
+                        });
+                      }}
                     >
                       <ImageThumb img={img} />
                     </div>
@@ -427,6 +466,45 @@ export default function InquiryDetailPage() {
         //   setLightboxOpen(false);
         // }}
       />
+
+      {menu && menu.index !== null && inquiry?.images?.[menu.index] && (
+        <div
+          className="rounded-xl"
+          style={{
+            position: "fixed",
+            top: menu.y,
+            left: menu.x,
+            background: "var(--surface)",
+            border: "1px solid var(--border)",
+            borderRadius: 10,
+            boxShadow: "0 10px 30px rgba(0,0,0,0.2)",
+            zIndex: 9999,
+            minWidth: 160,
+            overflow: "hidden",
+          }}
+          onMouseLeave={() => setMenu(null)}
+        >
+          <button
+            className="w-full text-left px-3 py-2 text-sm"
+            onClick={() => {
+              openAttachment(inquiry.images[menu.index!]);
+              setMenu(null);
+            }}
+          >
+            <Eye className="inline-block" size={14} /> Open
+          </button>
+
+          <button
+            className="w-full text-left px-3 py-2 text-sm"
+            onClick={() => {
+              downloadAttachment(inquiry.images[menu.index!]);
+              setMenu(null);
+            }}
+          >
+            <Download className="inline-block" size={14} /> Download
+          </button>
+        </div>
+      )}
     </div>
   );
 }

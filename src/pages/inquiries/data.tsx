@@ -9,6 +9,7 @@ import { Link } from "react-router-dom";
 import { useState } from "react";
 import ButtonLoader from "@/src/components/ui/loader/buttonLoader";
 import { Edit, Trash } from "lucide-react";
+import DOMPurify from "dompurify";
 
 type ColumnDeps = {
   setSelectedUserId: (id: string) => void;
@@ -47,9 +48,12 @@ export const getInquiryColumns = ({
           className="max-w-[260px] cursor-pointer"
           to={`/inquiries/${row.id}`}
         >
-          <p className="text-sm font-medium text-(--text) line-clamp-1">
-            {row.description || "—"}
-          </p>
+          <p
+            className="text-sm font-medium text-(--text) line-clamp-1"
+            dangerouslySetInnerHTML={{
+              __html: DOMPurify.sanitize(row.description || "—"),
+            }}
+          />
           <p className="text-xs text-(--textMuted)">
             {row.mobile || "No contact"}
           </p>

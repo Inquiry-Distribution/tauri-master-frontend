@@ -8,13 +8,17 @@ import {
   FileText,
   FileBarChart,
   FileIcon,
+  Download,
+  Trash,
 } from "lucide-react";
 import { ThemeContext } from "@/src/contexts/index";
 import { listen } from "@tauri-apps/api/event";
 import { convertFileSrc } from "@tauri-apps/api/core";
-import { readFile, stat } from "@tauri-apps/plugin-fs";
+import { readFile, stat, writeFile } from "@tauri-apps/plugin-fs";
 import Lightbox from "../lightbox";
 import Swal from "sweetalert2";
+import { downloadFile } from "@/src/utils/tauriHelper";
+import { save } from "@tauri-apps/plugin-dialog";
 
 export type UploadedFile = {
   file: File;
@@ -116,6 +120,7 @@ const getSafeUrl = (input: UploadedFile | string) => {
   // fallback (browser case)
   return input.url;
 };
+
 const FileInput = ({
   label,
   required,
@@ -142,6 +147,58 @@ const FileInput = ({
   const [dragging, setDragging] = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
+
+  const [menu, setMenu] = useState<{
+    x: number;
+    y: number;
+    index: number | null;
+  } | null>(null);
+
+  const openFile = async (f: UploadedFile) => {
+    const type = getFileType(f.file);
+
+    if (type === "image") {
+      setLightboxOpen(true);
+      setLightboxIndex(files.indexOf(f));
+    } else {
+      await open(f.path || getSafeUrl(f));
+    }
+  };
+
+  const downloadFile = async (f: UploadedFile) => {
+    const name = f.file.name;
+
+    if ("__TAURI_INTERNALS__" in window) {
+      const path = await save({
+        defaultPath: name,
+      });
+
+      if (!path) return;
+
+      if (f.path) {
+        const bytes = await readFile(f.path);
+        await writeFile(path, bytes);
+      } else {
+        const buf = await f.file.arrayBuffer();
+        await writeFile(path, new Uint8Array(buf));
+      }
+      return;
+    }
+
+    const url = URL.createObjectURL(f.file);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = name;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const deleteFile = (i: number) => {
+    URL.revokeObjectURL(files[i].url);
+    const updated = files.filter((_, idx) => idx !== i);
+    setFiles(updated);
+    onChange?.(updated.map((f) => f.file));
+  };
   const isTauri = "__TAURI__" in window;
 
   const isHandledRef = useRef(false);
@@ -385,6 +442,12 @@ const FileInput = ({
     };
   }, []);
 
+  useEffect(() => {
+    const close = () => setMenu(null);
+    window.addEventListener("click", close);
+    return () => window.removeEventListener("click", close);
+  }, []);
+
   return (
     <div className="w-full flex flex-col gap-2">
       {/* Label */}
@@ -477,8 +540,17 @@ const FileInput = ({
                     console.log("FILE SOURCE:", f.path ? "TAURI" : "BROWSER");
                     // window.open(getSafeUrl(f), "_blank");
                     // await open(getSafeUrl(f));
-                    await open(f.path || getSafeUrl(f));
+                    // await open(f.path || getSafeUrl(f));
+                    await downloadFile(f);
                   }
+                }}
+                onContextMenu={(e) => {
+                  e.preventDefault();
+                  setMenu({
+                    x: e.clientX,
+                    y: e.clientY,
+                    index: i,
+                  });
                 }}
                 onTouchStart={() => handleTouchStart(i)}
                 onTouchEnd={handleTouchEnd}
@@ -546,7 +618,7 @@ const FileInput = ({
                   className="absolute inset-0 flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
                   style={{ backgroundColor: "rgba(0,0,0,0.45)" }}
                 >
-                  <button
+                  {/* <button
                     type="button"
                     title="Preview"
                     // onClick={(e) => {
@@ -562,7 +634,8 @@ const FileInput = ({
                     style={{ backgroundColor: "rgba(255,255,255,0.9)" }}
                   >
                     <Eye size={14} style={{ color: tokens.accent }} />
-                  </button>
+                  </button> */}
+
                   {/* <button
                   type="button"
                   title="Remove"
@@ -659,6 +732,60 @@ const FileInput = ({
           }
         }}
       />
+
+      {menu && menu.index !== null && (
+        <div
+          className="rounded-xl"
+          style={{
+            position: "fixed",
+            top: menu.y,
+            left: menu.x,
+            background: tokens.bg,
+            border: `1px solid ${tokens.border}`,
+            borderRadius: 10,
+            boxShadow: "0 10px 30px rgba(0,0,0,0.2)",
+            zIndex: 9999,
+            minWidth: 160,
+            overflow: "hidden",
+          }}
+          onMouseLeave={() => setMenu(null)}
+        >
+          <button
+            className="w-full text-left px-3 py-2 text-sm hover:opacity-80"
+            onClick={() => {
+              openFile(files[menu.index!]);
+              setMenu(null);
+            }}
+          >
+            <Eye className="inline-block" size={14} /> Open
+          </button>
+
+          <button
+            className="w-full text-left px-3 py-2 text-sm hover:opacity-80"
+            onClick={() => {
+              downloadFile(files[menu.index!]);
+              setMenu(null);
+            }}
+          >
+            <Download className="inline-block" size={14} /> Download
+          </button>
+
+          <button
+            className="w-full text-left px-3 py-2 text-sm text-red-500 hover:opacity-80"
+            onClick={() => {
+              deleteFile(menu.index!);
+              setMenu(null);
+            }}
+          >
+            <Trash
+              className="inline-block"
+              size={14}
+              style={{ color: tokens.danger }}
+            />{" "}
+            Delete
+          </button>
+        </div>
+      )}
     </div>
   );
 };

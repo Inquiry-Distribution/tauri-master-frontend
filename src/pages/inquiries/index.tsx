@@ -78,6 +78,8 @@ export default function InquiriesPage() {
   const { tokens } = useTheme();
   const [searchParams, setSearchParams] = useSearchParams();
 
+  const userData = JSON.parse(localStorage.getItem("userData") || "{}");
+  const isSuperUser = userData?.role === "superuser";
   const navigate = useNavigate();
   // ─── Derive ALL state directly from URL ───────────────────────────────────
   const { defaultFrom, defaultTo } = getDefaultDates();
@@ -284,14 +286,16 @@ export default function InquiriesPage() {
             <Plus size={18} />
             Add Inquiry
           </button>
-          <button
-            type="button"
-            className="flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm text-white bg-red-600 hover:bg-red-700 transition-all shadow-lg shadow-blue-600/20"
-            onClick={() => navigate("/inquiries/trash")}
-          >
-            <Trash2 size={18} />
-            View Trash
-          </button>
+          {isSuperUser && (
+            <button
+              type="button"
+              className="flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm text-white bg-red-600 hover:bg-red-700 transition-all shadow-lg shadow-blue-600/20"
+              onClick={() => navigate("/inquiries/trash")}
+            >
+              <Trash2 size={18} />
+              View Trash
+            </button>
+          )}
         </div>
         {/* <div className="flex gap-3">
         </div> */}
