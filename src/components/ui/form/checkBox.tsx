@@ -18,38 +18,48 @@ const Checkbox: React.FC<CheckboxProps> = ({
   const id = useId();
 
   useEffect(() => {
-    if (ref.current) ref.current.indeterminate = !!indeterminate;
+    if (ref.current) {
+      ref.current.indeterminate = !!indeterminate;
+    }
   }, [indeterminate]);
+
+  const active = checked || indeterminate;
 
   return (
     <label
       htmlFor={id}
-      className="inline-flex items-center cursor-pointer select-none"
+      className="flex items-center gap-2 cursor-pointer select-none leading-none"
+      onClick={onChange}
     >
-      <span className="relative flex items-center justify-center">
-        <input
-          ref={ref}
-          id={id}
-          type="checkbox"
-          checked={checked}
-          onChange={onChange}
-          className="peer sr-only"
-        />
-        {/* Custom box */}
-        <span
-          className={cn(
-            "w-4 h-4 rounded border transition-all duration-150",
-            "border-(--border) bg-(--surface)",
-            "peer-focus-visible:ring-2 peer-focus-visible:ring-(--primary)/50",
-            checked || indeterminate
-              ? "bg-(--primary) border-(--primary)"
-              : "hover:border-(--primary)/60",
-          )}
-        />
-        {/* Checkmark / dash */}
-        {(checked || indeterminate) && (
+      {/* REAL INPUT (controls everything) */}
+      <input
+        ref={ref}
+        id={id}
+        type="checkbox"
+        checked={checked}
+        onChange={onChange}
+        className="sr-only"
+      />
+
+      {/* FIXED HIT AREA BOX */}
+      <span
+        className={cn(
+          "relative flex items-center justify-center",
+          "w-4 h-4 shrink-0", // 🔥 IMPORTANT: prevents flex distortion
+          "rounded border transition-all duration-200",
+
+          "bg-(--surface) border-(--border)",
+          "hover:border-(--accent)/60",
+
+          "peer-focus-visible:ring-2 peer-focus-visible:ring-(--accent)/40",
+
+          active ? "bg-(--surface) border-(--accent)" : "hover:bg-(--accent)/5",
+        )}
+        onClick={onChange}
+      >
+        {active && (
           <svg
-            className="absolute w-3 h-3 text-white pointer-events-none"
+            className="w-3 h-3 text-(--accent)"
             viewBox="0 0 12 12"
             fill="none"
             stroke="currentColor"
@@ -65,10 +75,12 @@ const Checkbox: React.FC<CheckboxProps> = ({
           </svg>
         )}
       </span>
+
       {label && (
-        <span className="ml-2 text-sm text-(--textMuted)">{label}</span>
+        <span className="text-sm leading-none text-(--textSec)">{label}</span>
       )}
     </label>
   );
 };
+
 export default Checkbox;
