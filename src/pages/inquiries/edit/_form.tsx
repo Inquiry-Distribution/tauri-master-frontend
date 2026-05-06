@@ -13,6 +13,8 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import { SOURCE_OPTIONS } from "../create/_form";
+import { RichTextEditor } from "@/src/components/ui/form/richTextEditor";
+import { useAddImagesInquiry } from "@/src/hooks/inquiry/useAddImagesInquiry";
 
 type Props = {
   initialData?: Partial<Inquiry>;
@@ -22,6 +24,11 @@ type Props = {
 
 const EditInquiryForm = ({ initialData, onClose, onSuccess }: Props) => {
   const { editInquiry, loading, error } = useEditInquiry();
+  const {
+    addImagesInquiry,
+    loading: addImagesLoading,
+    error: addImagesError,
+  } = useAddImagesInquiry();
   const navigate = useNavigate();
   const [form, setForm] = useState<{
     description: string;
@@ -63,6 +70,7 @@ const EditInquiryForm = ({ initialData, onClose, onSuccess }: Props) => {
     // e.preventDefault();
     try {
       const formData = new FormData();
+      const imagesFormData = new FormData();
 
       formData.append("description", form.description);
       formData.append("mobile", form.mobile);
@@ -73,10 +81,15 @@ const EditInquiryForm = ({ initialData, onClose, onSuccess }: Props) => {
       // ✅ append files correctly
       if (form.images && form.images.length > 0) {
         form.images.forEach((file) => {
-          formData.append("images", file); // important: same key "images"
+          imagesFormData.append("images", file); // important: same key "images"
         });
       }
-      await editInquiry(initialData?.id || "", formData);
+      await Promise.all([
+        editInquiry(initialData?.id || "", formData),
+        form.images.length > 0 &&
+          addImagesInquiry(initialData?.id || "", imagesFormData),
+      ]);
+      // await editInquiry(initialData?.id || "", formData);
       if (onSuccess && initialData) {
         onSuccess({
           ...(initialData as Inquiry),
@@ -120,12 +133,19 @@ const EditInquiryForm = ({ initialData, onClose, onSuccess }: Props) => {
           inputName="images"
           onChange={(files) => setForm((prev) => ({ ...prev, images: files }))}
         />
-        <TextArea
+        <RichTextEditor
           label="Inquiry Description"
           inputName="description"
-          placeholder="Description"
-          inputValue={form.description}
-          onChange={handleChange}
+          placeholder="Enter inquiry description..."
+          value={form.description}
+          onChange={(content) => {
+            setForm((prev) => ({
+              ...prev,
+              description: content,
+            }));
+          }}
+          required
+          height={220}
         />
         <div className="grid grid-cols-3  gap-4">
           <Input

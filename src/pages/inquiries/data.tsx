@@ -14,7 +14,7 @@ type ColumnDeps = {
   setSelectedUserId: (id: string) => void;
   setSelectedInquiry: (inquiry: Inquiry | null) => void;
   deleteLoading: boolean;
-  onDelete: (id: string) => void; // 👈 add this
+  onDelete: (inquiry: Inquiry) => Promise<void>; // 👈 add this
   tokens?: any;
   setEditInquiry: (inquiry: Inquiry | null) => void;
 };
@@ -26,6 +26,8 @@ export const getInquiryColumns = ({
   onDelete,
   setEditInquiry,
 }: ColumnDeps): TableColumn<Inquiry>[] => {
+  const userData = JSON.parse(localStorage.getItem("userData") || "{}");
+  const isSuperUser = userData?.role === "superuser";
   return [
     {
       key: "id",
@@ -153,9 +155,11 @@ export const getInquiryColumns = ({
           <Button variant="secondary" onClick={() => setEditInquiry(row)}>
             <Edit size={16} />
           </Button>
-          <Button variant="danger" onClick={() => onDelete(row.id)}>
-            {deleteLoading ? <ButtonLoader /> : <Trash size={16} />}
-          </Button>
+          {isSuperUser && (
+            <Button variant="danger" onClick={() => onDelete(row)}>
+              {deleteLoading ? <ButtonLoader /> : <Trash size={16} />}
+            </Button>
+          )}
         </div>
       ),
     },

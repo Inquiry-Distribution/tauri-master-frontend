@@ -19,6 +19,7 @@ pub fn run() {
   tauri::Builder::default()
     .plugin(tauri_plugin_fs::init())        // ✅ ADD THIS
     .plugin(tauri_plugin_dialog::init())    // ✅ ADD THIS
+    .plugin(tauri_plugin_shell::init()) // ✅ ADD THIS
     .setup(|app| {
       if cfg!(debug_assertions) {
         app.handle().plugin(

@@ -18,10 +18,12 @@ import { useTheme } from "@/src/contexts";
 import { useGetInquiryById } from "@/src/hooks/inquiry/useGetInquiryById";
 import { Inquiry, InquiryNote } from "@/src/types/inquiry";
 import { formatDateTime } from "@/src/utils/utils";
-import { Edit } from "lucide-react";
+import { Edit, UserRoundX } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import EditInquiryForm from "../edit/_form";
+import { useUnassignInquiry } from "@/src/hooks/inquiry/useUnassignInquiry";
+import Swal from "sweetalert2";
 
 const toUrl = (path: string) =>
   `${import.meta.env.VITE_PUBLIC_ASSET_URL}` + path;
@@ -34,6 +36,12 @@ export default function InquiryDetailPage() {
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const [isReassignOpen, setIsReassignOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
+  const {
+    unassignInquiry,
+    loading: unassignLoading,
+    error: unassignError,
+  } = useUnassignInquiry();
+
   //   const inquiry = MOCK_INQUIRY; // swap with useQuery / useFetch hook
   const {
     data: inquiry,
@@ -55,7 +63,23 @@ export default function InquiryDetailPage() {
       url: toUrl(img.url), // adjust if backend needs full URL
       name: img.filename,
     })) || [];
-
+  const handleUnassign = async () => {
+    if (!id) {
+      return;
+    }
+    Swal.fire({
+      title: "Are you sure you want to unassign this inquiry?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Yes",
+      cancelButtonText: "No",
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        await unassignInquiry(id!);
+        setInquiry({ ...inquiry, status: "unassigned", assignedTo: null });
+      }
+    });
+  };
   return (
     <div
       className="min-h-screen px-4 py-6 md:px-8 md:py-8"
@@ -72,10 +96,19 @@ export default function InquiryDetailPage() {
         </button>
 
         <div className="flex items-center gap-2">
+          {inquiry?.status === "assigned" && (
+            <Button variant="secondary" onClick={handleUnassign}>
+              <span className="flex items-center gap-1.5">
+                {/* {Icon.refresh} */}
+                <UserRoundX size={20} />
+                Unassign
+              </span>
+            </Button>
+          )}
           <Button variant="secondary" onClick={() => setIsReassignOpen(true)}>
             <span className="flex items-center gap-1.5">
               {Icon.refresh}
-              Reassign
+              {inquiry?.status === "assigned" ? "Reassign" : "Assign"}
             </span>
           </Button>
           <Button variant="secondary" onClick={() => setIsEditOpen(true)}>

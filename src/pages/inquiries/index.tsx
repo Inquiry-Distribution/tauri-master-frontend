@@ -10,6 +10,7 @@ import {
   CheckCircle,
   Clock,
   Download,
+  Trash2,
 } from "lucide-react";
 import { cn, useDebounce } from "../../utils/utils";
 // import { Inquiry } from "../../types";
@@ -116,7 +117,32 @@ export default function InquiriesPage() {
   const [selectedPerson, setSelectedPerson] = useState<any>(null);
   const { data, loading, setData, error, getInquiries } = useGetInquiries();
   const { deleteInquiry, loading: deleteLoading } = useDeleteInquiry();
-  const handleDelete = async (id: string) => {
+
+  const handleDelete = async (inquiry: Inquiry) => {
+    if (inquiry.assignedToId) {
+      const result = await Swal.fire({
+        icon: "warning",
+        title: "Inquiry already assigned",
+        text: "You must reassign this inquiry before deleting it.",
+        showCancelButton: true,
+        // showDenyButton: true,
+        confirmButtonText: "Reassign",
+        // denyButtonText: "Cancel",
+        cancelButtonText: "Close",
+        confirmButtonColor: "#2563eb", // blue
+        // denyButtonColor: "#6b7280",
+        cancelButtonColor: "#d33",
+      });
+
+      // 🔁 Reassign clicked
+      if (result.isConfirmed) {
+        setSelectedInquiry(inquiry); // opens your ReassignInquiryModal
+      }
+
+      return;
+    }
+
+    // 2. Confirm delete
     const result = await Swal.fire({
       title: "Are you sure?",
       text: "This inquiry will be permanently deleted.",
@@ -130,7 +156,7 @@ export default function InquiriesPage() {
     if (!result.isConfirmed) return;
 
     try {
-      await deleteInquiry(id);
+      await deleteInquiry(inquiry.id);
 
       Swal.fire({
         icon: "success",
@@ -146,6 +172,36 @@ export default function InquiriesPage() {
       });
     }
   };
+  // const handleDelete = async (id: string) => {
+  //   const result = await Swal.fire({
+  //     title: "Are you sure?",
+  //     text: "This inquiry will be permanently deleted.",
+  //     icon: "warning",
+  //     showCancelButton: true,
+  //     confirmButtonColor: "#d33",
+  //     cancelButtonColor: "#6b7280",
+  //     confirmButtonText: deleteLoading ? "Deleting..." : "Yes, delete it",
+  //   });
+
+  //   if (!result.isConfirmed) return;
+
+  //   try {
+  //     await deleteInquiry(id);
+
+  //     Swal.fire({
+  //       icon: "success",
+  //       title: "Inquiry deleted successfully",
+  //     });
+
+  //     // refresh list
+  //     getInquiries(`page=${page}&limit=${limit}`);
+  //   } catch (err) {
+  //     Swal.fire({
+  //       icon: "error",
+  //       title: "Failed to delete inquiry",
+  //     });
+  //   }
+  // };
   const columns = useMemo(
     () =>
       getInquiryColumns({
@@ -228,7 +284,17 @@ export default function InquiriesPage() {
             <Plus size={18} />
             Add Inquiry
           </button>
+          <button
+            type="button"
+            className="flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm text-white bg-red-600 hover:bg-red-700 transition-all shadow-lg shadow-blue-600/20"
+            onClick={() => navigate("/inquiries/trash")}
+          >
+            <Trash2 size={18} />
+            View Trash
+          </button>
         </div>
+        {/* <div className="flex gap-3">
+        </div> */}
       </div>
 
       <div className="flex  md:flex-row gap-4">

@@ -18,6 +18,7 @@ import AttendancePage from "../pages/attendance";
 import NotificationsPage from "../pages/notifications";
 import SalesPersonReportPage from "../pages/users/detail";
 import SettingsPage from "../pages/settings";
+import TrashInquiriesPage from "../pages/inquiries/trash";
 
 export default function AppRoutes() {
   return useRoutes([
@@ -45,6 +46,7 @@ export default function AppRoutes() {
             { path: "inquiries", element: <InquiriesPage /> },
             { path: "inquiries/create", element: <CreateInquiry /> },
             { path: "inquiries/:id", element: <InquiryDetailPage /> },
+            { path: "inquiries/trash", element: <TrashInquiriesPage /> },
             { path: "sales-persons", element: <SalesPersonsPage /> },
             { path: "sales-persons/:id", element: <SalesPersonReportPage /> },
             { path: "devices", element: <DevicesPage /> },

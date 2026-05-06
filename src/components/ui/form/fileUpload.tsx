@@ -19,6 +19,7 @@ import Swal from "sweetalert2";
 export type UploadedFile = {
   file: File;
   url: string;
+  path?: string; // ✅ add this
 };
 
 const blockedExtensions = [
@@ -88,6 +89,33 @@ const getMimeType = (name: string) => {
   return map[ext || ""] || "application/octet-stream";
 };
 
+// const getSafeUrl = (input: UploadedFile | string) => {
+//   if (typeof input === "string") {
+//     if (input.startsWith("http")) return input;
+
+//     // local file path (Tauri)
+//     return convertFileSrc(input);
+//   }
+
+//   // already selected file (has blob URL)
+//   return input.url;
+// };
+
+const getSafeUrl = (input: UploadedFile | string) => {
+  if (typeof input === "string") {
+    if (input.startsWith("http")) return input;
+
+    return convertFileSrc(input); // local path
+  }
+
+  // ✅ prefer real file path if exists
+  if (input?.path) {
+    return convertFileSrc(input?.path);
+  }
+
+  // fallback (browser case)
+  return input.url;
+};
 const FileInput = ({
   label,
   required,
@@ -181,17 +209,26 @@ const FileInput = ({
           const bytes = await readFile(path);
           const name = path.split(/[\\/]/).pop() || "file";
 
-          const blob = new Blob([bytes]);
+          // const blob = new Blob([bytes]);
 
-          // const realFile = new File([blob], name, {
-          //   type: "image/jpeg",
-          // });
+          // // const realFile = new File([blob], name, {
+          // //   type: "image/jpeg",
+          // // });
+          // const mime = getMimeType(name);
+          // const realFile = new window.File([blob], name, { type: mime });
+
+          // return {
+          //   file: realFile,
+          //   url: URL.createObjectURL(blob), // better than convertFileSrc
+          // };
+
           const mime = getMimeType(name);
-          const realFile = new window.File([blob], name, { type: mime });
+          const file = new File([bytes], name, { type: mime });
 
           return {
-            file: realFile,
-            url: URL.createObjectURL(blob), // better than convertFileSrc
+            file,
+            url: convertFileSrc(path), // ✅ important
+            path, // ✅ store real path
           };
         }),
       );
@@ -339,12 +376,12 @@ const FileInput = ({
   }, [disabled]);
   // useEffect(() => {
   //   return () => {
-  //     files.forEach((f) => URL.revokeObjectURL(f.url));
+  //     files.forEach((f) => URL.revokeObjectURL(getSafeUrl(f)));
   //   };
   // }, [files]);
   useEffect(() => {
     return () => {
-      files.forEach((f) => URL.revokeObjectURL(f.url));
+      files.forEach((f) => URL.revokeObjectURL(getSafeUrl(f)));
     };
   }, []);
 
@@ -430,13 +467,17 @@ const FileInput = ({
                 //   setLightboxIndex(i);
                 //   setLightboxOpen(true);
                 // }}
-                onClick={() => {
+                onClick={async () => {
                   const type = getFileType(f.file);
                   if (type === "image") {
                     setLightboxIndex(i);
                     setLightboxOpen(true);
                   } else {
-                    window.open(f.url, "_blank");
+                    console.log("URL:", getSafeUrl(f));
+                    console.log("FILE SOURCE:", f.path ? "TAURI" : "BROWSER");
+                    // window.open(getSafeUrl(f), "_blank");
+                    // await open(getSafeUrl(f));
+                    await open(f.path || getSafeUrl(f));
                   }
                 }}
                 onTouchStart={() => handleTouchStart(i)}
@@ -454,15 +495,15 @@ const FileInput = ({
               >
                 {/* Thumbnail */}
                 {/* <img
-                key={f.url}
-                src={f.url}
+                key={getSafeUrl(f)}
+                src={getSafeUrl(f)}
                 alt={f.file.name}
                 className="w-full h-full object-cover"
                 onError={() => console.error("Image failed:", f.file.name)}
               /> */}
                 {type === "image" && (
                   <img
-                    src={f.url}
+                    src={getSafeUrl(f)}
                     alt={f.file.name}
                     className="w-full h-full object-cover"
                   />
@@ -470,7 +511,7 @@ const FileInput = ({
 
                 {type === "video" && (
                   <video
-                    src={f.url}
+                    src={getSafeUrl(f)}
                     className="w-full h-full object-cover"
                     muted
                   />
@@ -478,7 +519,7 @@ const FileInput = ({
 
                 {type === "pdf" && (
                   <iframe
-                    src={f.url}
+                    src={getSafeUrl(f)}
                     className="w-full h-full no-scrollbar"
                     title={f.file.name}
                   />
@@ -510,7 +551,7 @@ const FileInput = ({
                     title="Preview"
                     // onClick={(e) => {
                     //   e.stopPropagation();
-                    //   window.open(f.url, "_blank");
+                    //   window.open(getSafeUrl(f), "_blank");
                     // }}
                     onClick={(e) => {
                       e.stopPropagation();
@@ -598,13 +639,13 @@ const FileInput = ({
         initialIndex={lightboxIndex}
         onClose={() => setLightboxOpen(false)}
         // items={files.map((f) => ({
-        //   url: f.url,
+        //   url: getSafeUrl(f),
         //   name: f.file.name,
         // }))}
         items={files
           .filter((f) => f.file.type.startsWith("image/"))
           .map((f) => ({
-            url: f.url,
+            url: getSafeUrl(f),
             name: f.file.name,
           }))}
         onDelete={(i) => {

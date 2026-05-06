@@ -6,6 +6,14 @@
   "permissions": [
     "core:default",
     "dialog:allow-save",
+    "fs:default",
+    "fs:allow-read-file",
+    "fs:allow-read",
+    "fs:scope-app",
+    "fs:scope-download",
+    "fs:scope-desktop",
+
+    "shell:allow-open",
     "fs:allow-write-file",
     "fs:allow-app-write",
     "fs:allow-home-write",

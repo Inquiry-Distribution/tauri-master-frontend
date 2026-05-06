@@ -1,6 +1,7 @@
 import { InquiryDistributor } from "@/src/components/ui/distributeInquiry/inquiryDistribution";
 import FileInput from "@/src/components/ui/form/fileUpload";
 import Input from "@/src/components/ui/form/input";
+import { RichTextEditor } from "@/src/components/ui/form/richTextEditor";
 import Select from "@/src/components/ui/form/select";
 import TextArea from "@/src/components/ui/form/textArea";
 import FullPageLoader from "@/src/components/ui/loader/fullPageLoader";
@@ -62,13 +63,24 @@ const InquiryForm = () => {
   const validateForm = () => {
     const newErrors: typeof errors = {};
 
-    if (!form.images || form.images.length === 0) {
-      newErrors.images = "Please upload at least one image.";
+    const hasImages = form.images && form.images.length > 0;
+    const hasDescription =
+      form.description &&
+      form.description.replace(/<(.|\n)*?>/g, "").trim().length > 0;
+
+    // ONLY if both are missing
+    if (!hasImages && !hasDescription) {
+      newErrors.images =
+        "Please upload at least one image or enter a description.";
+      newErrors.description =
+        "Please upload at least one image or enter a description.";
     }
 
-    if (!form.description.trim()) {
-      newErrors.description = "Description is required.";
-    } else if (form.description.trim().length < 10) {
+    // Optional: validate description only if provided
+    if (
+      hasDescription &&
+      form.description.replace(/<(.|\n)*?>/g, "").trim().length < 10
+    ) {
       newErrors.description = "Minimum 10 characters required.";
     }
 
@@ -174,13 +186,33 @@ const InquiryForm = () => {
           onChange={(files) => setForm((prev) => ({ ...prev, images: files }))}
           error={errors.images}
         />
-        <TextArea
+        {/* <TextArea
           label="Inquiry Description"
           inputName="description"
           placeholder="Description"
           inputValue={form.description}
           onChange={handleChange}
           error={errors.description}
+        /> */}
+        <RichTextEditor
+          label="Inquiry Description"
+          inputName="description"
+          placeholder="Enter inquiry description..."
+          value={form.description}
+          onChange={(content) => {
+            setForm((prev) => ({
+              ...prev,
+              description: content,
+            }));
+
+            setErrors((prev) => ({
+              ...prev,
+              description: "",
+            }));
+          }}
+          error={errors.description}
+          required
+          height={220}
         />
         <div className="grid grid-cols-3  gap-4">
           <Input
