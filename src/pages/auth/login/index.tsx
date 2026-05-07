@@ -39,6 +39,7 @@ export default function LoginPage() {
         refresh_token: refreshToken,
         user,
       });
+      navigate("/");
     } catch (err: any) {
       let title = "Login failed";
       let text = "Something went wrong";
@@ -79,7 +80,6 @@ export default function LoginPage() {
 
     try {
       await handleLogin(); // ✅ wait
-      navigate("/");
     } finally {
       setIsLoading(false);
     }

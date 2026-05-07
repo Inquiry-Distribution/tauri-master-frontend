@@ -114,11 +114,11 @@ const EditInquiryForm = ({ initialData, onClose, onSuccess }: Props) => {
         images: [],
       });
       //   navigate("/inquiries");
-    } catch (err) {
+    } catch (err: any) {
       Swal.fire({
         icon: "error",
         title: "Error Updating Inquiry.",
-        text: "Please try again later!",
+        text: err.response?.data?.message || "Something went wrong",
       });
     }
   };
