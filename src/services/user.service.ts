@@ -10,6 +10,10 @@ export const UserService = {
     const { data } = await api.get(`/users/sales`);
     return data;
   },
+  getAllAdmin: async (query: string) => {
+    const { data } = await api.get(`/users/?role=admin&${query}`);
+    return data;
+  },
   getSalesPersonById: async (id: string) => {
     const { data } = await api.get(`/users/${id}`);
     return data;
@@ -34,6 +38,11 @@ export const UserService = {
   },
   setResetPin: async (id: any, payload: { pin: string }) => {
     const { data } = await api.patch(`/users/${id}/pin`, payload);
+    return data;
+  },
+
+  resetAdminPassword: async (id: string, payload: { password: string }) => {
+    const { data } = await api.patch(`/users/${id}/admin-password`, payload);
     return data;
   },
 

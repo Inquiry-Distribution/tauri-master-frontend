@@ -189,26 +189,60 @@ export default function InquiriesPage() {
       });
     }
   };
-  const handleDelete = async (inquiry: Inquiry) => {
-    if (inquiry.assignedToId) {
-      const result = await Swal.fire({
-        icon: "warning",
-        title: "Inquiry already assigned",
-        text: "You must reassign this inquiry before deleting it.",
-        showCancelButton: true,
-        confirmButtonText: "Reassign",
-        cancelButtonText: "Close",
-        confirmButtonColor: "#2563eb",
-        cancelButtonColor: "#d33",
-      });
+  // const handleDelete = async (inquiry: Inquiry) => {
+  //   if (inquiry.assignedToId) {
+  //     const result = await Swal.fire({
+  //       icon: "warning",
+  //       title: "Inquiry already assigned",
+  //       text: "You must reassign this inquiry before deleting it.",
+  //       showCancelButton: true,
+  //       confirmButtonText: "Reassign",
+  //       cancelButtonText: "Close",
+  //       confirmButtonColor: "#2563eb",
+  //       cancelButtonColor: "#d33",
+  //     });
 
-      if (result.isConfirmed) {
-        setSelectedInquiry(inquiry);
-      }
+  //     if (result.isConfirmed) {
+  //       setSelectedInquiry(inquiry);
+  //     }
 
-      return;
-    }
+  //     return;
+  //   }
 
+  //   const result = await Swal.fire({
+  //     title: "Are you sure?",
+  //     text: "This inquiry will be deleted.",
+  //     icon: "warning",
+  //     showCancelButton: true,
+  //     confirmButtonColor: "#d33",
+  //     cancelButtonColor: "#6b7280",
+  //     confirmButtonText:
+  //       deletingId === inquiry.id ? "Deleting..." : "Yes, delete it",
+  //   });
+
+  //   if (!result.isConfirmed) return;
+
+  //   try {
+  //     setDeletingId(inquiry.id);
+
+  //     await deleteInquiry(inquiry.id);
+
+  //     Swal.fire({
+  //       icon: "success",
+  //       title: "Inquiry deleted successfully",
+  //     });
+
+  //     getInquiries(`page=${page}&limit=${limit}`);
+  //   } catch (err) {
+  //     Swal.fire({
+  //       icon: "error",
+  //       title: "Failed to delete inquiry",
+  //     });
+  //   } finally {
+  //     setDeletingId(null);
+  //   }
+  // };
+  const handleDelete = async (id: string) => {
     const result = await Swal.fire({
       title: "Are you sure?",
       text: "This inquiry will be deleted.",
@@ -216,62 +250,28 @@ export default function InquiriesPage() {
       showCancelButton: true,
       confirmButtonColor: "#d33",
       cancelButtonColor: "#6b7280",
-      confirmButtonText:
-        deletingId === inquiry.id ? "Deleting..." : "Yes, delete it",
+      confirmButtonText: deleteLoading ? "Deleting..." : "Yes, delete it",
     });
 
     if (!result.isConfirmed) return;
 
     try {
-      setDeletingId(inquiry.id);
-
-      await deleteInquiry(inquiry.id);
+      await deleteInquiry(id);
 
       Swal.fire({
         icon: "success",
         title: "Inquiry deleted successfully",
       });
 
+      // refresh list
       getInquiries(`page=${page}&limit=${limit}`);
     } catch (err) {
       Swal.fire({
         icon: "error",
         title: "Failed to delete inquiry",
       });
-    } finally {
-      setDeletingId(null);
     }
   };
-  // const handleDelete = async (id: string) => {
-  //   const result = await Swal.fire({
-  //     title: "Are you sure?",
-  //     text: "This inquiry will be permanently deleted.",
-  //     icon: "warning",
-  //     showCancelButton: true,
-  //     confirmButtonColor: "#d33",
-  //     cancelButtonColor: "#6b7280",
-  //     confirmButtonText: deleteLoading ? "Deleting..." : "Yes, delete it",
-  //   });
-
-  //   if (!result.isConfirmed) return;
-
-  //   try {
-  //     await deleteInquiry(id);
-
-  //     Swal.fire({
-  //       icon: "success",
-  //       title: "Inquiry deleted successfully",
-  //     });
-
-  //     // refresh list
-  //     getInquiries(`page=${page}&limit=${limit}`);
-  //   } catch (err) {
-  //     Swal.fire({
-  //       icon: "error",
-  //       title: "Failed to delete inquiry",
-  //     });
-  //   }
-  // };
   const columns = useMemo(
     () =>
       getInquiryColumns({

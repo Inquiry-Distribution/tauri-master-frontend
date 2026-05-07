@@ -18,13 +18,18 @@ import { useTheme } from "@/src/contexts";
 import { useGetInquiryById } from "@/src/hooks/inquiry/useGetInquiryById";
 import { Inquiry, InquiryNote } from "@/src/types/inquiry";
 import { formatDateTime } from "@/src/utils/utils";
-import { Download, Edit, Eye, UserRoundX } from "lucide-react";
+import { Download, Edit, Eye, Trash, UserRoundX } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import EditInquiryForm from "../edit/_form";
 import { useUnassignInquiry } from "@/src/hooks/inquiry/useUnassignInquiry";
 import Swal from "sweetalert2";
 import DOMPurify from "dompurify";
+import { writeFile } from "@tauri-apps/plugin-fs";
+import { save } from "@tauri-apps/plugin-dialog";
+import { tempDir } from "@tauri-apps/api/path";
+import { m } from "motion/react";
+import { useImageDeleteInquiry } from "@/src/hooks/inquiry/useImageDeleteInquiry";
 
 const toUrl = (path: string) =>
   `${import.meta.env.VITE_PUBLIC_ASSET_URL}` + path;
@@ -41,27 +46,72 @@ export default function InquiryDetailPage() {
   const [menu, setMenu] = useState<{
     x: number;
     y: number;
-    index: number | null;
+    file: Inquiry["images"][number] | null;
   } | null>(null);
 
-  const openAttachment = (img: any) => {
-    const url = toUrl(img.url);
-    window.open(url, "_blank"); // or use Tauri open if needed
+  // const openAttachment = async (img: any) => {
+  //   const url = toUrl(img.url);
+  //   await open(url);
+  //   // window.open(url, "_blank"); // or use Tauri open if needed
+  // };
+  const openAttachment = async (img: any) => {
+    try {
+      const url = toUrl(img.url);
+
+      // fetch remote file
+      const response = await fetch(url, {
+        credentials: "include",
+      });
+
+      const blob = await response.blob();
+      const buffer = new Uint8Array(await blob.arrayBuffer());
+
+      // create temp file path
+      const tempPath = `${await tempDir()}${img.filename}`;
+
+      // save locally
+      await writeFile(tempPath, buffer);
+
+      // open with native app
+      await open(tempPath);
+    } catch (err) {
+      console.error("Open attachment failed:", err);
+    }
   };
-
   const downloadAttachment = async (img: any) => {
-    const url = toUrl(img.url);
+    try {
+      const url = toUrl(img.url);
 
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = img.filename || "file";
-    a.click();
+      // Open native save dialog
+      const filePath = await save({
+        defaultPath: img.filename || "file",
+      });
+
+      if (!filePath) return; // user cancelled
+
+      // Fetch file
+      const response = await fetch(url);
+      const blob = await response.blob();
+
+      // Convert blob to Uint8Array
+      const buffer = new Uint8Array(await blob.arrayBuffer());
+
+      // Save file natively
+      await writeFile(filePath, buffer);
+    } catch (err) {
+      console.error("Download failed:", err);
+    }
   };
   const {
     unassignInquiry,
     loading: unassignLoading,
     error: unassignError,
   } = useUnassignInquiry();
+  const {
+    deleteImageInquiry,
+    loading: deleteLoading,
+    error: deleteError,
+  } = useImageDeleteInquiry();
 
   //   const inquiry = MOCK_INQUIRY; // swap with useQuery / useFetch hook
   const {
@@ -79,11 +129,30 @@ export default function InquiryDetailPage() {
     }
   }, [id, getInquiryById]);
 
-  const lightboxItems =
-    inquiry?.images?.map((img: any) => ({
-      url: toUrl(img.url), // adjust if backend needs full URL
-      name: img.filename,
-    })) || [];
+  const isPreviewableMedia = (file: any) => {
+    const name = file?.filename?.toLowerCase() || "";
+
+    return (
+      name.match(/\.(jpg|jpeg|png|gif|webp|bmp|svg|mp4|webm|ogg|mov)$/i) !==
+      null
+    );
+  };
+
+  const mediaFiles =
+    inquiry?.images?.filter((file: any) => isPreviewableMedia(file)) || [];
+
+  const otherFiles =
+    inquiry?.images?.filter((file: any) => !isPreviewableMedia(file)) || [];
+
+  // const lightboxItems =
+  //   inquiry?.images?.map((img: any) => ({
+  //     url: toUrl(img.url), // adjust if backend needs full URL
+  //     name: img.filename,
+  //   })) || [];
+  const lightboxItems = mediaFiles.map((img: any) => ({
+    url: toUrl(img.url),
+    name: img.filename,
+  }));
   const handleUnassign = async () => {
     if (!id) {
       return;
@@ -100,6 +169,60 @@ export default function InquiryDetailPage() {
         setInquiry({ ...inquiry, status: "unassigned", assignedTo: null });
       }
     });
+  };
+  const handleDeleteFile = async (imageId: string) => {
+    if (!id || !inquiry) return;
+
+    const previousImages = inquiry.images || [];
+
+    const result = await Swal.fire({
+      title: "Are you sure you want to delete this file?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Yes",
+      cancelButtonText: "No",
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      await deleteImageInquiry(id, imageId);
+
+      Swal.fire({
+        icon: "success",
+        title: "Deleted",
+        text: "File deleted successfully.",
+        timer: 1500,
+        showConfirmButton: false,
+      });
+      // ✅ Optimistically remove from UI immediately
+      setInquiry((prev: any) => {
+        if (!prev) return prev;
+
+        return {
+          ...prev,
+          images: prev.images?.filter((img: any) => img.id !== imageId) || [],
+        };
+      });
+    } catch (err) {
+      console.error(err);
+
+      // // ❌ Rollback if API fails
+      // setInquiry((prev: any) => {
+      //   if (!prev) return prev;
+
+      //   return {
+      //     ...prev,
+      //     images: previousImages,
+      //   };
+      // });
+
+      Swal.fire({
+        icon: "error",
+        title: "Delete failed",
+        text: "Could not delete the file.",
+      });
+    }
   };
   return (
     <div
@@ -204,28 +327,46 @@ export default function InquiryDetailPage() {
                 Attachments ({inquiry?.images?.length ?? 0})
               </SectionHeading>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                {inquiry?.images?.map(
-                  (img: Inquiry["images"][number], i: number) => (
-                    <div
-                      key={img.id}
-                      className="cursor-pointer"
-                      onClick={() => {
-                        setLightboxIndex(i);
-                        setLightboxOpen(true);
-                      }}
-                      onContextMenu={(e) => {
-                        e.preventDefault();
-                        setMenu({
-                          x: e.clientX,
-                          y: e.clientY,
-                          index: i,
-                        });
-                      }}
-                    >
-                      <ImageThumb img={img} />
-                    </div>
-                  ),
-                )}
+                {mediaFiles.map((img: Inquiry["images"][number], i: number) => (
+                  <div
+                    key={img.id}
+                    className="cursor-pointer"
+                    onClick={() => {
+                      setLightboxIndex(i);
+                      setLightboxOpen(true);
+                    }}
+                    onContextMenu={(e) => {
+                      e.preventDefault();
+                      setMenu({
+                        x: e.clientX,
+                        y: e.clientY,
+                        file: img,
+                      });
+                    }}
+                  >
+                    <ImageThumb img={img} />
+                  </div>
+                ))}
+                {otherFiles.map((img: Inquiry["images"][number], i: number) => (
+                  <div
+                    key={img.id}
+                    className="cursor-pointer"
+                    onClick={() => {
+                      setLightboxIndex(i);
+                      setLightboxOpen(true);
+                    }}
+                    onContextMenu={(e) => {
+                      e.preventDefault();
+                      setMenu({
+                        x: e.clientX,
+                        y: e.clientY,
+                        file: img,
+                      });
+                    }}
+                  >
+                    <ImageThumb img={img} />
+                  </div>
+                ))}
               </div>
             </Card>
           )}
@@ -467,7 +608,7 @@ export default function InquiryDetailPage() {
         // }}
       />
 
-      {menu && menu.index !== null && inquiry?.images?.[menu.index] && (
+      {menu?.file && (
         <div
           className="rounded-xl"
           style={{
@@ -484,7 +625,7 @@ export default function InquiryDetailPage() {
           }}
           onMouseLeave={() => setMenu(null)}
         >
-          <button
+          {/* <button
             className="w-full text-left px-3 py-2 text-sm"
             onClick={() => {
               openAttachment(inquiry.images[menu.index!]);
@@ -492,16 +633,28 @@ export default function InquiryDetailPage() {
             }}
           >
             <Eye className="inline-block" size={14} /> Open
-          </button>
+          </button> */}
 
           <button
             className="w-full text-left px-3 py-2 text-sm"
             onClick={() => {
-              downloadAttachment(inquiry.images[menu.index!]);
+              downloadAttachment(menu.file);
               setMenu(null);
             }}
           >
             <Download className="inline-block" size={14} /> Download
+          </button>
+          <button
+            className="w-full text-left px-3 py-2 text-sm text-danger"
+            onClick={() => {
+              // downloadAttachment(menu.file);
+              if (menu?.file?.id) {
+                handleDeleteFile(menu.file.id);
+              }
+              setMenu(null);
+            }}
+          >
+            <Trash className="inline-block text-danger" size={14} /> Delete
           </button>
         </div>
       )}

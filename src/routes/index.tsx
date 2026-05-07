@@ -19,6 +19,7 @@ import NotificationsPage from "../pages/notifications";
 import SalesPersonReportPage from "../pages/users/detail";
 import SettingsPage from "../pages/settings";
 import TrashInquiriesPage from "../pages/inquiries/trash";
+import AdminsPage from "../pages/admins";
 
 export default function AppRoutes() {
   return useRoutes([
@@ -48,6 +49,7 @@ export default function AppRoutes() {
             { path: "inquiries/:id", element: <InquiryDetailPage /> },
             { path: "inquiries/trash", element: <TrashInquiriesPage /> },
             { path: "sales-persons", element: <SalesPersonsPage /> },
+            { path: "admins", element: <AdminsPage /> },
             { path: "sales-persons/:id", element: <SalesPersonReportPage /> },
             { path: "devices", element: <DevicesPage /> },
             { path: "notifications", element: <NotificationsPage /> },

@@ -308,7 +308,7 @@ export function LiveLocationsCard() {
           </div>
 
           {/* Agent List */}
-          <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1 overflow-x-hidden pr-4">
+          <div className="space-y-2 max-h-[400px] rounded-2xl overflow-y-auto pr-1 overflow-x-hidden pr-4 no-scrollbar">
             {locations.map((loc) => {
               const isSelected = loc.salespersonId === selectedId;
 

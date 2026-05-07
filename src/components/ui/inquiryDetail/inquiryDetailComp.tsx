@@ -5,6 +5,15 @@ import {
 } from "@/src/pages/inquiries/create/inquiryStyles";
 import { InquiryImage, StatusHistory } from "@/src/types/inquiry";
 import { formatDateTime } from "@/src/utils/utils";
+import {
+  FileArchive,
+  FileCode,
+  FileIcon,
+  FileImage,
+  FileSpreadsheet,
+  FileText,
+  FileVideo,
+} from "lucide-react";
 
 /** Thin labelled meta row */
 export function MetaRow({
@@ -139,37 +148,83 @@ const removeprefix = (str: string, prefix: string) => {
 /** Image thumbnail card */
 export function ImageThumb({ img }: { img: InquiryImage }) {
   const filename = img.filename.split("\\").pop() ?? img.filename;
+
   const assetURL = import.meta.env.VITE_PUBLIC_ASSET_URL;
+
+  const ext = filename.split(".").pop()?.toLowerCase() || "";
+
+  const imageExtensions = ["jpg", "jpeg", "png", "gif", "webp", "bmp", "svg"];
+
+  const videoExtensions = ["mp4", "webm", "ogg", "mov"];
+
+  const isImage = imageExtensions.includes(ext);
+
+  const getFilePreview = () => {
+    // Actual image preview
+    if (isImage && img.url.startsWith("inquiries")) {
+      return (
+        <img
+          src={assetURL ? assetURL + removeprefix(img.url, "/app") : img.url}
+          alt={filename}
+          className="w-full h-full object-cover"
+        />
+      );
+    }
+
+    // PDF
+    if (ext === "pdf") {
+      return <FileText size={42} className="text-red-500" />;
+    }
+
+    // Word
+    if (["doc", "docx"].includes(ext)) {
+      return <FileText size={42} className="text-blue-500" />;
+    }
+
+    // Excel
+    if (["xls", "xlsx", "csv"].includes(ext)) {
+      return <FileSpreadsheet size={42} className="text-green-500" />;
+    }
+
+    // ZIP / RAR
+    if (["zip", "rar", "7z", "tar", "gz"].includes(ext)) {
+      return <FileArchive size={42} className="text-yellow-500" />;
+    }
+
+    // Video
+    if (videoExtensions.includes(ext)) {
+      return <FileVideo size={42} className="text-purple-500" />;
+    }
+
+    // Code files
+    if (["js", "ts", "tsx", "jsx", "json", "html", "css", "py"].includes(ext)) {
+      return <FileCode size={42} className="text-cyan-500" />;
+    }
+
+    // Generic image icon
+    if (["psd", "ai"].includes(ext)) {
+      return <FileImage size={42} className="text-pink-500" />;
+    }
+
+    // Default fallback
+    return <FileIcon size={42} className="text-(--textMuted)" />;
+  };
+
   return (
     <div className="rounded-lg overflow-hidden border border-(--border) group relative">
       <div
         className="h-28 flex items-center justify-center text-(--textMuted)"
         style={{ background: "var(--surfaceElevated)" }}
       >
-        {/* Show image if URL is absolute; otherwise show placeholder */}
-        {img.url.startsWith("inquiries") ? (
-          <img
-            src={assetURL ? assetURL + removeprefix(img.url, "/app") : img.url}
-            alt={filename}
-            className="w-full h-full object-cover"
-          />
-        ) : (
-          <svg
-            width="32"
-            height="32"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.5"
-          >
-            <rect x="3" y="3" width="18" height="18" rx="2" />
-            <circle cx="8.5" cy="8.5" r="1.5" />
-            <path d="M21 15l-5-5L5 21" />
-          </svg>
-        )}
+        {getFilePreview()}
       </div>
+
       <div className="px-2 py-1.5" style={{ background: "var(--surface)" }}>
         <p className="text-[11px] text-(--textMuted) truncate">{filename}</p>
+
+        <p className="text-[10px] uppercase text-(--textMuted)/70 mt-0.5">
+          {ext || "file"}
+        </p>
       </div>
     </div>
   );

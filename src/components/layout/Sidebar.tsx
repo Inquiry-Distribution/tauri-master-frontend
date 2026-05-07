@@ -11,6 +11,7 @@ import {
   X,
   Calendar,
   Bell,
+  Users2,
 } from "lucide-react";
 import { useTheme } from "@/src/contexts";
 import { useLayout } from "@/src/hooks/useLayout";
@@ -53,6 +54,12 @@ const menuItems = [
     label: "Notifications",
     path: "/notifications",
     roles: ["admin", "superuser"],
+  },
+  {
+    icon: Users2,
+    label: "Admins",
+    path: "/admins",
+    roles: ["superuser"],
   },
   {
     icon: Settings,

@@ -10,12 +10,14 @@ import { useState } from "react";
 import ButtonLoader from "@/src/components/ui/loader/buttonLoader";
 import { Edit, Trash } from "lucide-react";
 import DOMPurify from "dompurify";
+import { formatDateTime } from "@/src/utils/utils";
 
 type ColumnDeps = {
   setSelectedUserId: (id: string) => void;
   setSelectedInquiry: (inquiry: Inquiry | null) => void;
   deleteLoading: boolean;
-  onDelete: (inquiry: Inquiry) => Promise<void>; // 👈 add this
+  onDelete: (id: string) => Promise<void>; // 👈 add this
+  // onDelete: (inquiry: Inquiry) => Promise<void>; // 👈 add this
   deletingId: string | null;
   tokens?: any;
   setEditInquiry: (inquiry: Inquiry | null) => void;
@@ -129,10 +131,11 @@ export const getInquiryColumns = ({
 
     {
       key: "createdAt",
-      label: "Date",
+      label: "Date & Time",
       render: (row) => (
         <span className="text-xs text-(--textMuted)">
-          {new Date(row.createdAt).toLocaleDateString()}
+          {/* {new Date(row.createdAt).toLocaleDateString()} */}
+          {formatDateTime(row.createdAt)}
         </span>
       ),
     },
@@ -162,7 +165,7 @@ export const getInquiryColumns = ({
             <Edit size={16} />
           </Button>
           {isSuperUser && (
-            <Button variant="danger" onClick={() => onDelete(row)}>
+            <Button variant="danger" onClick={() => onDelete(row.id)}>
               {deletingId === row.id ? <ButtonLoader /> : <Trash size={16} />}
             </Button>
           )}
@@ -177,6 +180,9 @@ export const tabFilters = [
   { key: "unassigned", label: "Unassigned", status: "unassigned" },
   { key: "assigned", label: "Assigned", status: "assigned" },
   { key: "in_progress", label: "In Progress", status: "in_progress" },
+  { key: "follow_up", label: "Follow Up", status: "follow_up" },
+  { key: "converted", label: "Converted", status: "converted" },
+  { key: "not_interested", label: "Not Interested", status: "not_interested" },
   { key: "closed", label: "Closed", status: "closed" },
 ];
 // export const data: Inquiry[] = [

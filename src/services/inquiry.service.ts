@@ -74,4 +74,9 @@ export const InquiryService = {
     const { data } = await api.delete(`/inquiries/${id}/permanent`);
     return data;
   },
+
+  imageDeleteInquiry: async (id: string, imageId: string) => {
+    const { data } = await api.delete(`/inquiries/${id}/images/${imageId}`);
+    return data;
+  },
 };
