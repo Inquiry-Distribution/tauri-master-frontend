@@ -71,7 +71,9 @@ const getDateRange = (type: string) => {
       return { from: today, to: today };
   }
 };
+type AttendanceStatus = "present" | "half_day" | "absent" | string;
 
+type StatusCountMap = Record<string, number>;
 export default function SalesPersonReportPage() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -219,6 +221,44 @@ export default function SalesPersonReportPage() {
     };
   }, [attendance]);
 
+  const attendanceChartData = useMemo(() => {
+    if (!attendance?.records) return [];
+
+    return attendance.records
+      .slice()
+      .reverse()
+      .map((r) => ({
+        date: new Date(r.date).toLocaleDateString("en-IN", {
+          day: "2-digit",
+          month: "short",
+        }),
+        minutes: r.totalMinutes,
+        sessions: r.sessionsCount,
+        status: r.status,
+      }));
+  }, [attendance]);
+
+  const statusData = useMemo(() => {
+    if (!attendance?.records) return [];
+
+    const counts = attendance.records.reduce<StatusCountMap>((acc, r) => {
+      const key = r.status;
+
+      acc[key] = (acc[key] || 0) + 1;
+      return acc;
+    }, {} as StatusCountMap);
+
+    return Object.entries(counts).map(([name, value]) => ({
+      name,
+      value,
+    }));
+  }, [attendance]);
+
+  const STATUS_COLORS: Record<AttendanceStatus, string> = {
+    present: "#22c55e",
+    half_day: "#f59e0b",
+    absent: "#ef4444",
+  };
   const barData = [
     { name: "Closed", value: report?.closed || 0 },
     { name: "In Progress", value: report?.inProgress || 0 },
@@ -396,8 +436,8 @@ export default function SalesPersonReportPage() {
           </div> */}
 
           {/* Attendance */}
-          <div className="relative p-6 rounded-2xl border border-border bg-surface">
-            <h3 className="font-bold mb-4 text-text">Attendance Summary</h3>
+          <Card className="relative">
+            <h3 className="font-bold mb-6 text-text">Attendance Summary</h3>
 
             {/* Loader Overlay */}
             {attendanceLoading && (
@@ -408,37 +448,132 @@ export default function SalesPersonReportPage() {
             )}
 
             <div className={attendanceLoading ? "opacity-40" : ""}>
-              <div className="space-y-3 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-textSec">Total Days</span>
-                  <span className="text-text">
+              {/* Stats */}
+              <div className="grid grid-cols-2 gap-4 text-sm mb-6">
+                <div className="p-3 rounded-xl bg-background border border-border">
+                  <p className="text-textSec text-xs">Total Days</p>
+                  <p className="text-lg font-bold text-text">
                     {attendanceStats?.total ?? 0}
-                  </span>
+                  </p>
                 </div>
 
-                <div className="flex justify-between">
-                  <span className="text-textSec">Present Days</span>
-                  <span className="text-success font-semibold">
+                <div className="p-3 rounded-xl bg-background border border-border">
+                  <p className="text-textSec text-xs">Present Days</p>
+                  <p className="text-lg font-bold text-success">
                     {attendanceStats?.presentDays ?? 0}
-                  </span>
+                  </p>
                 </div>
 
-                <div className="flex justify-between">
-                  <span className="text-textSec">Sessions</span>
-                  <span className="text-text">
+                <div className="p-3 rounded-xl bg-background border border-border">
+                  <p className="text-textSec text-xs">Sessions</p>
+                  <p className="text-lg font-bold text-text">
                     {attendanceStats?.sessions ?? 0}
-                  </span>
+                  </p>
                 </div>
 
-                <div className="flex justify-between">
-                  <span className="text-textSec">Working Time</span>
-                  <span className="text-text">
+                <div className="p-3 rounded-xl bg-background border border-border">
+                  <p className="text-textSec text-xs">Working Time</p>
+                  <p className="text-lg font-bold text-text">
                     {attendanceStats?.minutes ?? 0} min
-                  </span>
+                  </p>
                 </div>
               </div>
+
+              {/* Bar Chart */}
+              <div className="h-64 mb-8">
+                <h4 className="text-sm font-semibold text-text mb-3">
+                  Daily Working Minutes
+                </h4>
+
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={attendanceChartData}>
+                    <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
+
+                    <XAxis dataKey="date" stroke="#888" fontSize={12} />
+
+                    <YAxis stroke="#888" fontSize={12} />
+
+                    <Tooltip
+                      contentStyle={{
+                        background: "#111827",
+                        border: "none",
+                        borderRadius: 12,
+                        color: "#fff",
+                      }}
+                    />
+
+                    <Bar
+                      dataKey="minutes"
+                      radius={[8, 8, 0, 0]}
+                      fill="#3b82f6"
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+
+              {/* Pie Chart */}
+              <div className="h-64 pb-2">
+                <h4 className="text-sm font-semibold text-text mb-3">
+                  Attendance Status
+                </h4>
+
+                <ResponsiveContainer height="100%" width="100%">
+                  <PieChart>
+                    <Pie
+                      data={statusData}
+                      dataKey="value"
+                      nameKey="name"
+                      outerRadius={90}
+                      innerRadius={50}
+                      paddingAngle={4}
+                      stroke={tokens.border}
+                      strokeWidth={1}
+                      cornerRadius={6}
+                    >
+                      {statusData.map((entry, index) => (
+                        <Cell
+                          key={index}
+                          fill={STATUS_COLORS[entry.name] || "#6366f1"}
+                        />
+                      ))}
+                    </Pie>
+
+                    <Tooltip
+                      contentStyle={{
+                        background: tokens.tooltipBg,
+                        border: `1px solid ${tokens.border}`,
+                        borderRadius: 12,
+                        color: tokens.textOpp,
+                      }}
+                    />
+
+                    <Legend
+                      verticalAlign="bottom"
+                      height={36}
+                      wrapperStyle={{
+                        paddingTop: 10,
+                        color: tokens.text,
+                      }}
+                    />
+                    <text
+                      x="50%"
+                      y="50%"
+                      textAnchor="middle"
+                      dominantBaseline="middle"
+                      style={{
+                        fill: tokens.text,
+                        fontSize: 16,
+                        fontWeight: 600,
+                      }}
+                      className="flex flex-col gap-1"
+                    >
+                      {attendanceStats?.total ?? 0} Days
+                    </text>
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
             </div>
-          </div>
+          </Card>
 
           <SalespersonLocationHistory salespersonId={id || ""} />
         </div>
