@@ -36,7 +36,7 @@ export const InquiryService = {
     });
     return data;
   },
-  editInquiry: async (id: string, payload: FormData) => {
+  editInquiry: async (id: string, payload: EditInquiryPayload) => {
     const { data } = await api.patch(`/inquiries/${id}`, payload);
     return data;
   },

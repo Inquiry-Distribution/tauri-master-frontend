@@ -9,7 +9,7 @@ export const useEditInquiry = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const editInquiry = async (id: string, formData: FormData) => {
+  const editInquiry = async (id: string, formData: EditInquiryPayload) => {
     try {
       setLoading(true);
       setError(null);

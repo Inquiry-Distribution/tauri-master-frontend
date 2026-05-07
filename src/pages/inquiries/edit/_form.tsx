@@ -7,7 +7,7 @@ import TextArea from "@/src/components/ui/form/textArea";
 import FullPageLoader from "@/src/components/ui/loader/fullPageLoader";
 import { useCreateInquiry } from "@/src/hooks/inquiry/useCreateInquiry";
 import { useEditInquiry } from "@/src/hooks/inquiry/useEditInquiry";
-import { Inquiry } from "@/src/types/inquiry";
+import { EditInquiryPayload, Inquiry } from "@/src/types/inquiry";
 
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -69,14 +69,14 @@ const EditInquiryForm = ({ initialData, onClose, onSuccess }: Props) => {
   const handleSubmit = async () => {
     // e.preventDefault();
     try {
-      const formData = new FormData();
       const imagesFormData = new FormData();
 
-      formData.append("description", form.description);
-      formData.append("mobile", form.mobile);
-      formData.append("inquiryTime", form.inquiryTime);
-
-      formData.append("source", form.source);
+      const payload: EditInquiryPayload = {
+        description: form.description,
+        mobile: form.mobile,
+        inquiryTime: form.inquiryTime,
+        source: form.source,
+      };
 
       // ✅ append files correctly
       if (form.images && form.images.length > 0) {
@@ -85,7 +85,7 @@ const EditInquiryForm = ({ initialData, onClose, onSuccess }: Props) => {
         });
       }
       await Promise.all([
-        editInquiry(initialData?.id || "", formData),
+        editInquiry(initialData?.id || "", payload),
         form.images.length > 0 &&
           addImagesInquiry(initialData?.id || "", imagesFormData),
       ]);
