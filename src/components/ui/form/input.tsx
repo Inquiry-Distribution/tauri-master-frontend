@@ -1,6 +1,6 @@
 import { useContext, useState } from "react";
 import { ThemeContext } from "@/src/contexts/index";
-import { Eye, EyeClosed } from "lucide-react";
+import { Calendar, Eye, EyeClosed } from "lucide-react";
 
 const Input = ({
   label,
@@ -40,6 +40,7 @@ const Input = ({
   const { tokens } = ctx;
 
   const isPassword = inputType === "password";
+  const isDate = inputType === "date";
 
   return (
     <div className="w-full">
@@ -86,6 +87,20 @@ const Input = ({
             tabIndex={-1}
           >
             {!showPassword ? <EyeClosed size={20} /> : <Eye size={20} />}
+          </button>
+        )}
+
+        {/* Custom Date Icon */}
+        {isDate && (
+          <button
+            type="button"
+            onClick={() => {
+              const el = document.getElementById(inputName) as HTMLInputElement;
+              el?.showPicker?.(); // modern browsers
+            }}
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500"
+          >
+            <Calendar size={20} />
           </button>
         )}
       </div>

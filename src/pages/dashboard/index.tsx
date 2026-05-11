@@ -9,6 +9,7 @@ import {
   MapPin,
   Contact2,
   Smartphone,
+  NotepadText,
 } from "lucide-react";
 import {
   BarChart,
@@ -152,6 +153,14 @@ export default function DashboardPage() {
             trend: "-1.2%",
             link: "/devices",
           },
+          {
+            label: "Today's Inquiries",
+            value: data.todayInquiries,
+            icon: NotepadText,
+            color: "bg-cyan-500",
+            trend: "+12.5%",
+            link: "/inquiries",
+          },
         ]
       : [
           // fallback dummy data
@@ -210,6 +219,14 @@ export default function DashboardPage() {
             color: "bg-red-500",
             trend: "-",
             link: "/devices",
+          },
+          {
+            label: "Today's Inquiries",
+            value: "-",
+            icon: NotepadText,
+            color: "bg-cyan-500",
+            trend: "-",
+            link: "/inquiries",
           },
         ]
   ).map((item, index) => ({

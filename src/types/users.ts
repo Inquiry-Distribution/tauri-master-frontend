@@ -16,6 +16,15 @@ export type CreateUser = {
   pin: string;
   company: string;
 };
+export type CreateAdmin = {
+  name: string;
+  email: string;
+  password: string;
+  role: string;
+  // employeeId: string;
+  // pin: string;
+  // company: string;
+};
 
 export type ResetPassword = {
   oldPassword: string;

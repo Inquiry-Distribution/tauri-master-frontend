@@ -110,3 +110,13 @@
 .animate-fadeIn {
   animation: fadeIn 0.15s ease;
 }
+
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+  opacity: 0;
+  display: none;
+}
+
+input[type="date"] {
+  position: relative;
+}
