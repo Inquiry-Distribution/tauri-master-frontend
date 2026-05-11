@@ -193,8 +193,19 @@ export default function InquiriesPage() {
   const limit = Number(searchParams.get("limit")) || 10;
   const searchTerm = searchParams.get("search") ?? "";
   const priority = searchParams.get("priority") ?? null;
-  const from = searchParams.get("from") ?? defaultFrom;
-  const to = searchParams.get("to") ?? defaultTo;
+  const rangeParam = searchParams.get("range") as FilterKey | null;
+
+  const rangeFilter = DATE_FILTERS.find((f) => f.key === rangeParam);
+
+  const computedRange = rangeFilter?.getRange();
+
+  const from =
+    searchParams.get("from") ??
+    (computedRange ? formatDate(computedRange.from) : defaultFrom);
+
+  const to =
+    searchParams.get("to") ??
+    (computedRange ? formatDate(computedRange.to) : defaultTo);
   const filterMode =
     (searchParams.get("filterMode") as "range" | "none") ?? "none";
   const activeRange = searchParams.get("range") ?? "today";

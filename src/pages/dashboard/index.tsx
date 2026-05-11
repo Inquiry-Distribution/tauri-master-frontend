@@ -159,7 +159,7 @@ export default function DashboardPage() {
             icon: NotepadText,
             color: "bg-cyan-500",
             trend: "+12.5%",
-            link: "/inquiries",
+            link: "/inquiries?showFilters=true&range=today&filterMode=range&page=1",
           },
         ]
       : [
@@ -226,7 +226,7 @@ export default function DashboardPage() {
             icon: NotepadText,
             color: "bg-cyan-500",
             trend: "-",
-            link: "/inquiries",
+            link: "/inquiries?showFilters=true&range=today&filterMode=range&page=1",
           },
         ]
   ).map((item, index) => ({
