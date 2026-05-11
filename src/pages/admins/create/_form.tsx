@@ -101,11 +101,11 @@ const CreateAdminForm = ({ onSuccess }: { onSuccess: (res: any) => void }) => {
       });
 
       handleReset();
-    } catch (err) {
+    } catch (err: any) {
       Swal.fire({
         icon: "error",
         title: "Error Creating Admin.",
-        text: err instanceof Error ? err.message : "An error occurred",
+        text: err?.response?.data?.message || "An error occurred",
       });
     }
   };
