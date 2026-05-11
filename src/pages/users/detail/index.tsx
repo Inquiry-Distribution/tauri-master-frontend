@@ -201,9 +201,10 @@ export default function SalesPersonReportPage() {
   const oneMonthAgo = new Date();
   oneMonthAgo.setMonth(today.getMonth() - 1);
 
-  const [from, setFrom] = useState(formatDate(oneMonthAgo));
+  const [from, setFrom] = useState(formatDate(today));
+  // const [from, setFrom] = useState(formatDate(oneMonthAgo));
   const [to, setTo] = useState(formatDate(today));
-  const [activeRange, setActiveRange] = useState<string>("30d");
+  const [activeRange, setActiveRange] = useState<string>("today");
   const [hasFetched, setHasFetched] = useState(false);
 
   useEffect(() => {

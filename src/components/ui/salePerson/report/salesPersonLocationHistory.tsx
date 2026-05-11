@@ -149,7 +149,7 @@ export function SalespersonLocationHistory({ salespersonId }: Props) {
   const { data, loading, getLocationHistoryBySalesPerson } =
     useGetLocationHistoryBySalesPerson();
 
-  const [activeRange, setActiveRange] = useState<string>("7d");
+  const [activeRange, setActiveRange] = useState<string>("today");
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [filterMode, setFilterMode] = useState<"preset" | "range">("preset");

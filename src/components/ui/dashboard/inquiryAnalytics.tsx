@@ -103,13 +103,14 @@ const FILTERS = [
 export default function InquiryAnalytics() {
   const { data, loading, error, getInquiryReportByStatus } =
     useGetInquiryReportByStatus();
-  const [activeFilter, setActiveFilter] = useState("30d");
+  const [activeFilter, setActiveFilter] = useState("today");
   // ✅ default dates
   const today = new Date();
   const oneMonthAgo = new Date();
   oneMonthAgo.setMonth(today.getMonth() - 1);
 
-  const [from, setFrom] = useState(formatDate(oneMonthAgo));
+  const [from, setFrom] = useState(formatDate(today));
+  // const [from, setFrom] = useState(formatDate(oneMonthAgo));
   const [to, setTo] = useState(formatDate(today));
 
   // ✅ initial API call

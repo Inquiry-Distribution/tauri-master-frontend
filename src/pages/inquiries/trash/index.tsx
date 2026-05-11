@@ -96,7 +96,7 @@ export default function TrashInquiriesPage() {
   const to = searchParams.get("to") ?? defaultTo;
   const filterMode =
     (searchParams.get("filterMode") as "range" | "none") ?? "none";
-  const activeRange = searchParams.get("range") ?? "30d";
+  const activeRange = searchParams.get("range") ?? "today";
   const personId = searchParams.get("assignedToId") ?? null;
   const showFilters = searchParams.get("showFilters") === "true";
 

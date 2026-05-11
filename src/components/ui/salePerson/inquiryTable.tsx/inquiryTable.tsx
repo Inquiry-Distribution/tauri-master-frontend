@@ -149,7 +149,7 @@ export default function InquiriesTable({ personId }: { personId: string }) {
 
   const [showFilters, setShowFilters] = useState(false);
   const [filterMode, setFilterMode] = useState<"range" | "none">("none");
-  const [activeRange, setActiveRange] = useState<string>("30d");
+  const [activeRange, setActiveRange] = useState<string>("today");
 
   const [selectedPerson, setSelectedPerson] = useState<any>(null);
 
