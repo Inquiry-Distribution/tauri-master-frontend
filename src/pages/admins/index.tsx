@@ -14,6 +14,9 @@ import { getAdminColumns } from "./data";
 import ChangePasswordModal from "./changePassword/_form";
 import CreateAdminForm from "./create/_form";
 import { Modal } from "@/src/components/ui/modal";
+import { useToggleActiveStatus } from "@/src/hooks/salesPerson/useToggleActive";
+import { useDeleteAdmin } from "@/src/hooks/admin/useDeleteAdmin";
+import Swal from "sweetalert2";
 
 export default function AdminsPage() {
   const { tokens } = useTheme();
@@ -31,20 +34,87 @@ export default function AdminsPage() {
   const [total, setTotal] = useState(0);
 
   const { getAllAdmins, loading } = useGetAllAdmins();
+  const { toggleActiveStatus, loading: toggleLoading } =
+    useToggleActiveStatus();
+  const [togglingId, setTogglingId] = useState<string | null>(null);
+
+  const {
+    deleteAdmin,
+    loading: deleteLoading,
+    error: deleteError,
+  } = useDeleteAdmin();
+  const [deleteId, setDeleteId] = useState<string | null>(null);
 
   const [changePasswordUser, setChangePasswordUser] =
     useState<AdminUser | null>(null);
 
   const [createAdminOpen, setCreateAdminOpen] = useState(false);
 
+  const handleDelete = async (id: string) => {
+    const result = await Swal.fire({
+      title: "Are you sure?",
+      text: "This admin will be deleted.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#6b7280",
+      confirmButtonText: deleteLoading ? "Deleting..." : "Yes, delete it",
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      await deleteAdmin(id);
+
+      Swal.fire({
+        icon: "success",
+        title: "Admin deleted successfully",
+      });
+
+      // remove instantly from table
+      setAdmins((prev) => prev.filter((admin) => admin.id !== id));
+      setDeleteId(null);
+    } catch (err: any) {
+      Swal.fire({
+        icon: "error",
+        title: "Failed to delete admin",
+        text: err?.response?.data?.message || "Unknown error",
+      });
+    }
+  };
   const columns = useMemo(
     () =>
       getAdminColumns({
         onChangePasswordModal: (user) => {
           setChangePasswordUser(user);
         },
+
+        onStatusChange: async (updatedUser) => {
+          try {
+            setTogglingId(updatedUser.id);
+
+            await toggleActiveStatus(updatedUser.id);
+
+            setAdmins((prev) =>
+              prev.map((admin) =>
+                admin.id === updatedUser.id
+                  ? {
+                      ...admin,
+                      isActive: updatedUser.isActive,
+                    }
+                  : admin,
+              ),
+            );
+          } finally {
+            setTogglingId(null);
+          }
+        },
+        togglingId,
+        onDelete: handleDelete,
+        deleteLoading,
+        deleteId,
       }),
-    [],
+    [toggleLoading],
   );
 
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
