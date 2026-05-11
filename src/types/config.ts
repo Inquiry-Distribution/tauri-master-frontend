@@ -3,3 +3,8 @@ export type ConfigLoginLimit = {
   maxAttempts: number;
   lockoutMinutes: number;
 };
+export type ConfigAttendanceHours = {
+  workStartHour: number;
+  workEndHour: number;
+  lateGraceMinute: number;
+};
