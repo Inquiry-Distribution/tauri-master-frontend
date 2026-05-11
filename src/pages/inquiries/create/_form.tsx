@@ -1,36 +1,108 @@
 import { InquiryDistributor } from "@/src/components/ui/distributeInquiry/inquiryDistribution";
 import FileInput from "@/src/components/ui/form/fileUpload";
 import Input from "@/src/components/ui/form/input";
+import { RichTextEditor } from "@/src/components/ui/form/richTextEditor";
+import Select from "@/src/components/ui/form/select";
 import TextArea from "@/src/components/ui/form/textArea";
 import FullPageLoader from "@/src/components/ui/loader/fullPageLoader";
 import { useCreateInquiry } from "@/src/hooks/inquiry/useCreateInquiry";
-import React, { useState } from "react";
+import { useCreateShareInquiry } from "@/src/hooks/inquiry/useCreateShareInquiry";
+import { getCurrentTime } from "@/src/utils/utils";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 
+export const SOURCE_OPTIONS = [
+  { label: "Walk-in", value: "Walk-in" },
+  { label: "Phone Call", value: "Phone Call" },
+  { label: "Email", value: "Email" },
+  { label: "Referral", value: "Referral" },
+  { label: "Social Media", value: "Social Media" },
+  { label: "Website", value: "Website" },
+  { label: "Whatsapp", value: "Whatsapp" },
+  { label: "Other", value: "Other" },
+];
+
 const InquiryForm = () => {
-  const { createInquiry, loading, error } = useCreateInquiry();
+  const {
+    createInquiry,
+    loading: inquiryLoading,
+    error: inquiryError,
+  } = useCreateInquiry();
+  const {
+    createShareInquiry,
+    loading: shareLoading,
+    error: shareError,
+  } = useCreateShareInquiry();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
   const navigate = useNavigate();
   const [form, setForm] = useState<{
     description: string;
     mobile: string;
     inquiryTime: string;
-    source:string;
+    source: string;
     // salesPersonId: string;
     images: File[];
   }>({
     description: "",
     mobile: "",
-    inquiryTime: "",
-    source:"",
+    inquiryTime: getCurrentTime(),
+    source: "",
     // salesPersonId: "",
     images: [],
   });
 
+  const [errors, setErrors] = useState<{
+    description?: string;
+    source?: string;
+    images?: string;
+  }>({});
+
+  const validateForm = () => {
+    const newErrors: typeof errors = {};
+
+    const hasImages = form.images && form.images.length > 0;
+    const hasDescription =
+      form.description &&
+      form.description.replace(/<(.|\n)*?>/g, "").trim().length > 0;
+
+    // ONLY if both are missing
+    if (!hasImages && !hasDescription) {
+      newErrors.images =
+        "Please upload at least one image or enter a description.";
+      newErrors.description =
+        "Please upload at least one image or enter a description.";
+    }
+
+    // Optional: validate description only if provided
+    if (
+      hasDescription &&
+      form.description.replace(/<(.|\n)*?>/g, "").trim().length < 10
+    ) {
+      newErrors.description = "Minimum 10 characters required.";
+    }
+
+    if (!form.source) {
+      newErrors.source = "Please select a source.";
+    }
+
+    setErrors(newErrors);
+
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleChange = (e: any) => {
+    const { name, value } = e.target;
     setForm((prev) => ({
       ...prev,
       [e.target.name]: e.target.value,
+    }));
+
+    setErrors((prev) => ({
+      ...prev,
+      [name]: "",
     }));
   };
 
@@ -46,15 +118,19 @@ const InquiryForm = () => {
   //     images: formData.getAll("images") as File[],
   //   });
   // };
-  const handleSubmit = async (salesPersonIdFromDistributor: string) => {
+  const handleSubmit = async (salesPersonIdFromDistributor: string | null) => {
     // e.preventDefault();
+    if (!validateForm()) return;
+
     try {
       const formData = new FormData();
 
       formData.append("description", form.description);
       formData.append("mobile", form.mobile);
       formData.append("inquiryTime", form.inquiryTime);
-      formData.append("salesPersonId", salesPersonIdFromDistributor);
+      if (salesPersonIdFromDistributor) {
+        formData.append("salesPersonId", salesPersonIdFromDistributor);
+      }
       formData.append("source", form.source);
 
       // ✅ append files correctly
@@ -63,7 +139,13 @@ const InquiryForm = () => {
           formData.append("images", file); // important: same key "images"
         });
       }
-      await createInquiry(formData);
+      if (salesPersonIdFromDistributor) {
+        console.log("share");
+        await createShareInquiry(formData);
+      } else {
+        console.log("create");
+        await createInquiry(formData);
+      }
       Swal.fire({
         icon: "success",
         title: "Inquiry Created.",
@@ -73,7 +155,7 @@ const InquiryForm = () => {
         description: "",
         mobile: "",
         inquiryTime: "",
-        source:"",
+        source: "",
         images: [],
       });
       navigate("/inquiries");
@@ -85,22 +167,52 @@ const InquiryForm = () => {
       });
     }
   };
+
+  useEffect(() => {
+    setLoading(inquiryLoading || shareLoading);
+  }, [inquiryLoading, shareLoading]);
+  useEffect(() => {
+    setError(inquiryError ? inquiryError : shareError ? shareError : null);
+  }, [inquiryError, shareError]);
   return (
     <form encType="multipart/form-data">
       <div className="space-y-4 ">
         <FileInput
-          maxSizeMB={5}
+          maxSizeMB={25}
           limit={10}
+          accept=".jpg,.jpeg,.png,.pdf,.xlsx,.xls,.docx,.doc,.ppt,.pptx,.mp4,.mkv"
           label="Upload Inquiry"
           inputName="images"
           onChange={(files) => setForm((prev) => ({ ...prev, images: files }))}
+          error={errors.images}
         />
-        <TextArea
+        {/* <TextArea
           label="Inquiry Description"
           inputName="description"
           placeholder="Description"
           inputValue={form.description}
           onChange={handleChange}
+          error={errors.description}
+        /> */}
+        <RichTextEditor
+          label="Inquiry Description"
+          inputName="description"
+          placeholder="Enter inquiry description..."
+          value={form.description}
+          onChange={(content) => {
+            setForm((prev) => ({
+              ...prev,
+              description: content,
+            }));
+
+            setErrors((prev) => ({
+              ...prev,
+              description: "",
+            }));
+          }}
+          error={errors.description}
+          required
+          height={220}
         />
         <div className="grid grid-cols-3  gap-4">
           <Input
@@ -110,12 +222,30 @@ const InquiryForm = () => {
             inputValue={form.mobile}
             onChange={handleChange}
           />
-          <Input
+          {/* <Input
             label="Source"
             inputName="source"
             placeholder="Enter Source..."
             inputValue={form.source}
             onChange={handleChange}
+          /> */}
+          <Select
+            label="Source"
+            options={SOURCE_OPTIONS}
+            selectName="source"
+            placeholder="Enter Source..."
+            value={form.source}
+            onChange={(opt) => {
+              setForm((prev) => ({
+                ...prev,
+                source: opt.value as string,
+              }));
+              setErrors((prev) => ({
+                ...prev,
+                source: "",
+              }));
+            }}
+            error={errors.source}
           />
           <Input
             label="Time"

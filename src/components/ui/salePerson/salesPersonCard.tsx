@@ -1,22 +1,22 @@
-import React, { useEffect, useState } from "react";
-import { Mail, Phone, MoreVertical, Edit } from "lucide-react";
+import React, { useState } from "react";
+import { Mail, Phone, Edit, ArrowUpRight, ArrowRight } from "lucide-react";
 import { SalesPerson } from "@/src/types/users";
-import { cn } from "@/src/utils/utils";
 import { useTheme } from "@/src/contexts";
 import SalesPersonAttendance from "./salesPersonAttendance";
 import { Button } from "../button";
-import { useUpdateUser } from "@/src/hooks/salesPerson/useUpdateUser";
 import { Modal } from "../modal";
 import UpdateSalesPersonForm from "./updateSalesPersonForm";
 import { useToggleActiveStatus } from "@/src/hooks/salesPerson/useToggleActive";
+import { useResetDeviceBySalesPerson } from "@/src/hooks/salesPerson/useResetDeviceBySalesPerson";
 import {
   statusUserBg,
   statusUserColor,
 } from "../distributeInquiry/shareInquiry/helpers";
 import ButtonLoader from "../loader/buttonLoader";
-import Swal from "sweetalert2";
 import SetResetPinForm from "./setResetPinForm";
-import { useResetDeviceBySalesPerson } from "@/src/hooks/salesPerson/useResetDeviceBySalesPerson";
+import Swal from "sweetalert2";
+import { Card } from "../card";
+import { Link } from "react-router-dom";
 
 interface Props {
   person: SalesPerson;
@@ -25,375 +25,354 @@ interface Props {
   onUpdated?: (updated: SalesPerson) => void;
 }
 
-// const defaultStats = {
-//   status: "active",
-//   performance: 75,
-//   totalInquiries: 0,
-//   closedInquiries: 0,
-//   avatar: "https://ui-avatars.com/api/?name=User",
-// };
+function getInitials(name: string) {
+  return name
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
+}
 
+function AttendanceBar({
+  attendance,
+}: {
+  attendance: SalesPerson["attendance"];
+}) {
+  const total = attendance?.totalDays || 1;
+  const present = attendance?.present ?? 0;
+  const halfDay = attendance?.halfDay ?? 0;
+  const absent = attendance?.absent ?? 0;
+
+  const pPct = Math.round((present / total) * 100);
+  const hPct = Math.round((halfDay / total) * 100);
+  const aPct = Math.round((absent / total) * 100);
+
+  return (
+    <div className="mt-3">
+      {/* Bar */}
+      <div className="flex h-1.5 rounded-full overflow-hidden gap-1">
+        <div className="bg-[#639922] rounded-full" style={{ flex: present }} />
+        <div className="bg-[#BA7517] rounded-full" style={{ flex: halfDay }} />
+        <div className="bg-[#E24B4A] rounded-full" style={{ flex: absent }} />
+      </div>
+
+      {/* Labels */}
+      <div className="flex flex-wrap gap-3 mt-1.5">
+        {[
+          { label: "Present", pct: pPct, color: "#639922" },
+          { label: "Half day", pct: hPct, color: "#BA7517" },
+          { label: "Absent", pct: aPct, color: "#E24B4A" },
+        ].map(({ label, pct, color }) => (
+          <span key={label} className="flex items-center gap-1 text-[11px]">
+            <span
+              className="w-1 h-1 rounded-full inline-block"
+              style={{ background: color }}
+            />
+            <span className="text-textSec">
+              {label} {pct}%
+            </span>
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+function InquiriesBar({ inquiries }: { inquiries: SalesPerson["inquiries"] }) {
+  const total = inquiries?.total || 1;
+
+  const inProgress = inquiries?.inProgress ?? 0;
+  const followUp = inquiries?.followUp ?? 0;
+  const closed = inquiries?.closed ?? 0;
+  const converted = inquiries?.converted ?? 0;
+
+  const p1 = Math.round((inProgress / total) * 100);
+  const p2 = Math.round((followUp / total) * 100);
+  const p3 = Math.round((closed / total) * 100);
+  const p4 = Math.round((converted / total) * 100);
+
+  return (
+    <div className="mt-3">
+      {/* Bar */}
+      <div className="flex h-1.5 rounded-full overflow-hidden gap-1">
+        <div
+          className="bg-[#185FA5] rounded-full"
+          style={{ flex: inProgress }}
+        />
+        <div className="bg-[#BA7517] rounded-full" style={{ flex: followUp }} />
+        <div className="bg-[#3B6D11] rounded-full" style={{ flex: closed }} />
+        <div
+          className="bg-[#993C1D] rounded-full"
+          style={{ flex: converted }}
+        />
+      </div>
+
+      {/* Labels */}
+      <div className="flex flex-wrap gap-3 mt-1.5">
+        {[
+          { label: "In Progress", pct: p1, color: "#185FA5" },
+          { label: "Follow Up", pct: p2, color: "#BA7517" },
+          { label: "Closed", pct: p3, color: "#3B6D11" },
+          { label: "Converted", pct: p4, color: "#993C1D" },
+        ].map(({ label, pct, color }) => (
+          <span key={label} className="flex items-center gap-1 text-[11px]">
+            <span
+              className="w-1 h-1 rounded-full inline-block"
+              style={{ background: color }}
+            />
+            <span className="text-textSec">
+              {label} {pct}%
+            </span>
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+interface InqCellProps {
+  value: number | string;
+  label: string;
+  valueStyle?: React.CSSProperties;
+}
+function InqCell({ value, label, valueStyle }: InqCellProps) {
+  return (
+    <div className="bg-bg rounded-lg px-2.5 pt-2.5 pb-2">
+      <p
+        className="text-[20px] font-semibold leading-[1.1] m-0"
+        style={valueStyle}
+      >
+        {value}
+      </p>
+
+      <p className="text-[10px] text-textMuted uppercase tracking-[0.05em] font-semibold mt-1">
+        {label}
+      </p>
+    </div>
+  );
+}
 export default function SalesPersonCard({
   person,
-  onViewReport,
   onToggleStatus,
   onUpdated,
 }: Props) {
-  const { tokens } = useTheme();
-  const [updateUserModal, setUpdateUserModal] = useState<boolean>(false);
-  const [setResetPinModal, setSetResetPinModal] = useState<boolean>(false);
+  const { tokens, isDark: dark } = useTheme();
+  const [updateUserModal, setUpdateUserModal] = useState(false);
+  const [setResetPinModal, setSetResetPinModal] = useState(false);
   const [status, setStatus] = useState(person.isActive ? "active" : "inactive");
-  const {
-    toggleActiveStatus,
-    loading: toggleLoading,
-    error: toggleError,
-  } = useToggleActiveStatus();
-  const {
-    resetDevice,
-    loading: resetLoading,
-    error: resetError,
-  } = useResetDeviceBySalesPerson();
+
+  const { toggleActiveStatus, loading: toggleLoading } =
+    useToggleActiveStatus();
+  const { resetDevice, loading: resetLoading } = useResetDeviceBySalesPerson();
+
+  const inq = person.inquiries;
+  const att = person.attendance;
+
+  const avatar =
+    person.profileImage ||
+    `https://ui-avatars.com/api/?name=${encodeURIComponent(person.name)}&background=random`;
+
   const handleToggleStatus = async () => {
     try {
       await toggleActiveStatus(person.id);
       setStatus((prev) => (prev === "active" ? "inactive" : "active"));
       onToggleStatus?.(person);
-    } catch (error) {
-      Swal.fire({
-        icon: "error",
-        title: "Failed to toggle status",
-      });
-      console.error(error);
+    } catch {
+      Swal.fire({ icon: "error", title: "Failed to toggle status" });
     }
   };
 
-  const handleResetDevice = async (id: string) => {
+  const handleResetDevice = async () => {
+    const result = await Swal.fire({
+      title: "Reset device?",
+      text: "You won't be able to undo this!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Yes, reset it",
+    });
+    if (!result.isConfirmed) return;
     try {
-      const result = await Swal.fire({
-        title: "Reset device?",
-        text: "You won't be able to undo this!",
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonText: "Yes, reset it",
-        cancelButtonText: "Cancel",
-      });
-
-      if (!result.isConfirmed) return;
-
-      await resetDevice(id);
-
-      Swal.fire({
-        icon: "success",
-        title: "Device reset successfully",
-      });
+      await resetDevice(person.id);
+      Swal.fire({ icon: "success", title: "Device reset successfully" });
     } catch (error: any) {
-      console.error(error);
-
       Swal.fire({
         icon: "error",
         title: "Failed to reset device",
-        text: String(error.response?.data?.message) || "Something went wrong",
+        text: error?.response?.data?.message ?? "Something went wrong",
       });
     }
   };
-  // ✅ Merge API data with defaults
-  // const data = {
-  //   ...defaultStats,
-  //   ...person,
-  //   avatar:
-  //     (person as any)?.avatar ||
-  //     `https://ui-avatars.com/api/?name=${encodeURIComponent(person.name)}`,
-  // };
-  const inquiries = person.inquiries;
-  const attendance = person.attendance;
 
-  const data = {
-    ...person,
-
-    status: person.isActive ? "active" : "inactive",
-
-    totalInquiries: inquiries?.total ?? 0,
-    closedInquiries: inquiries?.closed ?? 0,
-
-    // use API conversionRate instead of recalculating
-    performance: parseFloat(inquiries?.conversionRate?.replace("%", "") || "0"),
-
-    avatar:
-      person?.profileImage ||
-      `https://ui-avatars.com/api/?name=${encodeURIComponent(person.name)}`,
-  };
-
-  const performanceColor =
-    data.performance >= 70
-      ? tokens.success
-      : data.performance >= 40
-        ? tokens.warning
-        : tokens.danger;
-
-  // useEffect(() => {
-  //   setStatus(person.isActive ? "active" : "inactive");
-  // }, [person.isActive]);
   return (
-    <div
-      className="rounded-2xl border overflow-hidden transition-all duration-200 hover:shadow-xl"
-      style={{ backgroundColor: tokens.surface, borderColor: tokens.border }}
-    >
-      <div className="p-6 space-y-4">
-        {/* Header */}
-        {/* <div className="flex justify-between items-start mb-6">
-          <div className="relative">
-            <img
-              src={data.avatar}
-              alt={data.name}
-              className="w-16 h-16 rounded-2xl object-cover border-2"
-              style={{ borderColor: tokens.border }}
-            />
+    <Card className="p-0! relative overflow-visible">
+      {/* Header */}
+      <div className="px-5 pt-4 pb-3.5 flex items-center gap-3.5 relative">
+        <img
+          src={avatar}
+          alt={person.name}
+          className="w-13 h-13 rounded-xl object-cover shrink-0"
+        />
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-[15px] font-bold text-text truncate">
+              {person.name}
+            </span>
 
-            <div
-              className={cn(
-                "absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2",
-                data.status === "active" ? "bg-green-500" : "bg-red-500",
-              )}
-              style={{ borderColor: tokens.surface }}
-            />
+            <span
+              className={`text-[11px] font-semibold px-2 py-1 rounded-full shrink-0 ${
+                status === "active"
+                  ? "bg-[#EAF3DE] text-[#3B6D11]"
+                  : "bg-bg text-textMuted"
+              }`}
+            >
+              {status === "active" ? "Active" : "Inactive"}
+            </span>
           </div>
 
-          <button
-            title="More"
-            className="p-2 rounded-lg hover:bg-opacity-10 transition-colors"
+          <p className="text-[11px] text-textMuted mb-1">
+            {person.employeeId} &middot; {person.assignedArea ?? "No area"}
+          </p>
+
+          <div className="flex flex-wrap gap-2.5">
+            <span className="flex items-center gap-1 text-[12px] text-textSec">
+              <Mail size={12} />
+              {person.email}
+            </span>
+
+            {person.phone && (
+              <span className="flex items-center gap-1 text-[12px] text-textSec">
+                <Phone size={12} />
+                {person.phone}
+              </span>
+            )}
+          </div>
+        </div>
+        <div className="ml-auto mb-auto">
+          <Link
+            to={`/sales-persons/${person.id}`}
+            className="group flex items-center gap-1 text-[11px] font-semibold px-3 py-1.5 rounded-full whitespace-nowrap
+               transition-all duration-200 ease-out active:scale-95 "
             style={{
-              color: tokens.textMuted,
-              backgroundColor: tokens.borderLight,
+              background: tokens.accentLight,
+              color: tokens.accent,
             }}
           >
-            <MoreVertical size={18} />
-          </button>
-        </div> */}
-        <div className="flex justify-between items-start">
-          <div className="flex gap-3">
-            <img
-              alt={data.name}
-              src={data.avatar}
-              className="w-14 h-14 rounded-xl"
+            <span className="transition-transform duration-200 group-hover:-translate-x-0.5">
+              View
+            </span>
+
+            <ArrowRight
+              size={12}
+              className="transition-all duration-200 group-hover:translate-x-1 group-hover:scale-110"
             />
-
-            <div className="space-y-1">
-              {/* <h3 className="font-bold text-sm">{data.name}</h3> */}
-
-              <p className="text-[11px] opacity-70">ID: {data.employeeId}</p>
-              {/* <p className="text-[11px] opacity-70">{data.email}</p> */}
-              <div className="flex  gap-2 mt-2">
-                <div
-                  className="flex items-center gap-2 text-xs"
-                  style={{ color: tokens.textSec }}
-                >
-                  <Mail size={14} />
-                  {data.email || "No email"}
-                </div>
-
-                <div
-                  className="flex items-center gap-2 text-xs"
-                  style={{ color: tokens.textSec }}
-                >
-                  <Phone size={14} />
-                  {data.phone || "No phone"}
-                </div>
-              </div>
-              <p className="text-xs" style={{ color: tokens.textMuted }}>
-                Area: {data.assignedArea || "Not Assigned"}
-              </p>
-            </div>
-          </div>
-
-          {/* <button className="opacity-60">⋮</button> */}
-        </div>
-
-        {/* Info */}
-        <div className="mb-3">
-          <h3 className="text-lg font-bold" style={{ color: tokens.text }}>
-            {data.name}
-          </h3>
-
-          {/* <p className="text-xs mt-1" style={{ color: tokens.textMuted }}>
-            ID: {data.employeeId || "N/A"}
-          </p> */}
-
-          {/* <p className="text-xs" style={{ color: tokens.textMuted }}>
-            Area: {data.assignedArea || "Not Assigned"}
-          </p> */}
-
-          {/* <div className="flex flex-col gap-1 mt-2">
-            <div
-              className="flex items-center gap-2 text-xs"
-              style={{ color: tokens.textSec }}
-            >
-              <Mail size={14} />
-              {data.email || "No email"}
-            </div>
-
-            <div
-              className="flex items-center gap-2 text-xs"
-              style={{ color: tokens.textSec }}
-            >
-              <Phone size={14} />
-              {data.phone || "No phone"}
-            </div>
-          </div> */}
-        </div>
-        <div className="space-y-2">
-          <span className="font-bold text-xs uppercase tracking-wider text-textMuted">
-            Attendance
-          </span>
-          <div className="flex gap-2  text-xs w-full mb-3">
-            <SalesPersonAttendance attendance={data?.attendance} />
-          </div>
-        </div>
-
-        {/* Performance */}
-        {/* <div className="space-y-4">
-          <div>
-            <div
-              className="flex justify-between text-xs font-bold mb-1.5 uppercase tracking-wider"
-              style={{ color: tokens.textMuted }}
-            >
-              <span>Performance</span>
-              <span
-                style={{
-                  color: data.performance > 80 ? tokens.success : tokens.danger,
-                }}
-              >
-                {data.performance}%
-              </span>
-            </div>
-
-            <div
-              className="h-2 w-full rounded-full overflow-hidden"
-              style={{ backgroundColor: tokens.bg }}
-            >
-              <div
-                className="h-full transition-all duration-500"
-                style={{
-                  width: `${data.performance}%`,
-                  backgroundColor: performanceColor,
-                  // data.performance > 80 ? tokens.success : tokens.danger,
-                }}
-              />
-            </div>
-          </div> */}
-
-        {/* Stats */}
-        {/* <div className="grid grid-cols-2 gap-4 pt-2">
-            <div
-              className="p-3 rounded-xl"
-              style={{ backgroundColor: tokens.bg }}
-            >
-              <p
-                className="text-[10px] font-bold uppercase tracking-wider mb-1"
-                style={{ color: tokens.textMuted }}
-              >
-                Total
-              </p>
-              <p className="text-lg font-bold" style={{ color: tokens.text }}>
-                {data.totalInquiries}
-              </p>
-            </div>
-
-            <div
-              className="p-3 rounded-xl"
-              style={{ backgroundColor: tokens.bg }}
-            >
-              <p
-                className="text-[10px] font-bold uppercase tracking-wider mb-1"
-                style={{ color: tokens.textMuted }}
-              >
-                Closed
-              </p>
-              <p className="text-lg font-bold" style={{ color: tokens.text }}>
-                {data.closedInquiries}
-              </p>
-            </div>
-          </div> */}
-        {/* </div> */}
-
-        <div className="space-y-4">
-          {/* Performance */}
-          <div>
-            <div
-              className="flex justify-between text-[10px] font-bold uppercase tracking-wider mb-1"
-              style={{ color: tokens.textMuted }}
-            >
-              <span>Performance</span>
-              <span style={{ color: performanceColor }}>
-                {data.performance}%
-              </span>
-            </div>
-
-            <div
-              className="h-2 w-full rounded-full overflow-hidden"
-              style={{ backgroundColor: tokens.bg }}
-            >
-              <div
-                className="h-full transition-all duration-500"
-                style={{
-                  width: `${data.performance}%`,
-                  backgroundColor: performanceColor,
-                }}
-              />
-            </div>
-          </div>
-
-          {/* Stats Row (tight layout) */}
-          <div className="grid grid-cols-2 gap-3">
-            <div
-              className="p-3 rounded-xl flex flex-col justify-center"
-              style={{ backgroundColor: tokens.bg }}
-            >
-              <p
-                className="text-[10px] uppercase font-bold"
-                style={{ color: tokens.textMuted }}
-              >
-                Total
-              </p>
-              <p className="text-lg font-bold">{data.totalInquiries}</p>
-            </div>
-
-            <div
-              className="p-3 rounded-xl flex flex-col justify-center"
-              style={{ backgroundColor: tokens.bg }}
-            >
-              <p
-                className="text-[10px] uppercase font-bold"
-                style={{ color: tokens.textMuted }}
-              >
-                Closed
-              </p>
-              <p className="text-lg font-bold">{data.closedInquiries}</p>
-            </div>
-          </div>
+          </Link>
         </div>
       </div>
+      {/* Divider */}
+      <div className="h-px bg-border mx-5" />
+      {/* Inquiries */}
+      <div className="px-5 py-4">
+        <p className="text-[10px] font-bold tracking-[0.08em] uppercase text-textMuted mb-2.5">
+          Inquiries
+        </p>
 
+        <div className="grid grid-cols-3 gap-2">
+          <InqCell value={inq?.total ?? 0} label="Total" />
+          <InqCell
+            value={inq?.inProgress ?? 0}
+            label="In Progress"
+            valueStyle={{ color: "#185FA5" }}
+          />
+          <InqCell
+            value={inq?.followUp ?? 0}
+            label="Follow Up"
+            valueStyle={{ color: "#BA7517" }}
+          />
+          <InqCell value={inq?.assigned ?? 0} label="Assigned" />
+          <InqCell
+            value={inq?.closed ?? 0}
+            label="Closed"
+            valueStyle={{ color: "#3B6D11" }}
+          />
+          <InqCell
+            value={inq?.converted ?? 0}
+            label="Converted"
+            valueStyle={{ color: "#993C1D" }}
+          />
+        </div>
+
+        <div className="grid grid-cols-2 gap-2 mt-2">
+          {[
+            {
+              label: "Close rate",
+              value: inq?.closeRate ?? "0.00%",
+              color: "#3B6D11",
+            },
+            {
+              label: "Conversion rate",
+              value: inq?.conversionRate ?? "0.00%",
+              color: "#854F0B",
+            },
+          ].map(({ label, value, color }) => (
+            <div
+              key={label}
+              className="bg-bg rounded-lg p-2.5 flex justify-between items-center"
+            >
+              <span className="text-[11px] text-textSec font-semibold">
+                {label}
+              </span>
+              <span className="text-[14px] font-bold" style={{ color }}>
+                {value}
+              </span>
+            </div>
+          ))}
+        </div>
+
+        <InquiriesBar inquiries={person.inquiries} />
+      </div>
+      {/* Divider */}
+      <div className="h-px bg-border mx-5" />
+      {/* Attendance */}
+      <div className="px-5 py-4">
+        <p className="text-[10px] font-bold tracking-[0.08em] uppercase text-textMuted mb-2.5">
+          Attendance
+        </p>
+
+        <div className="grid grid-cols-4 gap-2">
+          {[
+            { val: att?.present ?? 0, label: "Present", color: "#3B6D11" },
+            { val: att?.halfDay ?? 0, label: "Half day", color: "#854F0B" },
+            { val: att?.absent ?? 0, label: "Absent", color: "#A32D2D" },
+            {
+              val: att?.totalDays ?? 0,
+              label: "Total days",
+              color: "var(--text)",
+            },
+          ].map(({ val, label, color }) => (
+            <div
+              key={label}
+              className="bg-bg rounded-lg px-2 pt-2.5 pb-2 text-center"
+            >
+              <p className="text-[20px] font-semibold m-0" style={{ color }}>
+                {val}
+              </p>
+              <p className="text-[10px] text-textMuted uppercase tracking-[0.05em] font-semibold mt-1">
+                {label}
+              </p>
+            </div>
+          ))}
+        </div>
+
+        <AttendanceBar attendance={att} />
+      </div>
       {/* Footer */}
-      <div
-        className="px-6 py-4 border-t flex items-center justify-between"
-        style={{
-          borderColor: tokens.border,
-          backgroundColor: tokens.bg + "30",
-        }}
-      >
-        {/* <button
-          onClick={() => onViewReport?.(data)}
-          className="text-sm font-bold text-blue-600 hover:underline"
-        >
-          View Full Report
-        </button> */}
+      <div className="px-5 py-3 border-t border-border flex flex-wrap items-center justify-between gap-2">
         <Button
-          onClick={() => handleToggleStatus()}
           type="button"
           variant="ghost"
+          onClick={handleToggleStatus}
           style={{
-            background: statusUserBg(!toggleLoading ? status : ""),
-            color: statusUserColor(!toggleLoading ? status : ""),
+            background: statusUserBg(!toggleLoading ? status : "", dark),
+            color: statusUserColor(!toggleLoading ? status : "", dark),
           }}
         >
           {toggleLoading ? (
@@ -411,61 +390,53 @@ export default function SalesPersonCard({
           size="md"
           onClick={() => setSetResetPinModal(true)}
         >
-          Reset Pin
-          {/* <Edit size={15} /> */}
+          Reset PIN
         </Button>
+
         <Button
           type="button"
           variant="secondary"
           size="md"
           onClick={() => setUpdateUserModal(true)}
         >
-          <Edit size={15} /> Edit
-        </Button>
-        <Button variant="danger" onClick={() => handleResetDevice(data.id)}>
-          {resetLoading ? <ButtonLoader /> : "Reset Device"}
+          <Edit size={13} /> Edit
         </Button>
 
-        {/* <button
-          onClick={() => onToggleStatus?.(data)}
-          className={cn(
-            "text-xs font-bold px-3 py-1.5 rounded-lg transition-colors",
-            data.status === "active"
-              ? "text-red-500 bg-red-500/10 hover:bg-red-500/20"
-              : "text-green-500 bg-green-500/10 hover:bg-green-500/20",
-          )}
-        >
-          {data.status === "active" ? "Block Agent" : "Unblock Agent"}
-        </button> */}
+        <Button variant="danger" onClick={handleResetDevice}>
+          {resetLoading ? <ButtonLoader /> : "Reset Device"}
+        </Button>
       </div>
+      {/* Modals unchanged */}
       {updateUserModal && (
         <Modal
           title="Update Sales Person"
           onClose={() => setUpdateUserModal(false)}
           width={400}
         >
+          {" "}
           <UpdateSalesPersonForm
-            salesPersonId={data.id}
-            person={data}
+            salesPersonId={person.id}
+            person={person}
             onClose={() => setUpdateUserModal(false)}
-            onUpdated={(updated) => {
-              onUpdated?.(updated);
+            onUpdated={(u) => {
+              onUpdated?.(u);
             }}
-          />
+          />{" "}
         </Modal>
-      )}
+      )}{" "}
       {setResetPinModal && (
         <Modal
-          title="(Re)Set Pin"
+          title="(Re)Set PIN"
           onClose={() => setSetResetPinModal(false)}
           width={400}
         >
+          {" "}
           <SetResetPinForm
-            salesPersonId={data.id}
+            salesPersonId={person.id}
             onClose={() => setSetResetPinModal(false)}
-          />
+          />{" "}
         </Modal>
       )}
-    </div>
+    </Card>
   );
 }

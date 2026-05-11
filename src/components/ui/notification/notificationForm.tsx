@@ -8,11 +8,11 @@ import ButtonLoader from "../loader/buttonLoader";
 import Swal from "sweetalert2";
 
 type Props = {
-  userId: string;
+  recipientIds: string[] | string; // can be single userId or array of userIds
   onClose: () => void;
 };
 
-export const NotificationForm = ({ userId, onClose }: Props) => {
+export const NotificationForm = ({ recipientIds, onClose }: Props) => {
   const { createNotification, loading, error } = useCreateNotification();
 
   const [form, setForm] = useState({
@@ -33,7 +33,9 @@ export const NotificationForm = ({ userId, onClose }: Props) => {
   const handleSubmit = async () => {
     try {
       await createNotification({
-        userId,
+        recipientIds: Array.isArray(recipientIds)
+          ? recipientIds
+          : [recipientIds], // wrap single userId in array
         title: form.title,
         body: form.body,
         data: form.data,

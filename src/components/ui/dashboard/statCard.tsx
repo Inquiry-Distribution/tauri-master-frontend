@@ -1,11 +1,13 @@
 import { useTheme } from "@/src/contexts";
 import { cn } from "@/src/utils/utils";
+import { useNavigate } from "react-router-dom";
 
 type StatCardProps = {
   label: string;
   value: string | number;
   icon: any;
   color: string;
+  link?: string; // ✅ make optional// make required (since you're always using it)
   trend?: string; // ✅ make optional// make required (since you're always using it)
 };
 
@@ -14,17 +16,20 @@ export const StatCard = ({
   value,
   icon: Icon,
   color,
+  link,
   trend,
 }: StatCardProps) => {
   const { tokens } = useTheme();
+  const navigate = useNavigate();
 
   return (
     <div
-      className="p-6 rounded-2xl border transition-all duration-200 hover:shadow-lg lg:w-2xs xl:w-3xs md:w-xs w-sm"
+      className="p-6 rounded-2xl border transition-all duration-200 hover:shadow-lg lg:w-2xs xl:w-3xs md:w-xs w-sm cursor-pointer"
       style={{
         backgroundColor: tokens.surface,
         borderColor: tokens.border,
       }}
+      onClick={() => link && navigate(link)}
     >
       <div className="flex items-start justify-between mb-4">
         {/* ICON */}
@@ -33,7 +38,7 @@ export const StatCard = ({
         </div>
 
         {/* TREND */}
-        {trend && (
+        {/* {trend && (
           <span
             className={cn(
               "text-xs font-bold px-2 py-1 rounded-lg",
@@ -46,7 +51,7 @@ export const StatCard = ({
           >
             {trend}
           </span>
-        )}
+        )} */}
       </div>
 
       {/* CONTENT */}

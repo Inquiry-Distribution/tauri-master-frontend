@@ -5,24 +5,30 @@ import { Attendance, AttendancePerson } from "@/src/types/attendance";
 import { Link } from "react-router-dom";
 import { getAttendanceStatusStyleMap } from "./attendanceStyles";
 import { SalesPerson } from "@/src/types/users";
+import { useState } from "react";
 
-type ColumnDeps = {
-  setSelectedUserId: (id: string) => void;
-};
+type ColumnDeps = {};
 type ColumnDeps2 = {
   setSelectedUserId: (id: string) => void;
   selectedPerson: SalesPerson | null;
 };
 
 export const getAttendanceColumns = ({
-  setSelectedUserId,
-}: ColumnDeps): TableColumn<Attendance>[] => {
+  selectedAttendance,
+  setSelectedAttendance,
+}: {
+  selectedAttendance: Attendance | null;
+  setSelectedAttendance: React.Dispatch<
+    React.SetStateAction<Attendance | null>
+  >;
+}): TableColumn<Attendance>[] => {
+  // const [expandedRowId, setExpandedRowId] = useState<string | null>(null);
   return [
     {
       key: "id",
       label: "Attendance ID",
       render: (row) => (
-        <span className="text-xs font-mono text-(--textMuted)">
+        <span style={{ fontSize: 12, fontFamily: "monospace", opacity: 0.7 }}>
           {row.id.slice(0, 8).toUpperCase()}
         </span>
       ),
@@ -31,76 +37,111 @@ export const getAttendanceColumns = ({
     {
       key: "salesperson",
       label: "Salesperson",
-      render: (row) => (
-        <div className="flex flex-col">
-          <span className="text-sm font-medium text-(--text)">
-            {row.salesperson?.name}
-          </span>
-          <span className="text-xs text-(--textMuted)">
-            {row.salesperson?.email}
-          </span>
-        </div>
-      ),
+      render: (row) => {
+        const { isDark, tokens: t } = useTheme();
+
+        return (
+          <div>
+            <div style={{ fontSize: 14, fontWeight: 500, color: t.text }}>
+              {row.salesperson?.name}
+            </div>
+            <div style={{ fontSize: 12, color: t.textMuted }}>
+              {row.salesperson?.email}
+            </div>
+          </div>
+        );
+      },
     },
 
+    // ✅ FIRST CHECK-IN
     {
-      key: "checkInTime",
-      label: "Check In",
-      render: (row) => (
-        <div className="flex flex-col">
-          <span className="text-sm text-(--text)">
-            {row.checkInTime
-              ? new Date(row.checkInTime).toLocaleTimeString()
-              : "—"}
-          </span>
-          <span className="text-xs text-(--textMuted)">
-            {row.checkInAddress || "No address"}
-          </span>
-        </div>
-      ),
+      key: "checkIn",
+      label: "First Check In",
+      render: (row) => {
+        const session = row.sessions?.[0];
+        const time = session?.checkInTime;
+
+        return <span>{time ? new Date(time).toLocaleTimeString() : "—"}</span>;
+      },
     },
 
+    // ✅ LAST CHECK-OUT
     {
-      key: "checkOutTime",
-      label: "Check Out",
-      render: (row) => (
-        <div className="flex flex-col">
-          <span className="text-sm text-(--text)">
-            {row.checkOutTime
-              ? new Date(row.checkOutTime).toLocaleTimeString()
-              : "—"}
-          </span>
-          <span className="text-xs text-(--textMuted)">
-            {row.checkOutAddress || "Not checked out"}
-          </span>
-        </div>
-      ),
+      key: "checkOut",
+      label: "Last Check Out",
+      render: (row) => {
+        const session = row.sessions?.[row.sessions.length - 1];
+        const time = session?.checkOutTime;
+
+        return <span>{time ? new Date(time).toLocaleTimeString() : "—"}</span>;
+      },
     },
 
+    // ✅ TOTAL TIME (NEW)
+    {
+      key: "totalMinutes",
+      label: "Work Duration",
+      render: (row) => {
+        const mins = row.totalMinutes;
+
+        const hrs = Math.floor(mins / 60);
+        const rem = mins % 60;
+
+        return <span>{mins ? `${hrs}h ${rem}m` : "0h"}</span>;
+      },
+    },
+
+    // ✅ SESSION COUNT (NEW)
+    {
+      key: "sessionsCount",
+      label: "Sessions",
+      render: (row) => <span>{row.sessionsCount}</span>,
+    },
+
+    // ✅ STATUS WITH THEME TOKENS
     {
       key: "status",
       label: "Status",
       render: (row) => {
-        const { isDark } = useTheme();
-        const styles = getAttendanceStatusStyleMap(isDark);
+        const { isDark, tokens: t } = useTheme();
 
-        const variant = styles[row.status as keyof typeof styles] || {
-          backgroundColor: isDark ? "#1f293733" : "#f3f4f6",
-          color: isDark ? "#9ca3af" : "#374151",
+        const map = {
+          present: {
+            bg: t.successLight,
+            color: t.success,
+          },
+          absent: {
+            bg: t.dangerLight,
+            color: t.danger,
+          },
+          half_day: {
+            bg: t.accentLight,
+            color: t.accent,
+          },
+          late: {
+            bg: t.warningLight,
+            color: t.warning,
+          },
+        };
+
+        const variant = map[row.status as keyof typeof map] || {
+          bg: t.borderLight,
+          color: t.textMuted,
         };
 
         return (
           <span
             style={{
-              ...variant,
-              padding: "2px 8px",
-              fontSize: "12px",
-              borderRadius: "999px",
+              backgroundColor: variant.bg,
+              color: variant.color,
+              padding: "2px 10px",
+              fontSize: 12,
+              borderRadius: 999,
               textTransform: "capitalize",
               fontWeight: 500,
             }}
           >
-            {row.status.replace("_", " ")}
+            {row.status}
           </span>
         );
       },
@@ -110,24 +151,32 @@ export const getAttendanceColumns = ({
       key: "date",
       label: "Date",
       render: (row) => (
-        <span className="text-xs text-(--textMuted)">
+        <span style={{ fontSize: 12, opacity: 0.7 }}>
           {new Date(row.date).toDateString()}
         </span>
       ),
     },
 
-    // {
-    //   key: "actions",
-    //   label: "Action",
-    //   render: (row) => (
-    //     <button
-    //       onClick={() => setSelectedUserId(row.salespersonId)}
-    //       className="text-xs px-3 py-1 rounded-md bg-(--primary) text-white hover:opacity-80"
-    //     >
-    //       View
-    //     </button>
-    //   ),
-    // },
+    {
+      key: "view",
+      label: "",
+      render: (row) => (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            setSelectedAttendance(row);
+          }}
+          style={{
+            fontSize: 12,
+            padding: "4px 8px",
+            borderRadius: 6,
+            cursor: "pointer",
+          }}
+        >
+          View
+        </button>
+      ),
+    },
   ];
 };
 

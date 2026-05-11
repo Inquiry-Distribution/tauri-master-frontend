@@ -10,6 +10,8 @@ import {
   Award,
   TrendingUp,
   Download,
+  RefreshCcw,
+  Check,
 } from "lucide-react";
 import { SalesPerson } from "@/src/types/users";
 import { cn } from "../../utils/utils";
@@ -18,6 +20,10 @@ import { useSalesPerson } from "@/src/hooks/salesPerson/useSalesPerson";
 import SectionLoader from "@/src/components/ui/loader/sectionLoader";
 import { Button } from "@/src/components/ui/button";
 import { exportSalesPersonExcel } from "@/src/xls-convert/salesPerson.export";
+import { Modal } from "@/src/components/ui/modal";
+import CreateUserForm from "./create/_form";
+import { useSyncUsers } from "@/src/hooks/salesPerson/useSyncUsers";
+import Swal from "sweetalert2";
 
 // const mockSalesPersons: SalesPerson[] = [
 //   {
@@ -55,28 +61,75 @@ import { exportSalesPersonExcel } from "@/src/xls-convert/salesPerson.export";
 //   },
 // ];
 
-const mapSalesPerson = (sp: any): SalesPerson => {
+export const mapSalesPerson = (sp: any): SalesPerson => {
   return {
     id: sp.id,
     name: sp.name,
     email: sp.email,
 
-    // ❌ not in API → fallback dummy
     phone: sp.phone || "",
     employeeId: sp.employeeId || "",
     assignedArea: sp.assignedArea || "Unassigned",
 
-    isActive: sp.isActive,
+    isActive: sp.isActive ?? true,
 
-    inquiries: sp.inquiries,
-    attendance: sp.attendance,
+    profileImage: sp.profileImage || "",
+
+    // ✅ fallback defaults for new users
+    inquiries: sp.inquiries || {
+      total: 0,
+      assigned: 0,
+      inProgress: 0,
+      followUp: 0,
+      closed: 0,
+      converted: 0,
+      conversionRate: "0%",
+      closeRate: "0%",
+    },
+
+    attendance: sp.attendance || {
+      present: 0,
+      halfDay: 0,
+      absent: 0,
+      totalDays: 0,
+    },
   };
 };
 export default function SalesPersonsPage() {
   const { tokens } = useTheme();
   const { getAllSalesPerson, loading, error } = useSalesPerson();
+  const {
+    syncUsers,
+    loading: syncUsersLoading,
+    error: syncUsersError,
+  } = useSyncUsers();
 
   const [salesPersons, setSalesPersons] = useState<SalesPerson[]>([]);
+  const [createSalesPersonOpen, setCreateSalesPersonOpen] = useState(false);
+
+  const [syncSuccess, setSyncSuccess] = useState(false);
+
+  const handleSync = async () => {
+    try {
+      await syncUsers(); // call your API
+
+      // show success icon
+      setSyncSuccess(true);
+
+      // revert back after 2 seconds
+      setTimeout(() => {
+        setSyncSuccess(false);
+      }, 2000);
+    } catch (err: any) {
+      console.error(err);
+      Swal.fire({
+        icon: "error",
+        title: "Sync Failed",
+        text:
+          err?.response?.data?.message || "An error occurred while syncing.",
+      });
+    }
+  };
 
   // ✅ Fetch data on mount
   useEffect(() => {
@@ -85,6 +138,36 @@ export default function SalesPersonsPage() {
         const data = await getAllSalesPerson();
 
         const mapped = data?.data?.salespersons?.map(mapSalesPerson) || [];
+        // const mapped = [
+        //   {
+        //     id: "6372da3d-bac127-43fc-999b-0338ba05cec8",
+        //     name: "Ravi Verma",
+        //     email: "ravi@inquiry.com",
+        //     phone: "9000000003",
+        //     employeeId: "EMP003",
+        //     assignedArea: "East Zone",
+        //     profileImage: null,
+        //     role: "sales",
+        //     isActive: true,
+        //     createdAt: "2026-04-28T12:30:37.346Z",
+        //     inquiries: {
+        //       total: 7,
+        //       assigned: 1,
+        //       inProgress: 2,
+        //       followUp: 1,
+        //       closed: 2,
+        //       converted: 1,
+        //       conversionRate: "14.29%",
+        //       closeRate: "28.57%",
+        //     },
+        //     attendance: {
+        //       present: 3,
+        //       halfDay: 1,
+        //       absent: 2,
+        //       totalDays: 6,
+        //     },
+        //   },
+        // ].map(mapSalesPerson);
 
         setSalesPersons(mapped);
 
@@ -120,14 +203,32 @@ export default function SalesPersonsPage() {
             Manage your sales persons and monitor their performance.
           </p>
         </div>
-        <Button onClick={() => exportSalesPersonExcel(salesPersons)}>
-          <Download size={18} />
-        </Button>
+        <div className="flex gap-3">
+          <Button
+            onClick={() => handleSync()}
+            variant="ghost"
+            title="Sync Data"
+          >
+            {syncUsersLoading ? (
+              <RefreshCcw size={18} className="animate-spin" />
+            ) : syncSuccess ? (
+              <Check size={18} className="text-green-500" />
+            ) : (
+              <RefreshCcw size={18} />
+            )}
+          </Button>
+          <Button onClick={() => exportSalesPersonExcel(salesPersons)}>
+            <Download size={18} />
+          </Button>
 
-        {/* <button className="flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm text-white bg-blue-600 hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/20">
-          <Plus size={18} />
-          Add Sales Person
-        </button> */}
+          <button
+            onClick={() => setCreateSalesPersonOpen(true)}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm text-white bg-blue-600 hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/20"
+          >
+            <Plus size={18} />
+            Add Sales Person
+          </button>
+        </div>
       </div>
 
       {/* ❌ Error State */}
@@ -157,6 +258,27 @@ export default function SalesPersonsPage() {
                 )}
           </div>
         </>
+      )}
+
+      {/* ✅ Create Sales Person Modal */}
+      {createSalesPersonOpen && (
+        <Modal
+          title="Create Sales Person"
+          onClose={() => setCreateSalesPersonOpen(false)}
+        >
+          <CreateUserForm
+            onSuccess={(user: any) => {
+              const mappedUser = mapSalesPerson(user);
+
+              setSalesPersons((prev) => {
+                const exists = prev.some((p) => p.id === mappedUser.id);
+                if (exists) return prev;
+                return [mappedUser, ...prev];
+              });
+              setCreateSalesPersonOpen(false);
+            }}
+          />
+        </Modal>
       )}
     </div>
   );

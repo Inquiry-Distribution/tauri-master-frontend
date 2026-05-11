@@ -14,7 +14,6 @@ export type EditInquiryPayload = {
   inquiryTime: string;
   // salesPersonId: string;
   source: string;
-  images: File;
 };
 
 // ===== Root Response =====

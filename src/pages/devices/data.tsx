@@ -8,6 +8,7 @@ import {
 } from "./deviceComponents";
 import { Clock, User } from "lucide-react";
 import { cn, formatTimeHM } from "@/src/utils/utils";
+import { useTheme } from "@/src/contexts";
 
 export const DUMMY_API_DEVICES: Device[] = [
   {
@@ -188,6 +189,34 @@ export const DUMMY_API_DEVICES: Device[] = [
 //   ];
 // }
 
+export const STATUS_STYLES = {
+  active: {
+    bg: {
+      light: "#E8F5E9", // cleaner green than green-200
+      dark: "rgba(52, 211, 153, 0.12)",
+    },
+    text: {
+      light: "#166534", // stronger green (better contrast than green-800)
+      dark: "#34D399",
+    },
+    dot: "#16A34A",
+    label: "Active",
+  },
+
+  blocked: {
+    bg: {
+      light: "#FDECEC", // softer, less aggressive than red-200
+      dark: "rgba(248, 113, 113, 0.12)",
+    },
+    text: {
+      light: "#991B1B", // deeper red for readability
+      dark: "#F87171",
+    },
+    dot: "#DC2626",
+    label: "Blocked",
+  },
+} as const;
+
 export function buildColumns(
   onToggle: (id: string) => void,
 ): TableColumn<Device>[] {
@@ -272,24 +301,29 @@ export function buildColumns(
       key: "isBlocked",
       label: "Status",
       sortable: true,
-      render: (row) => (
-        <span
-          className={cn(
-            "inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full",
-            row.isBlocked
-              ? "bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400"
-              : "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
-          )}
-        >
+      render: (row) => {
+        const { isDark: dark } = useTheme();
+        const status = row.isBlocked ? "blocked" : "active";
+        const s = STATUS_STYLES[status];
+
+        return (
           <span
             className={cn(
-              "w-1.5 h-1.5 rounded-full",
-              row.isBlocked ? "bg-red-500" : "bg-green-500",
+              "inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full",
             )}
-          />
-          {row.isBlocked ? "Blocked" : "Active"}
-        </span>
-      ),
+            style={{
+              backgroundColor: dark ? s.bg.dark : s.bg.light,
+              color: dark ? s.text.dark : s.text.light,
+            }}
+          >
+            <span
+              className="w-1.5 h-1.5 rounded-full"
+              style={{ backgroundColor: s.dot }}
+            />
+            {s.label}
+          </span>
+        );
+      },
     },
 
     {

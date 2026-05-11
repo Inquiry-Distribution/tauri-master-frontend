@@ -1,4 +1,4 @@
-import { useContext, useState } from "react";
+import { useContext } from "react";
 import { ThemeContext } from "@/src/contexts";
 
 export function Button({
@@ -11,9 +11,10 @@ export function Button({
   style: sx,
   className = "",
   type = "button",
+  title,
 }: {
   children: React.ReactNode;
-  variant?: "primary" | "secondary" | "danger" | "ghost" | "dashed";
+  variant?: "primary" | "secondary" | "danger" | "success" | "ghost" | "dashed";
   size?: "xs" | "sm" | "md" | "lg" | "xl";
   onClick?: () => void;
   disabled?: boolean;
@@ -21,14 +22,14 @@ export function Button({
   style?: React.CSSProperties;
   className?: string;
   type?: "button" | "submit" | "reset";
+  title?: string;
 }) {
   const ctx = useContext(ThemeContext);
-  const [hovered, setHovered] = useState(false);
-
   if (!ctx) return null;
+
   const { tokens } = ctx;
 
-  // ── Sizes ─────────────────────────────
+  // ── Sizes (unchanged) ─────────────────────────────
   const sizeClasses =
     size === "xs"
       ? "text-[11px] px-2 py-[4px]"
@@ -38,9 +39,8 @@ export function Button({
           ? "text-[13px] px-3.5 py-[7px]"
           : size === "lg"
             ? "text-[15px] px-4 py-[8px]"
-            : "text-[16px] px-5 py-[10px]"; // xl
+            : "text-[16px] px-5 py-[10px]";
 
-  // ── Base ──────────────────────────────
   const baseClasses =
     "inline-flex items-center gap-1.5 font-medium rounded-lg transition-all duration-150 outline-none";
 
@@ -48,7 +48,7 @@ export function Button({
     ? "opacity-50 cursor-not-allowed"
     : "cursor-pointer";
 
-  // ── Variants ──────────────────────────
+  // ── Variants (same logic preserved) ─────────────
   const variants = {
     primary: {
       bg: tokens.accent,
@@ -68,6 +68,12 @@ export function Button({
       border: `1px solid ${tokens.danger}30`,
       hoverBg: tokens.danger + "20",
     },
+    success: {
+      bg: tokens.successLight,
+      color: tokens.success,
+      border: `1px solid ${tokens.success}30`,
+      hoverBg: tokens.success + "20",
+    },
     ghost: {
       bg: "transparent",
       color: tokens.textSec,
@@ -84,20 +90,30 @@ export function Button({
 
   const v = variants[variant];
 
+  // ── CSS variables approach (key improvement) ─────
+  // This replaces React hover state safely
+  const cssVars = {
+    "--btn-bg": v.bg,
+    "--btn-color": v.color,
+    "--btn-border": v.border,
+    "--btn-hover-bg": v.hoverBg,
+    ...sx,
+  } as React.CSSProperties;
+
   return (
     <button
+      title={title || ""}
       type={type}
       disabled={disabled}
-      onClick={!disabled ? onClick : undefined}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      className={`${baseClasses} ${sizeClasses} ${disabledClasses} ${className}`}
-      style={{
-        backgroundColor: hovered && !disabled ? v.hoverBg : v.bg,
-        color: v.color,
-        border: v.border,
-        ...sx,
-      }}
+      onClick={disabled ? undefined : onClick}
+      className={`
+        ${baseClasses}
+        ${sizeClasses}
+        ${disabledClasses}
+        btn-theme
+        ${className}
+      `}
+      style={cssVars}
     >
       {Icon && <Icon size={14} />}
       {children}

@@ -5,8 +5,10 @@ import { useTheme } from "@/src/contexts";
 
 export const PersonSelector = ({
   setPersonId,
+  value,
   setSelectedPerson,
 }: {
+  value?: string | null;
   setPersonId: (id: string | null) => void;
   setSelectedPerson: (person: SalesPerson | null) => void;
 }) => {
@@ -17,7 +19,7 @@ export const PersonSelector = ({
 
   useEffect(() => {
     (async () => {
-      const res = await getAllSalesPerson();
+      const res = await getAllSalesPerson("");
       setPersons(res?.data || []);
     })();
   }, []);
@@ -40,6 +42,7 @@ export const PersonSelector = ({
           id="person-selector"
           name="person-selector"
           disabled={loading}
+          value={value ?? ""}
           onChange={(e) => {
             const id = e.target.value || null;
 
@@ -48,7 +51,7 @@ export const PersonSelector = ({
 
             setSelectedPerson(person);
           }}
-          className="w-full appearance-none rounded-xl px-3 py-2.5 text-sm outline-none transition-all"
+          className="w-full appearance-none rounded-xl px-3 py-3 text-sm outline-none transition-all"
           style={{
             backgroundColor: tokens.surface,
             border: `1px solid ${tokens.border}`,

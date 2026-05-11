@@ -15,29 +15,61 @@ import { useSetResetPin } from "@/src/hooks/salesPerson/useSetResetPin";
 
 const SetResetPinForm = ({
   salesPersonId,
-
   onClose,
 }: {
   salesPersonId: string;
-
   onClose: () => void;
 }) => {
-  const { resetPin, loading, error } = useSetResetPin();
+  const { resetPin, loading } = useSetResetPin();
 
-  const [form, setForm] = useState<{ pin: string }>({
+  const [form, setForm] = useState({
     pin: "",
+    confirmPin: "",
   });
+
+  const [errors, setErrors] = useState<any>({});
 
   const handleChange = (e: any) => {
     setForm((prev) => ({
       ...prev,
       [e.target.name]: e.target.value,
     }));
+
+    // clear error on typing
+    setErrors((prev: any) => ({
+      ...prev,
+      [e.target.name]: "",
+    }));
   };
 
-  const handleSubmit = async () => {
+  const validate = () => {
+    let newErrors: any = {};
+
+    if (!form.pin) {
+      newErrors.pin = "PIN is required";
+    } else if (!/^\d+$/.test(form.pin)) {
+      newErrors.pin = "PIN must be numeric";
+    } else if (form.pin.length < 4) {
+      newErrors.pin = "PIN must be at least 4 digits";
+    }
+
+    if (!form.confirmPin) {
+      newErrors.confirmPin = "Confirm PIN is required";
+    } else if (form.pin !== form.confirmPin) {
+      newErrors.confirmPin = "PINs do not match";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async (e: any) => {
+    e.preventDefault();
+
+    if (!validate()) return;
+
     try {
-      const updated = await resetPin(salesPersonId, form);
+      await resetPin(salesPersonId, { pin: form.pin });
 
       Swal.fire({
         icon: "success",
@@ -52,21 +84,34 @@ const SetResetPinForm = ({
       });
     }
   };
+
   return (
-    <form>
-      <div className="space-y-4 ">
+    <form onSubmit={handleSubmit}>
+      <div className="space-y-4">
         <Input
           label="Pin"
           inputType="password"
           inputName="pin"
-          placeholder="Pin"
+          placeholder="Enter PIN"
           inputValue={form.pin}
-          showLabel={false}
           onChange={handleChange}
+          error={errors.pin}
+          showLabel={false}
+        />
+
+        <Input
+          label="Confirm Pin"
+          inputType="password"
+          inputName="confirmPin"
+          placeholder="Confirm PIN"
+          inputValue={form.confirmPin}
+          onChange={handleChange}
+          error={errors.confirmPin}
+          showLabel={false}
         />
 
         <div className="flex justify-center">
-          <Button variant="primary" onClick={handleSubmit} disabled={loading}>
+          <Button type="submit" variant="primary" disabled={loading}>
             {loading ? <ButtonLoader /> : "Set Pin"}
           </Button>
         </div>

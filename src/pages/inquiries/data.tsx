@@ -9,12 +9,16 @@ import { Link } from "react-router-dom";
 import { useState } from "react";
 import ButtonLoader from "@/src/components/ui/loader/buttonLoader";
 import { Edit, Trash } from "lucide-react";
+import DOMPurify from "dompurify";
+import { formatDateTime } from "@/src/utils/utils";
 
 type ColumnDeps = {
   setSelectedUserId: (id: string) => void;
   setSelectedInquiry: (inquiry: Inquiry | null) => void;
   deleteLoading: boolean;
-  onDelete: (id: string) => void; // 👈 add this
+  onDelete: (id: string) => Promise<void>; // 👈 add this
+  // onDelete: (inquiry: Inquiry) => Promise<void>; // 👈 add this
+  deletingId: string | null;
   tokens?: any;
   setEditInquiry: (inquiry: Inquiry | null) => void;
 };
@@ -24,8 +28,11 @@ export const getInquiryColumns = ({
   setSelectedInquiry,
   deleteLoading,
   onDelete,
+  deletingId,
   setEditInquiry,
 }: ColumnDeps): TableColumn<Inquiry>[] => {
+  const userData = JSON.parse(localStorage.getItem("userData") || "{}");
+  const isSuperUser = userData?.role === "superuser";
   return [
     {
       key: "id",
@@ -45,9 +52,12 @@ export const getInquiryColumns = ({
           className="max-w-[260px] cursor-pointer"
           to={`/inquiries/${row.id}`}
         >
-          <p className="text-sm font-medium text-(--text) line-clamp-1">
-            {row.description || "—"}
-          </p>
+          <p
+            className="text-sm font-medium text-(--text) line-clamp-1"
+            dangerouslySetInnerHTML={{
+              __html: DOMPurify.sanitize(row.description || "—"),
+            }}
+          />
           <p className="text-xs text-(--textMuted)">
             {row.mobile || "No contact"}
           </p>
@@ -121,10 +131,11 @@ export const getInquiryColumns = ({
 
     {
       key: "createdAt",
-      label: "Date",
+      label: "Date & Time",
       render: (row) => (
         <span className="text-xs text-(--textMuted)">
-          {new Date(row.createdAt).toLocaleDateString()}
+          {/* {new Date(row.createdAt).toLocaleDateString()} */}
+          {formatDateTime(row.createdAt)}
         </span>
       ),
     },
@@ -143,19 +154,21 @@ export const getInquiryColumns = ({
       key: "actions",
       label: "Action",
       render: (row) => (
-        <div className="flex w-full items-center justify-end gap-2">
+        <div className="flex w-full items-center justify-start gap-2">
           <Button
-            variant={row.status === "assigned" ? "secondary" : "primary"}
+            variant={row.status !== "unassigned" ? "secondary" : "primary"}
             onClick={() => setSelectedInquiry(row)}
           >
-            {row.status === "assigned" ? "Reassign" : "Assign"}
+            {row.status !== "unassigned" ? "Reassign" : "Assign"}
           </Button>
           <Button variant="secondary" onClick={() => setEditInquiry(row)}>
             <Edit size={16} />
           </Button>
-          <Button variant="danger" onClick={() => onDelete(row.id)}>
-            {deleteLoading ? <ButtonLoader /> : <Trash size={16} />}
-          </Button>
+          {isSuperUser && (
+            <Button variant="danger" onClick={() => onDelete(row.id)}>
+              {deletingId === row.id ? <ButtonLoader /> : <Trash size={16} />}
+            </Button>
+          )}
         </div>
       ),
     },
@@ -164,9 +177,19 @@ export const getInquiryColumns = ({
 
 export const tabFilters = [
   { key: "all", label: "All", status: "" },
+
+  {
+    key: "unassigned",
+    label: "Unassigned",
+    status: "unassigned",
+    hideWhenAssignedPersonSelected: true,
+  },
+
   { key: "assigned", label: "Assigned", status: "assigned" },
-  { key: "unassigned", label: "Unassigned", status: "unassigned" },
   { key: "in_progress", label: "In Progress", status: "in_progress" },
+  { key: "follow_up", label: "Follow Up", status: "follow_up" },
+  { key: "converted", label: "Converted", status: "converted" },
+  { key: "not_interested", label: "Not Interested", status: "not_interested" },
   { key: "closed", label: "Closed", status: "closed" },
 ];
 // export const data: Inquiry[] = [

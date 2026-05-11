@@ -7,6 +7,8 @@ import {
   AlertCircle,
   TrendingUp,
   MapPin,
+  Contact2,
+  Smartphone,
 } from "lucide-react";
 import {
   BarChart,
@@ -30,6 +32,9 @@ import { BroadcastForm } from "@/src/components/ui/notification/broadcastForm";
 import { Modal } from "@/src/components/ui/modal";
 import { Card } from "@/src/components/ui/card";
 import InquiryAnalytics from "@/src/components/ui/dashboard/inquiryAnalytics";
+import RecentActivity from "@/src/components/ui/dashboard/recentActivity";
+import { Live } from "@google/genai";
+import { LiveLocationsCard } from "../devices/deviceComponents";
 
 // const stats = [
 //   {
@@ -76,6 +81,9 @@ export default function DashboardPage() {
   const { tokens } = useTheme();
   const navigate = useNavigate();
   const [showBroadcastModal, setShowBroadcastModal] = useState<boolean>(false);
+
+  const userData = JSON.parse(localStorage.getItem("userData") || "{}");
+  const isSuperUser = userData?.role === "superuser";
   const { data, loading, error, getDashboardSummary } =
     useGetDashboardSummary();
 
@@ -94,6 +102,7 @@ export default function DashboardPage() {
             icon: FileText,
             color: "bg-blue-500",
             trend: "+12.5%",
+            link: "/inquiries",
           },
           {
             label: "Unassigned",
@@ -101,6 +110,7 @@ export default function DashboardPage() {
             icon: AlertCircle,
             color: "bg-amber-500",
             trend: "-4.1%",
+            link: "/inquiries?tab=unassigned",
           },
           {
             label: "In Progress",
@@ -108,6 +118,7 @@ export default function DashboardPage() {
             icon: CheckCircle,
             color: "bg-green-500",
             trend: "+8.2%",
+            link: "/inquiries?tab=in_progress",
           },
           {
             label: "Closed",
@@ -115,20 +126,23 @@ export default function DashboardPage() {
             icon: CheckCircle,
             color: "bg-emerald-500",
             trend: "+5.6%",
+            link: "/inquiries?tab=closed",
           },
           {
-            label: "Total Sales",
-            value: `₹${data.totalSales}`,
-            icon: TrendingUp,
+            label: "Total Sales Person",
+            value: `${data.totalSales}`,
+            icon: Users,
             color: "bg-indigo-500",
             trend: "+10.3%",
+            link: "/sales-persons",
           },
           {
             label: "Total Devices",
             value: data.totalDevices,
-            icon: Users,
+            icon: Smartphone,
             color: "bg-purple-500",
             trend: "+2.1%",
+            link: "/devices",
           },
           {
             label: "Blocked Devices",
@@ -136,58 +150,66 @@ export default function DashboardPage() {
             icon: AlertCircle,
             color: "bg-red-500",
             trend: "-1.2%",
+            link: "/devices",
           },
         ]
       : [
           // fallback dummy data
           {
             label: "Total Inquiries",
-            value: "1,284",
+            value: "-",
             icon: FileText,
             color: "bg-blue-500",
-            trend: "+12.5%",
+            trend: "-",
+            link: "/inquiries",
           },
           {
             label: "Unassigned",
-            value: "182",
+            value: "-",
             icon: AlertCircle,
             color: "bg-amber-500",
-            trend: "-4.1%",
+            trend: "-",
+            link: "/inquiries?tab=unassigned",
           },
           {
             label: "In Progress",
-            value: "640",
+            value: "-",
             icon: CheckCircle,
             color: "bg-green-500",
-            trend: "+8.2%",
+            trend: "-",
+            link: "/inquiries?tab=in_progress",
           },
           {
             label: "Closed",
-            value: "462",
+            value: "-",
             icon: CheckCircle,
             color: "bg-emerald-500",
-            trend: "+5.6%",
+            trend: "-",
+            link: "/inquiries?tab=closed",
           },
           {
-            label: "Total Sales",
-            value: "₹52,000",
-            icon: TrendingUp,
+            label: "Total Sales Person",
+            value: "-",
+            icon: Users,
             color: "bg-indigo-500",
-            trend: "+10.3%",
+            trend: "-",
+            link: "/sales-persons",
           },
           {
             label: "Total Devices",
-            value: "120",
-            icon: Users,
+            value: "-",
+            icon: Smartphone,
             color: "bg-purple-500",
-            trend: "+2.1%",
+            trend: "-",
+            link: "/devices",
           },
           {
             label: "Blocked Devices",
-            value: "8",
+            value: "-",
             icon: AlertCircle,
             color: "bg-red-500",
-            trend: "-1.2%",
+            trend: "-",
+            link: "/devices",
           },
         ]
   ).map((item, index) => ({
@@ -238,7 +260,7 @@ export default function DashboardPage() {
       </div>
 
       {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 xl:grid-cols-7"> */}
-      <div className="flex flex-wrap gap-6 w-full justify-center items-start">
+      <div className="flex flex-wrap gap-6 w-full justify-start items-start">
         {loading ? (
           <CommonLoader fullScreen={true} overlay={true} />
         ) : (
@@ -251,11 +273,10 @@ export default function DashboardPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 lg:grid-cols-5 md:grid-cols-3 gap-6 grid">
-          <Card className="lg:col-span-2 md:col-span-3 sm:col-span-3">
-            <InquiryAnalytics />
-          </Card>
-          <div
+        <Card>
+          <InquiryAnalytics />
+        </Card>
+        {/* <div
             className="lg:col-span-3 md:col-span-3 sm:col-span-3 grid p-6 rounded-2xl border"
             style={{
               backgroundColor: tokens.surface,
@@ -337,49 +358,10 @@ export default function DashboardPage() {
                 </AreaChart>
               </ResponsiveContainer>
             </div>
-          </div>
-        </div>
+          </div> */}
 
-        <div
-          className="p-6 rounded-2xl border"
-          style={{
-            backgroundColor: tokens.surface,
-            borderColor: tokens.border,
-          }}
-        >
-          <h3 className="font-bold text-lg mb-6" style={{ color: tokens.text }}>
-            Recent Activity
-          </h3>
-          <div className="space-y-6">
-            {[1, 2, 3, 4, 5].map((i) => (
-              <div key={i} className="flex gap-4">
-                <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0">
-                  <FileText size={18} className="text-blue-600" />
-                </div>
-                <div>
-                  <p
-                    className="text-sm font-bold"
-                    style={{ color: tokens.text }}
-                  >
-                    New Inquiry Received
-                  </p>
-                  <p className="text-xs" style={{ color: tokens.textSec }}>
-                    Customer: John Doe • 2 mins ago
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-          <button
-            className="w-full mt-6 py-2 text-sm font-bold rounded-xl transition-colors"
-            style={{
-              backgroundColor: tokens.borderLight,
-              color: tokens.accent,
-            }}
-          >
-            View All Activity
-          </button>
-        </div>
+        {isSuperUser && <RecentActivity />}
+        {/* {isSuperUser && <LiveLocationsCard />} */}
       </div>
       {/* Broadcast Modal */}
       {showBroadcastModal && (

@@ -1,37 +1,41 @@
 import { AttendanceService } from "@/src/services/attendance.service";
 import { useState, useCallback } from "react";
+import { AttendanceResponse } from "@/src/types/attendance"; // adjust path
 
 export const useGetAttendanceById = () => {
-  const [data, setData] = useState<any>(null);
-  const [loading, setLoading] = useState(false);
+  const [data, setData] = useState<AttendanceResponse | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
-  const getAttendancePerson = useCallback(async (id: string, query: string) => {
-    try {
-      setLoading(true);
-      setError(null);
+  const getAttendancePerson = useCallback(
+    async (id: string, query: string): Promise<AttendanceResponse> => {
+      try {
+        setLoading(true);
+        setError(null);
 
-      const response = await AttendanceService.getAttendancePerson(id, query);
+        const response = await AttendanceService.getAttendancePerson(id, query);
 
-      setData(response?.data);
+        setData(response?.data);
 
-      return response;
-    } catch (err: any) {
-      const message =
-        err?.response?.data?.message || "Failed to fetch attendance records";
+        return response.data;
+      } catch (err: any) {
+        const message =
+          err?.response?.data?.message || "Failed to fetch attendance records";
 
-      setError(message);
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+        setError(message);
+        throw err;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [],
+  );
 
   return {
     data,
     loading,
     error,
     getAttendancePerson,
-    setData, // optional if you want manual updates
+    setData,
   };
 };

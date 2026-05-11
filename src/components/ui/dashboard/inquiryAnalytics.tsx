@@ -12,38 +12,94 @@ import Swal from "sweetalert2";
 // helper for date formatting (yyyy-mm-dd)
 const formatDate = (date: Date) => date.toISOString().split("T")[0];
 
-const getDateRange = (type: string) => {
-  const today = new Date();
+const FILTERS = [
+  {
+    key: "today",
+    label: "Today",
+    getRange: () => {
+      const today = new Date();
 
-  switch (type) {
-    case "7d": {
+      return {
+        from: today,
+        to: today,
+      };
+    },
+  },
+
+  {
+    key: "yesterday",
+    label: "Yesterday",
+    getRange: () => {
+      const today = new Date();
+      const yesterday = new Date();
+
+      yesterday.setDate(today.getDate() - 1);
+
+      return {
+        from: yesterday,
+        to: yesterday,
+      };
+    },
+  },
+
+  {
+    key: "7d",
+    label: "Last 7 Days",
+    getRange: () => {
+      const today = new Date();
       const from = new Date();
+
       from.setDate(today.getDate() - 7);
-      return { from, to: today };
-    }
 
-    case "30d": {
+      return {
+        from,
+        to: today,
+      };
+    },
+  },
+
+  {
+    key: "30d",
+    label: "Last 30 Days",
+    getRange: () => {
+      const today = new Date();
       const from = new Date();
+
       from.setDate(today.getDate() - 30);
-      return { from, to: today };
-    }
 
-    case "thisMonth": {
-      const from = new Date(today.getFullYear(), today.getMonth(), 1);
-      return { from, to: today };
-    }
+      return {
+        from,
+        to: today,
+      };
+    },
+  },
 
-    case "lastMonth": {
-      const from = new Date(today.getFullYear(), today.getMonth() - 1, 1);
-      const to = new Date(today.getFullYear(), today.getMonth(), 0);
-      return { from, to };
-    }
+  {
+    key: "thisMonth",
+    label: "This Month",
+    getRange: () => {
+      const today = new Date();
 
-    default:
-      return { from: today, to: today };
-  }
-};
+      return {
+        from: new Date(today.getFullYear(), today.getMonth(), 1),
+        to: today,
+      };
+    },
+  },
 
+  {
+    key: "lastMonth",
+    label: "Last Month",
+    getRange: () => {
+      const today = new Date();
+
+      return {
+        from: new Date(today.getFullYear(), today.getMonth() - 1, 1),
+        to: new Date(today.getFullYear(), today.getMonth(), 0),
+      };
+    },
+  },
+];
 export default function InquiryAnalytics() {
   const { data, loading, error, getInquiryReportByStatus } =
     useGetInquiryReportByStatus();
@@ -73,14 +129,31 @@ export default function InquiryAnalytics() {
     }
     await getInquiryReportByStatus(from, to);
   };
-  const applyRange = async (type: string) => {
-    const { from, to } = getDateRange(type);
+  // const applyRange = async (type: string) => {
+  //   const { from, to } = getDateRange(type);
+
+  //   const f = formatDate(from);
+  //   const t = formatDate(to);
+
+  //   setFrom(f);
+  //   setTo(t);
+
+  //   await getInquiryReportByStatus(f, t);
+  // };
+  const applyRange = async (filterKey: string) => {
+    const filter = FILTERS.find((f) => f.key === filterKey);
+
+    if (!filter) return;
+
+    const { from, to } = filter.getRange();
 
     const f = formatDate(from);
     const t = formatDate(to);
 
     setFrom(f);
     setTo(t);
+
+    setActiveFilter(filterKey);
 
     await getInquiryReportByStatus(f, t);
   };
@@ -92,53 +165,16 @@ export default function InquiryAnalytics() {
       <h3 className="text-lg font-semibold text-text">Inquiry Status</h3>
       {/* ───── Filters ───── */}
       <div className="flex flex-wrap gap-2">
-        <Button
-          size="sm"
-          variant={activeFilter === "7d" ? "primary" : "ghost"}
-          onClick={() => {
-            setActiveFilter("7d");
-
-            applyRange("7d");
-          }}
-        >
-          Last 7 days
-        </Button>
-
-        <Button
-          size="sm"
-          variant={activeFilter === "30d" ? "primary" : "ghost"}
-          onClick={() => {
-            setActiveFilter("30d");
-
-            applyRange("30d");
-          }}
-        >
-          Last 30 days
-        </Button>
-
-        <Button
-          size="sm"
-          variant={activeFilter === "thisMonth" ? "primary" : "ghost"}
-          onClick={() => {
-            setActiveFilter("thisMonth");
-
-            applyRange("thisMonth");
-          }}
-        >
-          This Month
-        </Button>
-
-        <Button
-          size="sm"
-          variant={activeFilter === "lastMonth" ? "primary" : "ghost"}
-          onClick={() => {
-            setActiveFilter("lastMonth");
-
-            applyRange("lastMonth");
-          }}
-        >
-          Last Month
-        </Button>
+        {FILTERS.map((filter) => (
+          <Button
+            key={filter.key}
+            size="sm"
+            variant={activeFilter === filter.key ? "primary" : "ghost"}
+            onClick={() => applyRange(filter.key)}
+          >
+            {filter.label}
+          </Button>
+        ))}
       </div>
       <div className="grid lg:grid-cols-10 md:grid-cols-6 sm:grid-cols-4 gap-2">
         <div className="lg:col-span-4 md:col-span-2 sm:col-span-1">

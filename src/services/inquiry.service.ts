@@ -11,12 +11,24 @@ export const InquiryService = {
     const { data } = await api.get(`/inquiries?${query}`);
     return data;
   },
+  getTrashInquiries: async (query: string) => {
+    const { data } = await api.get(`/inquiries/trash?${query}`);
+    return data;
+  },
 
   getInquiryById: async (id: string) => {
     const { data } = await api.get(`/inquiries/${id}`);
     return data;
   },
   createInquiry: async (payload: FormData) => {
+    const { data } = await api.post("/inquiries/", payload, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+    return data;
+  },
+  createShareInquiry: async (payload: FormData) => {
     const { data } = await api.post("/inquiries/share", payload, {
       headers: {
         "Content-Type": "multipart/form-data",
@@ -24,16 +36,47 @@ export const InquiryService = {
     });
     return data;
   },
-  editInquiry: async (id: string, payload: FormData) => {
+  editInquiry: async (id: string, payload: EditInquiryPayload) => {
     const { data } = await api.patch(`/inquiries/${id}`, payload);
+    return data;
+  },
+  addImagesInquiry: async (id: string, payload: FormData) => {
+    const { data } = await api.post(`/inquiries/${id}/images`, payload, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
     return data;
   },
   reassignInquiry: async (id: string, payload: { salesPersonId: string }) => {
     const { data } = await api.post(`/inquiries/${id}/reassign`, payload);
     return data;
   },
+  unassignInquiry: async (id: string) => {
+    const { data } = await api.patch(`/inquiries/${id}/unassign`);
+    return data;
+  },
   deleteInquiry: async (id: string) => {
     const { data } = await api.delete(`/inquiries/${id}`);
+    return data;
+  },
+  bulkDeleteInquiry: async (payload: { ids: string[] }) => {
+    const { data } = await api.delete(`/inquiries/bulk`, {
+      data: payload,
+    });
+    return data;
+  },
+  restoreInquiry: async (id: string) => {
+    const { data } = await api.patch(`/inquiries/${id}/restore`);
+    return data;
+  },
+  permanentlyDeleteInquiry: async (id: string) => {
+    const { data } = await api.delete(`/inquiries/${id}/permanent`);
+    return data;
+  },
+
+  imageDeleteInquiry: async (id: string, imageId: string) => {
+    const { data } = await api.delete(`/inquiries/${id}/images/${imageId}`);
     return data;
   },
 };

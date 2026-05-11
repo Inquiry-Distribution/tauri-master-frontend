@@ -5,7 +5,7 @@ import Layout from "../components/layout/Layout";
 import DashboardPage from "../pages/dashboard";
 import InquiriesPage from "../pages/inquiries";
 import SalesPersonsPage from "../pages/users";
-import SalesPersonReportPage from "../pages/users/report";
+
 import DevicesPage from "../pages/devices";
 import AIReportsPage from "../pages/ai-reports";
 import NotFound from "../components/layout/NotFound";
@@ -15,6 +15,11 @@ import RegisterPage from "../pages/auth/register";
 import ForgotPasswordPage from "../pages/auth/forgot-password";
 import InquiryDetailPage from "../pages/inquiries/detail";
 import AttendancePage from "../pages/attendance";
+import NotificationsPage from "../pages/notifications";
+import SalesPersonReportPage from "../pages/users/detail";
+import SettingsPage from "../pages/settings";
+import TrashInquiriesPage from "../pages/inquiries/trash";
+import AdminsPage from "../pages/admins";
 
 export default function AppRoutes() {
   return useRoutes([
@@ -42,16 +47,25 @@ export default function AppRoutes() {
             { path: "inquiries", element: <InquiriesPage /> },
             { path: "inquiries/create", element: <CreateInquiry /> },
             { path: "inquiries/:id", element: <InquiryDetailPage /> },
+            { path: "inquiries/trash", element: <TrashInquiriesPage /> },
             { path: "sales-persons", element: <SalesPersonsPage /> },
+            { path: "admins", element: <AdminsPage /> },
             { path: "sales-persons/:id", element: <SalesPersonReportPage /> },
             { path: "devices", element: <DevicesPage /> },
+            { path: "notifications", element: <NotificationsPage /> },
             // { path: "ai-reports", element: <AIReportsPage /> },
             { path: "attendance", element: <AttendancePage /> },
+            {
+              element: <ProtectedRoute allowedRoles={["superuser"]} />,
+              children: [{ path: "settings", element: <SettingsPage /> }],
+            },
+
             { path: "*", element: <NotFound /> },
           ],
         },
       ],
     },
+
     { path: "*", element: <NotFound /> },
   ]);
 }

@@ -1,5 +1,6 @@
-import { useContext } from "react";
+import { useContext, useState } from "react";
 import { ThemeContext } from "@/src/contexts/index";
+import { Eye, EyeClosed } from "lucide-react";
 
 const Input = ({
   label,
@@ -32,9 +33,13 @@ const Input = ({
   onBlur?: (e: React.FocusEvent<HTMLInputElement>) => void;
 }) => {
   const ctx = useContext(ThemeContext);
+  const [showPassword, setShowPassword] = useState(false);
+
   if (!ctx) return null;
 
   const { tokens } = ctx;
+
+  const isPassword = inputType === "password";
 
   return (
     <div className="w-full">
@@ -49,7 +54,7 @@ const Input = ({
       )}
 
       <div
-        className={`rounded-lg border transition ${
+        className={`relative rounded-lg border transition ${
           disabled ? "opacity-70 cursor-not-allowed" : ""
         }`}
         style={{
@@ -60,18 +65,29 @@ const Input = ({
         <input
           id={inputName}
           name={inputName}
-          type={inputType}
+          type={isPassword && showPassword ? "text" : inputType}
           value={inputValue}
           placeholder={placeholder}
           disabled={disabled}
           onChange={onChange}
           onBlur={onBlur}
-          className={`w-full px-3 py-2 text-[13px] rounded-lg outline-none bg-transparent placeholder:text-gray-400 ${customClassName}`}
-          style={{
-            color: tokens.text,
-          }}
+          className={`w-full px-3 py-2 text-[13px] rounded-lg outline-none bg-transparent placeholder:text-gray-400 ${
+            isPassword ? "pr-10" : ""
+          } ${customClassName}`}
+          style={{ color: tokens.text }}
           {...props}
         />
+
+        {isPassword && (
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500"
+            tabIndex={-1}
+          >
+            {!showPassword ? <EyeClosed size={20} /> : <Eye size={20} />}
+          </button>
+        )}
       </div>
 
       {subLabel && (

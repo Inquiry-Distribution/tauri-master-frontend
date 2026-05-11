@@ -7,12 +7,12 @@ export const useCreateNotification = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const createNotification = async (formValues: FormData | Notification) => {
+  const createNotification = async (formValues: Notification) => {
     try {
       setLoading(true);
       setError(null);
 
-      const payload = mapNotificationFormToPayload(formValues as any);
+      const payload = mapNotificationFormToPayload(formValues);
 
       const response = await NotificationService.sendNotification(
         payload as any,

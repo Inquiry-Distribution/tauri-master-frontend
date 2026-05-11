@@ -18,10 +18,18 @@ import { useTheme } from "@/src/contexts";
 import { useGetInquiryById } from "@/src/hooks/inquiry/useGetInquiryById";
 import { Inquiry, InquiryNote } from "@/src/types/inquiry";
 import { formatDateTime } from "@/src/utils/utils";
-import { Edit } from "lucide-react";
+import { Download, Edit, Eye, Trash, UserRoundX } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import EditInquiryForm from "../edit/_form";
+import { useUnassignInquiry } from "@/src/hooks/inquiry/useUnassignInquiry";
+import Swal from "sweetalert2";
+import DOMPurify from "dompurify";
+import { writeFile } from "@tauri-apps/plugin-fs";
+import { save } from "@tauri-apps/plugin-dialog";
+import { tempDir } from "@tauri-apps/api/path";
+import { m } from "motion/react";
+import { useImageDeleteInquiry } from "@/src/hooks/inquiry/useImageDeleteInquiry";
 
 const toUrl = (path: string) =>
   `${import.meta.env.VITE_PUBLIC_ASSET_URL}` + path;
@@ -34,6 +42,77 @@ export default function InquiryDetailPage() {
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const [isReassignOpen, setIsReassignOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
+
+  const [menu, setMenu] = useState<{
+    x: number;
+    y: number;
+    file: Inquiry["images"][number] | null;
+  } | null>(null);
+
+  // const openAttachment = async (img: any) => {
+  //   const url = toUrl(img.url);
+  //   await open(url);
+  //   // window.open(url, "_blank"); // or use Tauri open if needed
+  // };
+  const openAttachment = async (img: any) => {
+    try {
+      const url = toUrl(img.url);
+
+      // fetch remote file
+      const response = await fetch(url, {
+        credentials: "include",
+      });
+
+      const blob = await response.blob();
+      const buffer = new Uint8Array(await blob.arrayBuffer());
+
+      // create temp file path
+      const tempPath = `${await tempDir()}${img.filename}`;
+
+      // save locally
+      await writeFile(tempPath, buffer);
+
+      // open with native app
+      await open(tempPath);
+    } catch (err) {
+      console.error("Open attachment failed:", err);
+    }
+  };
+  const downloadAttachment = async (img: any) => {
+    try {
+      const url = toUrl(img.url);
+
+      // Open native save dialog
+      const filePath = await save({
+        defaultPath: img.filename || "file",
+      });
+
+      if (!filePath) return; // user cancelled
+
+      // Fetch file
+      const response = await fetch(url);
+      const blob = await response.blob();
+
+      // Convert blob to Uint8Array
+      const buffer = new Uint8Array(await blob.arrayBuffer());
+
+      // Save file natively
+      await writeFile(filePath, buffer);
+    } catch (err) {
+      console.error("Download failed:", err);
+    }
+  };
+  const {
+    unassignInquiry,
+    loading: unassignLoading,
+    error: unassignError,
+  } = useUnassignInquiry();
+  const {
+    deleteImageInquiry,
+    loading: deleteLoading,
+    error: deleteError,
+  } = useImageDeleteInquiry();
+
   //   const inquiry = MOCK_INQUIRY; // swap with useQuery / useFetch hook
   const {
     data: inquiry,
@@ -50,12 +129,101 @@ export default function InquiryDetailPage() {
     }
   }, [id, getInquiryById]);
 
-  const lightboxItems =
-    inquiry?.images?.map((img: any) => ({
-      url: toUrl(img.url), // adjust if backend needs full URL
-      name: img.filename,
-    })) || [];
+  const isPreviewableMedia = (file: any) => {
+    const name = file?.filename?.toLowerCase() || "";
 
+    return (
+      name.match(/\.(jpg|jpeg|png|gif|webp|bmp|svg|mp4|webm|ogg|mov)$/i) !==
+      null
+    );
+  };
+
+  const mediaFiles =
+    inquiry?.images?.filter((file: any) => isPreviewableMedia(file)) || [];
+
+  const otherFiles =
+    inquiry?.images?.filter((file: any) => !isPreviewableMedia(file)) || [];
+
+  // const lightboxItems =
+  //   inquiry?.images?.map((img: any) => ({
+  //     url: toUrl(img.url), // adjust if backend needs full URL
+  //     name: img.filename,
+  //   })) || [];
+  const lightboxItems = mediaFiles.map((img: any) => ({
+    url: toUrl(img.url),
+    name: img.filename,
+  }));
+  const handleUnassign = async () => {
+    if (!id) {
+      return;
+    }
+    Swal.fire({
+      title: "Are you sure you want to unassign this inquiry?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Yes",
+      cancelButtonText: "No",
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        await unassignInquiry(id!);
+        setInquiry({ ...inquiry, status: "unassigned", assignedTo: null });
+      }
+    });
+  };
+  const handleDeleteFile = async (imageId: string) => {
+    if (!id || !inquiry) return;
+
+    const previousImages = inquiry.images || [];
+
+    const result = await Swal.fire({
+      title: "Are you sure you want to delete this file?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Yes",
+      cancelButtonText: "No",
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      await deleteImageInquiry(id, imageId);
+
+      Swal.fire({
+        icon: "success",
+        title: "Deleted",
+        text: "File deleted successfully.",
+        timer: 1500,
+        showConfirmButton: false,
+      });
+      // ✅ Optimistically remove from UI immediately
+      setInquiry((prev: any) => {
+        if (!prev) return prev;
+
+        return {
+          ...prev,
+          images: prev.images?.filter((img: any) => img.id !== imageId) || [],
+        };
+      });
+    } catch (err) {
+      console.error(err);
+
+      // // ❌ Rollback if API fails
+      // setInquiry((prev: any) => {
+      //   if (!prev) return prev;
+
+      //   return {
+      //     ...prev,
+      //     images: previousImages,
+      //   };
+      // });
+
+      Swal.fire({
+        icon: "error",
+        title: "Delete failed",
+        text: "Could not delete the file.",
+      });
+    }
+  };
   return (
     <div
       className="min-h-screen px-4 py-6 md:px-8 md:py-8"
@@ -72,10 +240,19 @@ export default function InquiryDetailPage() {
         </button>
 
         <div className="flex items-center gap-2">
+          {inquiry?.status === "assigned" && (
+            <Button variant="secondary" onClick={handleUnassign}>
+              <span className="flex items-center gap-1.5">
+                {/* {Icon.refresh} */}
+                <UserRoundX size={20} />
+                Unassign
+              </span>
+            </Button>
+          )}
           <Button variant="secondary" onClick={() => setIsReassignOpen(true)}>
             <span className="flex items-center gap-1.5">
               {Icon.refresh}
-              Reassign
+              {inquiry?.status === "assigned" ? "Reassign" : "Assign"}
             </span>
           </Button>
           <Button variant="secondary" onClick={() => setIsEditOpen(true)}>
@@ -106,7 +283,12 @@ export default function InquiryDetailPage() {
           {inquiry?.title ? (
             inquiry.title
           ) : inquiry?.description ? (
-            <div className="line-clamp-1">{inquiry.description}</div>
+            <div
+              className="line-clamp-1"
+              dangerouslySetInnerHTML={{
+                __html: DOMPurify.sanitize(inquiry.description),
+              }}
+            ></div>
           ) : (
             "Untitled Inquiry"
           )}
@@ -124,13 +306,18 @@ export default function InquiryDetailPage() {
           {/* Description */}
           <Card>
             <SectionHeading>Description</SectionHeading>
-            <p className="text-sm text-(--text) leading-relaxed whitespace-pre-wrap">
-              {inquiry?.description || (
-                <span className="text-(--textMuted) italic">
-                  No description provided.
-                </span>
-              )}
-            </p>
+            <p
+              className="text-sm text-(--text) leading-relaxed whitespace-pre-wrap"
+              dangerouslySetInnerHTML={{
+                __html: DOMPurify.sanitize(
+                  inquiry?.description || (
+                    <span className="text-(--textMuted) italic">
+                      No description provided.
+                    </span>
+                  ),
+                ),
+              }}
+            ></p>
           </Card>
 
           {/* Attached images */}
@@ -140,20 +327,46 @@ export default function InquiryDetailPage() {
                 Attachments ({inquiry?.images?.length ?? 0})
               </SectionHeading>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                {inquiry?.images?.map(
-                  (img: Inquiry["images"][number], i: number) => (
-                    <div
-                      key={img.id}
-                      onClick={() => {
-                        setLightboxIndex(i);
-                        setLightboxOpen(true);
-                      }}
-                      className="cursor-pointer"
-                    >
-                      <ImageThumb img={img} />
-                    </div>
-                  ),
-                )}
+                {mediaFiles.map((img: Inquiry["images"][number], i: number) => (
+                  <div
+                    key={img.id}
+                    className="cursor-pointer"
+                    onClick={() => {
+                      setLightboxIndex(i);
+                      setLightboxOpen(true);
+                    }}
+                    onContextMenu={(e) => {
+                      e.preventDefault();
+                      setMenu({
+                        x: e.clientX,
+                        y: e.clientY,
+                        file: img,
+                      });
+                    }}
+                  >
+                    <ImageThumb img={img} />
+                  </div>
+                ))}
+                {otherFiles.map((img: Inquiry["images"][number], i: number) => (
+                  <div
+                    key={img.id}
+                    className="cursor-pointer"
+                    onClick={() => {
+                      setLightboxIndex(i);
+                      setLightboxOpen(true);
+                    }}
+                    onContextMenu={(e) => {
+                      e.preventDefault();
+                      setMenu({
+                        x: e.clientX,
+                        y: e.clientY,
+                        file: img,
+                      });
+                    }}
+                  >
+                    <ImageThumb img={img} />
+                  </div>
+                ))}
               </div>
             </Card>
           )}
@@ -387,7 +600,6 @@ export default function InquiryDetailPage() {
         initialIndex={lightboxIndex}
         onClose={() => setLightboxOpen(false)}
         // onDelete={(i) => {
-        //   console.log("delete image at index:", i);
 
         //   // optional: call API + refetch
         //   // deleteInquiryImage(inquiry.id, lightboxItems[i].id)
@@ -395,6 +607,57 @@ export default function InquiryDetailPage() {
         //   setLightboxOpen(false);
         // }}
       />
+
+      {menu?.file && (
+        <div
+          className="rounded-xl"
+          style={{
+            position: "fixed",
+            top: menu.y,
+            left: menu.x,
+            background: "var(--surface)",
+            border: "1px solid var(--border)",
+            borderRadius: 10,
+            boxShadow: "0 10px 30px rgba(0,0,0,0.2)",
+            zIndex: 9999,
+            minWidth: 160,
+            overflow: "hidden",
+          }}
+          onMouseLeave={() => setMenu(null)}
+        >
+          {/* <button
+            className="w-full text-left px-3 py-2 text-sm"
+            onClick={() => {
+              openAttachment(inquiry.images[menu.index!]);
+              setMenu(null);
+            }}
+          >
+            <Eye className="inline-block" size={14} /> Open
+          </button> */}
+
+          <button
+            className="w-full text-left px-3 py-2 text-sm"
+            onClick={() => {
+              downloadAttachment(menu.file);
+              setMenu(null);
+            }}
+          >
+            <Download className="inline-block" size={14} /> Download
+          </button>
+          <button
+            className="w-full text-left px-3 py-2 text-sm text-danger"
+            onClick={() => {
+              // downloadAttachment(menu.file);
+              if (menu?.file?.id) {
+                handleDeleteFile(menu.file.id);
+              }
+              setMenu(null);
+            }}
+          >
+            <Trash className="inline-block text-danger" size={14} /> Delete
+          </button>
+        </div>
+      )}
     </div>
   );
 }

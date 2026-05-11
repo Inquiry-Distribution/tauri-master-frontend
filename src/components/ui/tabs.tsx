@@ -5,7 +5,7 @@ import { useTheme } from "@/src/contexts";
 
 export type TabItem = {
   key: string;
-  label: string;
+  label: ReactNode;
   icon?: ReactNode;
   content?: ReactNode;
 };

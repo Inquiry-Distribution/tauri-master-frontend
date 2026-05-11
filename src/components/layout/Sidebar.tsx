@@ -10,6 +10,8 @@ import {
   LogOut,
   X,
   Calendar,
+  Bell,
+  Users2,
 } from "lucide-react";
 import { useTheme } from "@/src/contexts";
 import { useLayout } from "@/src/hooks/useLayout";
@@ -17,11 +19,54 @@ import { cn } from "@/src/utils/utils";
 import { useAuth } from "@/src/contexts/authContext";
 
 const menuItems = [
-  { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
-  { icon: FileText, label: "Inquiries", path: "/inquiries" },
-  { icon: Users, label: "Sales Persons", path: "/sales-persons" },
-  { icon: Calendar, label: "Attendance", path: "/attendance" },
-  { icon: Smartphone, label: "Devices", path: "/devices" },
+  {
+    icon: LayoutDashboard,
+    label: "Dashboard",
+    path: "/dashboard",
+    roles: ["admin", "superuser"],
+  },
+  {
+    icon: FileText,
+    label: "Inquiries",
+    path: "/inquiries",
+    roles: ["admin", "superuser"],
+  },
+  {
+    icon: Users,
+    label: "Sales Persons",
+    path: "/sales-persons",
+    roles: ["admin", "superuser"],
+  },
+  {
+    icon: Calendar,
+    label: "Attendance",
+    path: "/attendance",
+    roles: ["admin", "superuser"],
+  },
+  {
+    icon: Smartphone,
+    label: "Devices",
+    path: "/devices",
+    roles: ["admin", "superuser"],
+  },
+  {
+    icon: Bell,
+    label: "Notifications",
+    path: "/notifications",
+    roles: ["admin", "superuser"],
+  },
+  {
+    icon: Users2,
+    label: "Admins",
+    path: "/admins",
+    roles: ["superuser"],
+  },
+  {
+    icon: Settings,
+    label: "Settings",
+    path: "/settings",
+    roles: ["superuser"],
+  },
   // { icon: BarChart3, label: "AI Reports", path: "/ai-reports" },
 ];
 
@@ -30,7 +75,10 @@ export default function Sidebar() {
   const { sidebarOpen, setSidebarOpen, isMobile } = useLayout();
   const { logout } = useAuth();
   const navigate = useNavigate();
+  const userData = JSON.parse(localStorage.getItem("userData") || "{}");
+  const role = userData?.role;
 
+  const filteredItems = menuItems.filter((item) => item.roles.includes(role));
   const handleLogout = async () => {
     await logout();
     navigate("/login");
@@ -97,10 +145,13 @@ export default function Sidebar() {
             Main Menu
           </span>
         </div>
-        {menuItems.map((item) => (
+        {filteredItems.map((item) => (
           <NavLink
             key={item.path}
             to={item.path}
+            onClick={() => {
+              if (isMobile) setSidebarOpen(false);
+            }}
             className={({ isActive }) =>
               cn(
                 "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group relative",

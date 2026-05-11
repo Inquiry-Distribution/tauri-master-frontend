@@ -52,16 +52,16 @@ function DynamicTable<T extends Record<string, any>>({
   // ── Selection helpers ──────────────────────────────────────────────────────
   const safeSelected = selectedRows ?? [];
 
-  const identity = (row: T) => (rowKey ? rowKey(row) : data.indexOf(row));
-
+  // const identity = (row: T) => (rowKey ? rowKey(row) : data.indexOf(row));
+  const identity = (row: T, index: number) => (rowKey ? rowKey(row) : index);
   const isSelected = (row: T) =>
-    safeSelected.some((r) => identity(r) === identity(row));
+    safeSelected.some((r, i) => identity(r, i) === identity(row, i));
 
   const toggleRow = (row: T) => {
     if (!onSelectChange) return;
     isSelected(row)
       ? onSelectChange(
-          safeSelected.filter((r) => identity(r) !== identity(row)),
+          safeSelected.filter((r, i) => identity(r, i) !== identity(row, i)),
         )
       : onSelectChange([...safeSelected, row]);
   };
@@ -74,10 +74,10 @@ function DynamicTable<T extends Record<string, any>>({
   };
 
   // Reset selection when data changes
-  useEffect(() => {
-    onSelectChange?.([]);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data]);
+  // useEffect(() => {
+  //   onSelectChange?.([]);
+  //   // eslint-disable-next-line react-hooks/exhaustive-deps
+  // }, [data]);
 
   // ── Sorting ────────────────────────────────────────────────────────────────
   const handleSort = (col: TableColumn<T>) => {
@@ -268,8 +268,11 @@ function DynamicTable<T extends Record<string, any>>({
                     onClick={() => onRowClick?.(row)}
                     className={cn(
                       onRowClick && "cursor-pointer",
-                      striped && ri % 2 !== 0 && "bg-(--surface)/40",
-                      selected && "bg-(--primary)/5",
+                      striped === true && ri % 2 !== 0 ? "bg-(--bg)/40!" : "",
+                      striped === true && ri % 2 === 0
+                        ? "bg-(--surface)/40!"
+                        : "",
+                      selected && "bg-(--primary)/5!",
                     )}
                   >
                     {/* Checkbox cell */}

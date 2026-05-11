@@ -1,29 +1,7 @@
-import * as XLSX from "xlsx";
-import { saveAs } from "file-saver";
-import { Attendance } from "../types/attendance";
-import { formatAttendanceForExport } from "../mappers/attendance.mapper";
-
-// export const exportAttendanceExcel = (data: Attendance[]) => {
-//   const formattedData = formatAttendanceForExport(data);
-
-//   const worksheet = XLSX.utils.json_to_sheet(formattedData);
-
-//   const workbook = XLSX.utils.book_new();
-//   XLSX.utils.book_append_sheet(workbook, worksheet, "Attendance");
-
-//   const excelBuffer = XLSX.write(workbook, {
-//     bookType: "xlsx",
-//     type: "array",
-//   });
-
-//   const file = new Blob([excelBuffer], {
-//     type: "application/octet-stream",
-//   });
-
-//   saveAs(file, "attendance.xlsx");
-// };
-
+import { writeFile } from "@tauri-apps/plugin-fs";
+import { save } from "@tauri-apps/plugin-dialog";
 import ExcelJS from "exceljs";
+import { Attendance } from "../types/attendance";
 
 export const exportAttendanceExcel = async (data: Attendance[]) => {
   const workbook = new ExcelJS.Workbook();
@@ -55,7 +33,6 @@ export const exportAttendanceExcel = async (data: Attendance[]) => {
 
   dashboard.getRow(3).font = { bold: true };
 
-  // Status breakdown table (for charts)
   dashboard.addRow([]);
   dashboard.addRow(["Status", "Count"]);
   [
@@ -83,7 +60,6 @@ export const exportAttendanceExcel = async (data: Attendance[]) => {
       { header: "Address", key: "address", width: 40 },
     ];
 
-    // 🔥 Header styling
     sheet.getRow(1).eachCell((cell) => {
       cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
       cell.fill = {
@@ -94,7 +70,6 @@ export const exportAttendanceExcel = async (data: Attendance[]) => {
       cell.alignment = { horizontal: "center" };
     });
 
-    // Freeze + filter
     sheet.views = [{ state: "frozen", ySplit: 1 }];
     sheet.autoFilter = { from: "A1", to: "H1" };
 
@@ -117,7 +92,6 @@ export const exportAttendanceExcel = async (data: Attendance[]) => {
 
     const lastRow = sheet.rowCount;
 
-    // 🎨 CONDITIONAL FORMATTING (STATUS)
     sheet.addConditionalFormatting({
       ref: `G2:G${lastRow}`,
       rules: [
@@ -166,37 +140,58 @@ export const exportAttendanceExcel = async (data: Attendance[]) => {
       ],
     });
 
-    // ✅ Wrap text
     sheet.eachRow((row) => {
       row.eachCell((cell) => {
-        cell.alignment = {
-          wrapText: true,
-          vertical: "middle",
-        };
+        cell.alignment = { wrapText: true, vertical: "middle" };
       });
     });
   };
 
-  // =========================
-  // 📄 MULTIPLE SHEETS
-  // =========================
-  const presentData = data.filter((d) => d.status === "present");
-  const absentData = data.filter((d) => d.status === "absent");
-  const halfDayData = data.filter((d) => d.status === "half_day");
-
   createSheet("All", data);
-  createSheet("Present", presentData);
-  createSheet("Absent", absentData);
-  createSheet("Half Day", halfDayData);
+  createSheet(
+    "Present",
+    data.filter((d) => d.status === "present"),
+  );
+  createSheet(
+    "Absent",
+    data.filter((d) => d.status === "absent"),
+  );
+  createSheet(
+    "Half Day",
+    data.filter((d) => d.status === "half_day"),
+  );
 
   // =========================
   // 📤 EXPORT
   // =========================
   const buffer = await workbook.xlsx.writeBuffer();
+  const uint8Array = new Uint8Array(buffer as ArrayBuffer);
 
-  const blob = new Blob([buffer], {
-    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-  });
+  // ✅ Check for Tauri environment correctly
+  const isTauri = "__TAURI_INTERNALS__" in window;
 
-  saveAs(blob, "attendance_report.xlsx");
+  if (isTauri) {
+    const filePath = await save({
+      defaultPath: "attendance_report.xlsx",
+      filters: [{ name: "Excel", extensions: ["xlsx"] }],
+    });
+
+    // User cancelled the dialog
+    if (!filePath) return;
+
+    // ✅ Tauri v2: writeFile(path, data)
+    await writeFile(filePath, uint8Array);
+  } else {
+    const blob = new Blob([uint8Array], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "attendance_report.xlsx";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url); // ✅ Clean up the object URL
+  }
 };

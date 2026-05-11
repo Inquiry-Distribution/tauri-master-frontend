@@ -48,4 +48,12 @@ export const getStatusStyleMap = (isDark: boolean) => ({
     bg: isDark ? "#11182733" : "#e5e7eb",
     color: isDark ? "#9ca3af" : "#374151",
   },
+  not_interested: {
+    bg: isDark ? "#37415133" : "#e5e7eb",
+    color: isDark ? "#d1d5db" : "#374151",
+  },
+  converted: {
+    bg: isDark ? "#14532d33" : "#dcfce7",
+    color: isDark ? "#86efac" : "#15803d",
+  },
 });

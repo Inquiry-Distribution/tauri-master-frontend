@@ -9,6 +9,7 @@ import {
   statusColor,
 } from "./helpers";
 import ButtonLoader from "../../loader/buttonLoader";
+import { Button } from "../../button";
 
 const ShareInquiry = ({
   person,
@@ -17,10 +18,34 @@ const ShareInquiry = ({
   onConfirm,
   loading,
 }: ShareInquiryModalProps) => {
+  if (!person) {
+    return (
+      <div className="flex w-full flex-col items-center gap-3.5">
+        <div className="text-sm mb-4">No salesperson selected</div>
+
+        <div className="flex w-full justify-center items-center gap-2">
+          <Button onClick={onClose} variant="danger" size="md">
+            Cancel
+          </Button>
+
+          <Button
+            onClick={() => {
+              onConfirm(null);
+              onClose();
+            }}
+            size="md"
+            variant="primary"
+          >
+            Continue
+          </Button>
+        </div>
+      </div>
+    );
+  }
   const ctx = useContext(ThemeContext);
   if (!ctx) return null;
   const { tokens } = ctx;
-  const w = person.workload ?? {
+  const w = person?.workload ?? {
     inquiriesOpen: 0,
     inquiriesLimit: 0,
     avgResponseMin: 0,
