@@ -20,5 +20,6 @@
     "fs:allow-download-write",
     "fs:scope-download-recursive",
     "fs:scope-home-recursive"
-  ]
+  ],
+  "csp": "default-src 'self' data: blob: filesystem: ws: http://localhost:* https://*.tile.openstreetmap.org;"
 }

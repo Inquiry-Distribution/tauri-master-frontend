@@ -37,37 +37,106 @@ import { useDebounce } from "@/src/utils/utils";
 
 const formatDate = (date: Date) => date.toISOString().split("T")[0];
 
-const getDateRange = (type: string) => {
-  const today = new Date();
+type FilterKey =
+  | "today"
+  | "yesterday"
+  | "7d"
+  | "30d"
+  | "thisMonth"
+  | "lastMonth";
 
-  switch (type) {
-    case "7d": {
+export const DATE_FILTERS: {
+  key: FilterKey;
+  label: string;
+  getRange: () => { from: Date; to: Date };
+}[] = [
+  {
+    key: "today",
+    label: "Today",
+    getRange: () => {
+      const today = new Date();
+
+      return {
+        from: today,
+        to: today,
+      };
+    },
+  },
+
+  {
+    key: "yesterday",
+    label: "Yesterday",
+    getRange: () => {
+      const today = new Date();
+      const yesterday = new Date();
+
+      yesterday.setDate(today.getDate() - 1);
+
+      return {
+        from: yesterday,
+        to: yesterday,
+      };
+    },
+  },
+
+  {
+    key: "7d",
+    label: "Last 7 Days",
+    getRange: () => {
+      const today = new Date();
       const from = new Date();
+
       from.setDate(today.getDate() - 7);
-      return { from, to: today };
-    }
 
-    case "30d": {
+      return {
+        from,
+        to: today,
+      };
+    },
+  },
+
+  {
+    key: "30d",
+    label: "Last 30 Days",
+    getRange: () => {
+      const today = new Date();
       const from = new Date();
+
       from.setDate(today.getDate() - 30);
-      return { from, to: today };
-    }
 
-    case "thisMonth": {
-      const from = new Date(today.getFullYear(), today.getMonth(), 1);
-      return { from, to: today };
-    }
+      return {
+        from,
+        to: today,
+      };
+    },
+  },
 
-    case "lastMonth": {
-      const from = new Date(today.getFullYear(), today.getMonth() - 1, 1);
-      const to = new Date(today.getFullYear(), today.getMonth(), 0);
-      return { from, to };
-    }
+  {
+    key: "thisMonth",
+    label: "This Month",
+    getRange: () => {
+      const today = new Date();
 
-    default:
-      return { from: today, to: today };
-  }
-};
+      return {
+        from: new Date(today.getFullYear(), today.getMonth(), 1),
+        to: today,
+      };
+    },
+  },
+
+  {
+    key: "lastMonth",
+    label: "Last Month",
+    getRange: () => {
+      const today = new Date();
+
+      return {
+        from: new Date(today.getFullYear(), today.getMonth() - 1, 1),
+        to: new Date(today.getFullYear(), today.getMonth(), 0),
+      };
+    },
+  },
+];
 export default function InquiriesTable({ personId }: { personId: string }) {
   const { tokens } = useTheme();
   const [searchTerm, setSearchTerm] = useState("");
@@ -165,19 +234,64 @@ export default function InquiriesTable({ personId }: { personId: string }) {
     getInquiries(`page=${newPage}&limit=${limit}`);
   };
 
-  const applyRange = (type: string) => {
-    const { from, to } = getDateRange(type);
+  const applyRange = (filterKey: FilterKey) => {
+    const filter = DATE_FILTERS.find((f) => f.key === filterKey);
+
+    if (!filter) return;
+
+    const { from, to } = filter.getRange();
 
     setFrom(formatDate(from));
     setTo(formatDate(to));
 
-    setActiveRange(type);
+    setActiveRange(filterKey);
     setFilterMode("range");
     setPage(1);
   };
 
   const inquiries = data?.inquiries || [];
+  const statusCounts = data?.statusCounts || {};
+
   const totalPages = Math.ceil((data?.total || 0) / (data?.limit || 10));
+
+  const visibleTabs = useMemo(() => {
+    return tabFilters
+      .filter((tab) => {
+        if (personId && tab.hideWhenAssignedPersonSelected) {
+          return false;
+        }
+        return true;
+      })
+      .map((tab) => {
+        const isActive = activeTab === tab.key;
+
+        return {
+          ...tab,
+          label: (
+            <div className="flex items-center gap-2 text-xs">
+              <span>{tab.label}</span>
+
+              {statusCounts?.[tab.key] != null && (
+                <span
+                  className="px-2 py-0.5 text-xs rounded-full font-medium transition-all"
+                  style={{
+                    background: isActive
+                      ? tokens.accent
+                      : tokens.surfaceElevated,
+                    color: isActive ? "#fff" : tokens.textMuted,
+                    border: `1px solid ${
+                      isActive ? tokens.accent : tokens.border
+                    }`,
+                  }}
+                >
+                  {statusCounts?.[tab.key] ?? 0}
+                </span>
+              )}
+            </div>
+          ),
+        };
+      });
+  }, [personId, statusCounts, activeTab, tokens]);
   return (
     <div className=" bg-surface space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -243,37 +357,16 @@ export default function InquiriesTable({ personId }: { personId: string }) {
                 Date Range:
               </div>
 
-              <Button
-                size="sm"
-                variant={activeRange === "7d" ? "primary" : "ghost"}
-                onClick={() => applyRange("7d")}
-              >
-                Last 7 days
-              </Button>
-
-              <Button
-                size="sm"
-                variant={activeRange === "30d" ? "primary" : "ghost"}
-                onClick={() => applyRange("30d")}
-              >
-                Last 30 days
-              </Button>
-
-              <Button
-                size="sm"
-                variant={activeRange === "thisMonth" ? "primary" : "ghost"}
-                onClick={() => applyRange("thisMonth")}
-              >
-                This Month
-              </Button>
-
-              <Button
-                size="sm"
-                variant={activeRange === "lastMonth" ? "primary" : "ghost"}
-                onClick={() => applyRange("lastMonth")}
-              >
-                Last Month
-              </Button>
+              {DATE_FILTERS.map((filter) => (
+                <Button
+                  key={filter.key}
+                  size="sm"
+                  variant={activeRange === filter.key ? "primary" : "ghost"}
+                  onClick={() => applyRange(filter.key)}
+                >
+                  {filter.label}
+                </Button>
+              ))}
             </div>
 
             {/* PRIORITY FILTER */}
@@ -378,7 +471,7 @@ export default function InquiriesTable({ personId }: { personId: string }) {
           setActiveTab(key);
           setPage(1); // reset pagination on tab change
         }}
-        tabs={tabFilters.map((tab) => ({
+        tabs={visibleTabs.map((tab) => ({
           key: tab.key,
           label: tab.label,
           content: (

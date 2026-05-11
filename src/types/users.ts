@@ -96,6 +96,7 @@ export type SalesPersonReport = {
   inProgress: number;
   followUp: number;
   converted: number;
+  notInterested: number;
   conversionRate: string;
   closeRate: string;
 };

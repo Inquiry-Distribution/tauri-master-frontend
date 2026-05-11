@@ -177,7 +177,14 @@ export const getInquiryColumns = ({
 
 export const tabFilters = [
   { key: "all", label: "All", status: "" },
-  { key: "unassigned", label: "Unassigned", status: "unassigned" },
+
+  {
+    key: "unassigned",
+    label: "Unassigned",
+    status: "unassigned",
+    hideWhenAssignedPersonSelected: true,
+  },
+
   { key: "assigned", label: "Assigned", status: "assigned" },
   { key: "in_progress", label: "In Progress", status: "in_progress" },
   { key: "follow_up", label: "Follow Up", status: "follow_up" },

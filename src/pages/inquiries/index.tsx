@@ -38,37 +38,138 @@ import { useBulkDeleteInquiry } from "@/src/hooks/inquiry/useBulkDeleteInquiry";
 
 const formatDate = (date: Date) => date.toISOString().split("T")[0];
 
-const getDateRange = (type: string) => {
-  const today = new Date();
+type FilterKey =
+  | "today"
+  | "yesterday"
+  | "7d"
+  | "30d"
+  | "thisMonth"
+  | "lastMonth";
 
-  switch (type) {
-    case "7d": {
+export const DATE_FILTERS: {
+  key: FilterKey;
+  label: string;
+  getRange: () => { from: Date; to: Date };
+}[] = [
+  {
+    key: "today",
+    label: "Today",
+    getRange: () => {
+      const today = new Date();
+
+      return {
+        from: today,
+        to: today,
+      };
+    },
+  },
+
+  {
+    key: "yesterday",
+    label: "Yesterday",
+    getRange: () => {
+      const today = new Date();
+      const yesterday = new Date();
+
+      yesterday.setDate(today.getDate() - 1);
+
+      return {
+        from: yesterday,
+        to: yesterday,
+      };
+    },
+  },
+
+  {
+    key: "7d",
+    label: "Last 7 Days",
+    getRange: () => {
+      const today = new Date();
       const from = new Date();
+
       from.setDate(today.getDate() - 7);
-      return { from, to: today };
-    }
 
-    case "30d": {
+      return {
+        from,
+        to: today,
+      };
+    },
+  },
+
+  {
+    key: "30d",
+    label: "Last 30 Days",
+    getRange: () => {
+      const today = new Date();
       const from = new Date();
+
       from.setDate(today.getDate() - 30);
-      return { from, to: today };
-    }
 
-    case "thisMonth": {
-      const from = new Date(today.getFullYear(), today.getMonth(), 1);
-      return { from, to: today };
-    }
+      return {
+        from,
+        to: today,
+      };
+    },
+  },
 
-    case "lastMonth": {
-      const from = new Date(today.getFullYear(), today.getMonth() - 1, 1);
-      const to = new Date(today.getFullYear(), today.getMonth(), 0);
-      return { from, to };
-    }
+  {
+    key: "thisMonth",
+    label: "This Month",
+    getRange: () => {
+      const today = new Date();
 
-    default:
-      return { from: today, to: today };
-  }
-};
+      return {
+        from: new Date(today.getFullYear(), today.getMonth(), 1),
+        to: today,
+      };
+    },
+  },
+
+  {
+    key: "lastMonth",
+    label: "Last Month",
+    getRange: () => {
+      const today = new Date();
+
+      return {
+        from: new Date(today.getFullYear(), today.getMonth() - 1, 1),
+        to: new Date(today.getFullYear(), today.getMonth(), 0),
+      };
+    },
+  },
+];
+
+// const getDateRange = (type: string) => {
+//   const today = new Date();
+
+//   switch (type) {
+//     case "7d": {
+//       const from = new Date();
+//       from.setDate(today.getDate() - 7);
+//       return { from, to: today };
+//     }
+
+//     case "30d": {
+//       const from = new Date();
+//       from.setDate(today.getDate() - 30);
+//       return { from, to: today };
+//     }
+
+//     case "thisMonth": {
+//       const from = new Date(today.getFullYear(), today.getMonth(), 1);
+//       return { from, to: today };
+//     }
+
+//     case "lastMonth": {
+//       const from = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+//       const to = new Date(today.getFullYear(), today.getMonth(), 0);
+//       return { from, to };
+//     }
+
+//     default:
+//       return { from: today, to: today };
+//   }
+// };
 // Helper to compute default date values (used as fallback when not in URL)
 const getDefaultDates = () => {
   const today = new Date();
@@ -319,19 +420,75 @@ export default function InquiriesPage() {
   ]);
 
   // ─── Quick-range helper ────────────────────────────────────────────────
-  const applyRange = (type: string) => {
-    const { from, to } = getDateRange(type);
+  const applyRange = (filterKey: FilterKey) => {
+    const filter = DATE_FILTERS.find((f) => f.key === filterKey);
+
+    if (!filter) return;
+
+    const { from, to } = filter.getRange();
+
     patchParams({
       from: formatDate(from),
       to: formatDate(to),
-      range: type,
+      range: filterKey,
       filterMode: "range",
       page: "1",
     });
   };
 
+  useEffect(() => {
+    const isUnassignedSelected = activeTab === "unassigned";
+
+    if (personId && isUnassignedSelected) {
+      patchParams({
+        tab: "all",
+        page: "1",
+      });
+    }
+  }, [personId, activeTab]);
+
   const inquiries = data?.inquiries || [];
+  const statusCounts = data?.statusCounts || {};
   const totalPages = Math.ceil((data?.total || 0) / (data?.limit || 10));
+
+  const visibleTabs = useMemo(() => {
+    return tabFilters
+      .filter((tab) => {
+        if (personId && tab.hideWhenAssignedPersonSelected) {
+          return false;
+        }
+        return true;
+      })
+      .map((tab) => {
+        const isActive = activeTab === tab.key;
+
+        return {
+          ...tab,
+          label: (
+            <div className="flex items-center gap-2">
+              <span>{tab.label}</span>
+
+              {statusCounts?.[tab.key] != null && (
+                <span
+                  className="px-2 py-0.5 text-xs rounded-full font-medium transition-all"
+                  style={{
+                    background: isActive
+                      ? tokens.accent
+                      : tokens.surfaceElevated,
+                    color: isActive ? "#fff" : tokens.textMuted,
+                    border: `1px solid ${
+                      isActive ? tokens.accent : tokens.border
+                    }`,
+                  }}
+                >
+                  {statusCounts?.[tab.key] ?? 0}
+                </span>
+              )}
+            </div>
+          ),
+        };
+      });
+  }, [personId, statusCounts, activeTab, tokens]);
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -433,21 +590,14 @@ export default function InquiriesPage() {
                 Date Range:
               </div>
 
-              {(["7d", "30d", "thisMonth", "lastMonth"] as const).map((r) => (
+              {DATE_FILTERS.map((filter) => (
                 <Button
-                  key={r}
+                  key={filter.key}
                   size="sm"
-                  variant={activeRange === r ? "primary" : "ghost"}
-                  onClick={() => applyRange(r)}
+                  variant={activeRange === filter.key ? "primary" : "ghost"}
+                  onClick={() => applyRange(filter.key)}
                 >
-                  {
-                    {
-                      "7d": "Last 7 days",
-                      "30d": "Last 30 days",
-                      thisMonth: "This Month",
-                      lastMonth: "Last Month",
-                    }[r]
-                  }
+                  {filter.label}
                 </Button>
               ))}
             </div>
@@ -539,9 +689,10 @@ export default function InquiriesPage() {
         //   setPage(1); // reset pagination on tab change
         // }}
         onChange={(key) => patchParams({ tab: key, page: "1" })}
-        tabs={tabFilters.map((tab) => ({
+        tabs={visibleTabs.map((tab) => ({
           key: tab.key,
           label: tab.label,
+
           content: (
             <DynamicTable
               columns={columns}

@@ -42,7 +42,106 @@ const getDateRange = (type: string) => {
       return { from: today, to: today };
   }
 };
+type FilterKey =
+  | "today"
+  | "yesterday"
+  | "7d"
+  | "30d"
+  | "thisMonth"
+  | "lastMonth";
 
+export const DATE_FILTERS: {
+  key: FilterKey;
+  label: string;
+  getRange: () => { from: Date; to: Date };
+}[] = [
+  {
+    key: "today",
+    label: "Today",
+    getRange: () => {
+      const today = new Date();
+
+      return {
+        from: today,
+        to: today,
+      };
+    },
+  },
+
+  {
+    key: "yesterday",
+    label: "Yesterday",
+    getRange: () => {
+      const today = new Date();
+      const yesterday = new Date();
+
+      yesterday.setDate(today.getDate() - 1);
+
+      return {
+        from: yesterday,
+        to: yesterday,
+      };
+    },
+  },
+
+  {
+    key: "7d",
+    label: "Last 7 Days",
+    getRange: () => {
+      const today = new Date();
+      const from = new Date();
+
+      from.setDate(today.getDate() - 7);
+
+      return {
+        from,
+        to: today,
+      };
+    },
+  },
+
+  {
+    key: "30d",
+    label: "Last 30 Days",
+    getRange: () => {
+      const today = new Date();
+      const from = new Date();
+
+      from.setDate(today.getDate() - 30);
+
+      return {
+        from,
+        to: today,
+      };
+    },
+  },
+
+  {
+    key: "thisMonth",
+    label: "This Month",
+    getRange: () => {
+      const today = new Date();
+
+      return {
+        from: new Date(today.getFullYear(), today.getMonth(), 1),
+        to: today,
+      };
+    },
+  },
+
+  {
+    key: "lastMonth",
+    label: "Last Month",
+    getRange: () => {
+      const today = new Date();
+
+      return {
+        from: new Date(today.getFullYear(), today.getMonth() - 1, 1),
+        to: new Date(today.getFullYear(), today.getMonth(), 0),
+      };
+    },
+  },
+];
 const getDefaultDates = () => {
   const today = new Date();
   const oneMonthAgo = new Date();
@@ -129,12 +228,29 @@ export default function AttendancePage() {
   ]);
 
   // ─── Quick-range helper ───────────────────────────────────────────────────
-  const applyRange = (type: string) => {
-    const { from, to } = getDateRange(type);
+  // const applyRange = (type: string) => {
+  //   const { from, to } = getDateRange(type);
+  //   patchParams({
+  //     from: formatDate(from),
+  //     to: formatDate(to),
+  //     range: type,
+  //     filterMode: "range",
+  //     date: null,
+  //     page: "1",
+  //   });
+  // };
+
+  const applyRange = (filterKey: FilterKey) => {
+    const filter = DATE_FILTERS.find((f) => f.key === filterKey);
+
+    if (!filter) return;
+
+    const { from, to } = filter.getRange();
+
     patchParams({
       from: formatDate(from),
       to: formatDate(to),
-      range: type,
+      range: filterKey,
       filterMode: "range",
       date: null,
       page: "1",
@@ -221,21 +337,14 @@ export default function AttendancePage() {
                 >
                   Date Range:
                 </div>
-                {(["7d", "30d", "thisMonth", "lastMonth"] as const).map((r) => (
+                {DATE_FILTERS.map((filter) => (
                   <Button
-                    key={r}
+                    key={filter.key}
                     size="sm"
-                    variant={activeRange === r ? "primary" : "ghost"}
-                    onClick={() => applyRange(r)}
+                    variant={activeRange === filter.key ? "primary" : "ghost"}
+                    onClick={() => applyRange(filter.key)}
                   >
-                    {
-                      {
-                        "7d": "Last 7 days",
-                        "30d": "Last 30 days",
-                        thisMonth: "This Month",
-                        lastMonth: "Last Month",
-                      }[r]
-                    }
+                    {filter.label}
                   </Button>
                 ))}
               </div>

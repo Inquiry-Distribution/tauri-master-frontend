@@ -2,7 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import { useTheme } from "../../contexts";
-import { Search } from "lucide-react";
+import { Plus, Search } from "lucide-react";
 
 import DynamicTable from "@/src/components/ui/table/dynamicTable";
 
@@ -12,6 +12,8 @@ import { AdminUser, useGetAllAdmins } from "@/src/hooks/admin/useGetAllAdmins";
 
 import { getAdminColumns } from "./data";
 import ChangePasswordModal from "./changePassword/_form";
+import CreateAdminForm from "./create/_form";
+import { Modal } from "@/src/components/ui/modal";
 
 export default function AdminsPage() {
   const { tokens } = useTheme();
@@ -32,6 +34,8 @@ export default function AdminsPage() {
 
   const [changePasswordUser, setChangePasswordUser] =
     useState<AdminUser | null>(null);
+
+  const [createAdminOpen, setCreateAdminOpen] = useState(false);
 
   const columns = useMemo(
     () =>
@@ -80,6 +84,14 @@ export default function AdminsPage() {
             Manage all admin accounts.
           </p>
         </div>
+
+        <button
+          onClick={() => setCreateAdminOpen(true)}
+          className="flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm text-white bg-blue-600 hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/20"
+        >
+          <Plus size={18} />
+          Add Admin
+        </button>
       </div>
 
       <div className="flex flex-col md:flex-row gap-4">
@@ -128,6 +140,21 @@ export default function AdminsPage() {
           adminUser={changePasswordUser}
           onClose={() => setChangePasswordUser(null)}
         />
+      )}
+      {/* ✅ Create Admin Modal */}
+      {createAdminOpen && (
+        <Modal title="Create Admin" onClose={() => setCreateAdminOpen(false)}>
+          <CreateAdminForm
+            onSuccess={(user: any) => {
+              setAdmins((prev) => {
+                const exists = prev.some((p) => p.id === user.id);
+                if (exists) return prev;
+                return [user, ...prev];
+              });
+              setCreateAdminOpen(false);
+            }}
+          />
+        </Modal>
       )}
     </div>
   );

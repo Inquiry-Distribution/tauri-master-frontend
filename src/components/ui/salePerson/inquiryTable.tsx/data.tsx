@@ -10,6 +10,8 @@ import { Avatar } from "../../avatar";
 import { Button } from "../../button";
 import ButtonLoader from "../../loader/buttonLoader";
 
+import DOMPurify from "dompurify";
+
 export const getInquiryColumns = (): TableColumn<Inquiry>[] => {
   return [
     {
@@ -30,9 +32,12 @@ export const getInquiryColumns = (): TableColumn<Inquiry>[] => {
           className="max-w-[260px] cursor-pointer"
           to={`/inquiries/${row.id}`}
         >
-          <p className="text-sm font-medium text-(--text) line-clamp-1">
-            {row.description || "—"}
-          </p>
+          <p
+            className="text-sm font-medium text-(--text) line-clamp-1"
+            dangerouslySetInnerHTML={{
+              __html: DOMPurify.sanitize(row.description || "—"),
+            }}
+          />
           <p className="text-xs text-(--textMuted)">
             {row.mobile || "No contact"}
           </p>
@@ -149,8 +154,18 @@ export const getInquiryColumns = (): TableColumn<Inquiry>[] => {
 
 export const tabFilters = [
   { key: "all", label: "All", status: "" },
+
+  {
+    key: "unassigned",
+    label: "Unassigned",
+    status: "unassigned",
+    hideWhenAssignedPersonSelected: true,
+  },
+
   { key: "assigned", label: "Assigned", status: "assigned" },
-  // { key: "unassigned", label: "Unassigned", status: "unassigned" },
   { key: "in_progress", label: "In Progress", status: "in_progress" },
+  { key: "follow_up", label: "Follow Up", status: "follow_up" },
+  { key: "converted", label: "Converted", status: "converted" },
+  { key: "not_interested", label: "Not Interested", status: "not_interested" },
   { key: "closed", label: "Closed", status: "closed" },
 ];

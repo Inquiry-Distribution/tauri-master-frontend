@@ -14,34 +14,134 @@ type Props = {
 // Helpers
 // ───────────────────────────────
 const formatDate = (date: Date) => date.toISOString().split("T")[0];
+type FilterKey =
+  | "today"
+  | "yesterday"
+  | "7d"
+  | "30d"
+  | "thisMonth"
+  | "lastMonth";
 
-const getDateRange = (type: string) => {
-  const today = new Date();
+export const DATE_FILTERS: {
+  key: FilterKey;
+  label: string;
+  getRange: () => { from: Date; to: Date };
+}[] = [
+  {
+    key: "today",
+    label: "Today",
+    getRange: () => {
+      const today = new Date();
 
-  switch (type) {
-    case "7d": {
+      return {
+        from: today,
+        to: today,
+      };
+    },
+  },
+
+  {
+    key: "yesterday",
+    label: "Yesterday",
+    getRange: () => {
+      const today = new Date();
+      const yesterday = new Date();
+
+      yesterday.setDate(today.getDate() - 1);
+
+      return {
+        from: yesterday,
+        to: yesterday,
+      };
+    },
+  },
+
+  {
+    key: "7d",
+    label: "Last 7 Days",
+    getRange: () => {
+      const today = new Date();
       const from = new Date();
+
       from.setDate(today.getDate() - 7);
-      return { from, to: today };
-    }
-    case "30d": {
+
+      return {
+        from,
+        to: today,
+      };
+    },
+  },
+
+  {
+    key: "30d",
+    label: "Last 30 Days",
+    getRange: () => {
+      const today = new Date();
       const from = new Date();
+
       from.setDate(today.getDate() - 30);
-      return { from, to: today };
-    }
-    case "thisMonth": {
-      const from = new Date(today.getFullYear(), today.getMonth(), 1);
-      return { from, to: today };
-    }
-    case "lastMonth": {
-      const from = new Date(today.getFullYear(), today.getMonth() - 1, 1);
-      const to = new Date(today.getFullYear(), today.getMonth(), 0);
-      return { from, to };
-    }
-    default:
-      return { from: today, to: today };
-  }
-};
+
+      return {
+        from,
+        to: today,
+      };
+    },
+  },
+
+  {
+    key: "thisMonth",
+    label: "This Month",
+    getRange: () => {
+      const today = new Date();
+
+      return {
+        from: new Date(today.getFullYear(), today.getMonth(), 1),
+        to: today,
+      };
+    },
+  },
+
+  {
+    key: "lastMonth",
+    label: "Last Month",
+    getRange: () => {
+      const today = new Date();
+
+      return {
+        from: new Date(today.getFullYear(), today.getMonth() - 1, 1),
+        to: new Date(today.getFullYear(), today.getMonth(), 0),
+      };
+    },
+  },
+];
+
+// const getDateRange = (type: string) => {
+//   const today = new Date();
+
+//   switch (type) {
+//     case "7d": {
+//       const from = new Date();
+//       from.setDate(today.getDate() - 7);
+//       return { from, to: today };
+//     }
+//     case "30d": {
+//       const from = new Date();
+//       from.setDate(today.getDate() - 30);
+//       return { from, to: today };
+//     }
+//     case "thisMonth": {
+//       const from = new Date(today.getFullYear(), today.getMonth(), 1);
+//       return { from, to: today };
+//     }
+//     case "lastMonth": {
+//       const from = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+//       const to = new Date(today.getFullYear(), today.getMonth(), 0);
+//       return { from, to };
+//     }
+//     default:
+//       return { from: today, to: today };
+//   }
+// };
 
 export function SalespersonLocationHistory({ salespersonId }: Props) {
   const { tokens } = useTheme();
@@ -61,7 +161,9 @@ export function SalespersonLocationHistory({ salespersonId }: Props) {
   // Apply preset
   // ───────────────────────────────
   const applyRange = (type: string) => {
-    const range = getDateRange(type);
+    const range =
+      DATE_FILTERS.find((item) => item.key === type)?.getRange() ||
+      DATE_FILTERS[0].getRange();
 
     const formattedFrom = formatDate(range.from);
     const formattedTo = formatDate(range.to);
@@ -140,14 +242,14 @@ export function SalespersonLocationHistory({ salespersonId }: Props) {
           Date Range:
         </div>
 
-        {["7d", "30d", "thisMonth", "lastMonth"].map((range) => (
+        {DATE_FILTERS.map((item) => (
           <Button
-            key={range}
-            onClick={() => applyRange(range)}
+            key={item.key}
+            onClick={() => applyRange(item.key)}
             size="sm"
-            variant={activeRange === range ? "primary" : "secondary"}
+            variant={activeRange === item.key ? "primary" : "secondary"}
           >
-            {range}
+            {item.label}
           </Button>
         ))}
 

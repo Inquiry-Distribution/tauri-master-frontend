@@ -8,6 +8,7 @@ import {
   TrendingUp,
   PieChart as PieChartIcon,
   MapPin,
+  User,
 } from "lucide-react";
 import {
   BarChart,
@@ -37,40 +38,139 @@ import { useGetAttendanceById } from "@/src/hooks/attendance/useGetAttendanceByI
 import { AttendanceResponse } from "@/src/types/attendance";
 import { SalespersonLocationHistory } from "@/src/components/ui/salePerson/report/salesPersonLocationHistory";
 import UserAuditLogTable from "@/src/components/ui/salePerson/report/auditLogTable";
-
 const formatDate = (date: Date) => date.toISOString().split("T")[0];
 
-const getDateRange = (type: string) => {
-  const today = new Date();
+type FilterKey =
+  | "today"
+  | "yesterday"
+  | "7d"
+  | "30d"
+  | "thisMonth"
+  | "lastMonth";
 
-  switch (type) {
-    case "7d": {
+export const DATE_FILTERS: {
+  key: FilterKey;
+  label: string;
+  getRange: () => { from: Date; to: Date };
+}[] = [
+  {
+    key: "today",
+    label: "Today",
+    getRange: () => {
+      const today = new Date();
+
+      return {
+        from: today,
+        to: today,
+      };
+    },
+  },
+
+  {
+    key: "yesterday",
+    label: "Yesterday",
+    getRange: () => {
+      const today = new Date();
+      const yesterday = new Date();
+
+      yesterday.setDate(today.getDate() - 1);
+
+      return {
+        from: yesterday,
+        to: yesterday,
+      };
+    },
+  },
+
+  {
+    key: "7d",
+    label: "Last 7 Days",
+    getRange: () => {
+      const today = new Date();
       const from = new Date();
+
       from.setDate(today.getDate() - 7);
-      return { from, to: today };
-    }
 
-    case "30d": {
+      return {
+        from,
+        to: today,
+      };
+    },
+  },
+
+  {
+    key: "30d",
+    label: "Last 30 Days",
+    getRange: () => {
+      const today = new Date();
       const from = new Date();
+
       from.setDate(today.getDate() - 30);
-      return { from, to: today };
-    }
 
-    case "thisMonth": {
-      const from = new Date(today.getFullYear(), today.getMonth(), 1);
-      return { from, to: today };
-    }
+      return {
+        from,
+        to: today,
+      };
+    },
+  },
 
-    case "lastMonth": {
-      const from = new Date(today.getFullYear(), today.getMonth() - 1, 1);
-      const to = new Date(today.getFullYear(), today.getMonth(), 0);
-      return { from, to };
-    }
+  {
+    key: "thisMonth",
+    label: "This Month",
+    getRange: () => {
+      const today = new Date();
 
-    default:
-      return { from: today, to: today };
-  }
-};
+      return {
+        from: new Date(today.getFullYear(), today.getMonth(), 1),
+        to: today,
+      };
+    },
+  },
+
+  {
+    key: "lastMonth",
+    label: "Last Month",
+    getRange: () => {
+      const today = new Date();
+
+      return {
+        from: new Date(today.getFullYear(), today.getMonth() - 1, 1),
+        to: new Date(today.getFullYear(), today.getMonth(), 0),
+      };
+    },
+  },
+];
+// const getDateRange = (type: string) => {
+//   const today = new Date();
+
+//   switch (type) {
+//     case "7d": {
+//       const from = new Date();
+//       from.setDate(today.getDate() - 7);
+//       return { from, to: today };
+//     }
+
+//     case "30d": {
+//       const from = new Date();
+//       from.setDate(today.getDate() - 30);
+//       return { from, to: today };
+//     }
+
+//     case "thisMonth": {
+//       const from = new Date(today.getFullYear(), today.getMonth(), 1);
+//       return { from, to: today };
+//     }
+
+//     case "lastMonth": {
+//       const from = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+//       const to = new Date(today.getFullYear(), today.getMonth(), 0);
+//       return { from, to };
+//     }
+
+//     default:
+//       return { from: today, to: today };
+//   }
+// };
 type AttendanceStatus = "present" | "half_day" | "absent" | string;
 
 type StatusCountMap = Record<string, number>;
@@ -192,13 +292,17 @@ export default function SalesPersonReportPage() {
 
   const loading = userLoading || reportLoading;
 
-  const applyRange = (type: string) => {
-    const { from, to } = getDateRange(type);
+  const applyRange = (filterKey: FilterKey) => {
+    const filter = DATE_FILTERS.find((f) => f.key === filterKey);
+
+    if (!filter) return;
+
+    const { from, to } = filter.getRange();
 
     setFrom(formatDate(from));
     setTo(formatDate(to));
 
-    setActiveRange(type);
+    setActiveRange(filterKey);
     setFilterMode("range");
     setPage(1);
   };
@@ -260,10 +364,11 @@ export default function SalesPersonReportPage() {
     absent: "#ef4444",
   };
   const barData = [
-    { name: "Closed", value: report?.closed || 0 },
     { name: "In Progress", value: report?.inProgress || 0 },
     { name: "Follow Up", value: report?.followUp || 0 },
     { name: "Converted", value: report?.converted || 0 },
+    { name: "Not Interested", value: report?.notInterested || 0 },
+    { name: "Closed", value: report?.closed || 0 },
   ];
 
   const pieData = [
@@ -316,13 +421,17 @@ export default function SalesPersonReportPage() {
           {/* Profile */}
           <div className="p-6 rounded-2xl border border-border bg-surface">
             <div className="flex flex-col items-center text-center">
-              <img
-                src={
-                  user?.profileImage ||
-                  `https://picsum.photos/seed/${id}/200/200`
-                }
-                className="w-24 h-24 rounded-2xl object-cover mb-4 border border-border"
-              />
+              {user?.profileImage ? (
+                <img
+                  src={user.profileImage}
+                  alt={user?.name || "User"}
+                  className="w-24 h-24 rounded-2xl object-cover mb-4 border border-border"
+                />
+              ) : (
+                <div className="w-24 h-24 rounded-2xl mb-4 border border-border bg-card flex items-center justify-center">
+                  <User size={40} className="text-textMuted" />
+                </div>
+              )}
 
               <h2 className="text-xl font-bold text-text">
                 {user?.name || "-"}
@@ -590,37 +699,16 @@ export default function SalesPersonReportPage() {
                 Date Range:
               </div>
 
-              <Button
-                size="sm"
-                variant={activeRange === "7d" ? "primary" : "ghost"}
-                onClick={() => applyRange("7d")}
-              >
-                Last 7 days
-              </Button>
-
-              <Button
-                size="sm"
-                variant={activeRange === "30d" ? "primary" : "ghost"}
-                onClick={() => applyRange("30d")}
-              >
-                Last 30 days
-              </Button>
-
-              <Button
-                size="sm"
-                variant={activeRange === "thisMonth" ? "primary" : "ghost"}
-                onClick={() => applyRange("thisMonth")}
-              >
-                This Month
-              </Button>
-
-              <Button
-                size="sm"
-                variant={activeRange === "lastMonth" ? "primary" : "ghost"}
-                onClick={() => applyRange("lastMonth")}
-              >
-                Last Month
-              </Button>
+              {DATE_FILTERS.map((filter) => (
+                <Button
+                  key={filter.key}
+                  size="sm"
+                  variant={activeRange === filter.key ? "primary" : "ghost"}
+                  onClick={() => applyRange(filter.key)}
+                >
+                  {filter.label}
+                </Button>
+              ))}
               {/* Custom Range */}
               <div className="lg:w-1/3 md:w-1/2 w-full grid lg:grid-cols-10 md:grid-cols-6 grid-cols-4 gap-2">
                 <div className="lg:col-span-4 md:col-span-2 sm:col-span-1">
@@ -663,7 +751,7 @@ export default function SalesPersonReportPage() {
               </div>
             </div>
           </div>
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-5 gap-4">
             <div className="p-4 rounded-xl bg-surfaceElevated border border-border">
               <p className="text-xs text-textMuted">Converted</p>
               {reportLoading ? (
@@ -685,7 +773,27 @@ export default function SalesPersonReportPage() {
                 </p>
               )}
             </div>
+            <div className="p-4 rounded-xl bg-surfaceElevated border border-border">
+              <p className="text-xs text-textMuted">Follow Up</p>
+              {reportLoading ? (
+                <div className="h-6 w-10 bg-muted rounded animate-pulse" />
+              ) : (
+                <p className="text-xl font-bold text-warning">
+                  {report?.followUp}
+                </p>
+              )}
+            </div>
 
+            <div className="p-4 rounded-xl bg-surfaceElevated border border-border">
+              <p className="text-xs text-textMuted">Not Interested</p>
+              {reportLoading ? (
+                <div className="h-6 w-10 bg-muted rounded animate-pulse" />
+              ) : (
+                <p className="text-xl font-bold text-danger">
+                  {report?.notInterested}
+                </p>
+              )}
+            </div>
             <div className="p-4 rounded-xl bg-surfaceElevated border border-border">
               <p className="text-xs text-textMuted">Closed</p>
               {reportLoading ? (

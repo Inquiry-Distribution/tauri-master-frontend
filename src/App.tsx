@@ -14,6 +14,8 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { AuthProvider } from "./contexts/authContext";
 import "leaflet/dist/leaflet.css";
 import "@/src/api/axios";
+import "@/src/api/lib/leaflet";
+import "leaflet/dist/leaflet.css";
 // import { setNavigate } from "./api/navigate";
 // import AppRoutes from './routes/AppRoutes';
 
