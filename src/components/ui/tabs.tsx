@@ -127,7 +127,7 @@ const Tabs = ({
       {/* Header */}
       <div
         className={clsx(
-          "flex gap-1",
+          "flex gap-1 overflow-x-auto custom-tabs-scroll",
           variant === "card" && "rounded-xl p-1",
           variant === "pill" && "rounded-full p-1",
           variant === "solid" && "gap-2",
@@ -149,7 +149,7 @@ const Tabs = ({
               type="button"
               key={tab.key}
               onClick={() => setTab(tab.key)}
-              className="flex flex-1 items-center justify-center gap-2 px-4 py-2 text-sm font-medium transition-all"
+              className="flex shrink-0 flex-1 items-center justify-center gap-2 px-4 py-2 text-sm font-medium transition-all whitespace-nowrap"
               style={{
                 background:
                   variant === "solid"
