@@ -15,8 +15,11 @@ import Swal from "sweetalert2";
 type ToggleStatus = "idle" | "loading" | "success";
 export default function AttendanceHoursForm() {
   const { data, getConfigAttendanceHours } = useGetConfigAttendanceHours();
-  const { updateConfigAttendanceHours, loading } =
-    useUpdateConfigAttendanceHours();
+  const {
+    updateConfigAttendanceHours,
+    loading,
+    error: updateError,
+  } = useUpdateConfigAttendanceHours();
   const [toggleStatus, setToggleStatus] = useState<
     "idle" | "loading" | "success"
   >("idle");
@@ -24,7 +27,11 @@ export default function AttendanceHoursForm() {
   const [form, setForm] = useState<ConfigAttendanceHours>({
     workStartHour: 0,
     workEndHour: 0,
+    workStartMinute: 0,
+    workEndMinute: 0,
     lateGraceMinute: 0,
+    workStart: "",
+    workEnd: "",
   });
 
   const [errors, setErrors] = useState<any>({});
@@ -47,16 +54,11 @@ export default function AttendanceHoursForm() {
 
   // ✅ Handle input + toggle properly
   const handleChange = (e: any) => {
-    const { name, value, type, checked } = e.target;
+    const { name, value, type } = e.target;
 
     setForm((prev) => ({
       ...prev,
-      [name]:
-        type === "checkbox"
-          ? checked
-          : type === "number"
-            ? Number(value)
-            : value,
+      [name]: type === "number" ? (value === "" ? 0 : Number(value)) : value,
     }));
 
     setErrors((prev: any) => ({
@@ -64,27 +66,48 @@ export default function AttendanceHoursForm() {
       [name]: "",
     }));
   };
-
   // ✅ Validation
   const validate = () => {
     let newErrors: any = {};
 
-    if (!form.workStartHour || form.workStartHour <= 0) {
-      newErrors.workStartHour = "Work start hour must be greater than 0";
+    // HH:mm format validation
+    const timeRegex = /^([01]\d|2[0-3]):([0-5]\d)$/;
+
+    if (!form.workStart) {
+      newErrors.workStart = "Work start time is required";
+    } else if (!timeRegex.test(form.workStart)) {
+      newErrors.workStart = "Invalid time format";
     }
 
-    if (!form.workEndHour || form.workEndHour <= 0) {
-      newErrors.workEndHour = "Work end hour must be greater than 0";
+    if (!form.workEnd) {
+      newErrors.workEnd = "Work end time is required";
+    } else if (!timeRegex.test(form.workEnd)) {
+      newErrors.workEnd = "Invalid time format";
     }
 
-    if (!form.lateGraceMinute || form.lateGraceMinute <= 0) {
-      newErrors.lateGraceMinute = "Late grace minute must be greater than 0";
+    // Compare times
+    if (timeRegex.test(form.workStart) && timeRegex.test(form.workEnd)) {
+      const start = new Date(`1970-01-01T${form.workStart}:00`);
+      const end = new Date(`1970-01-01T${form.workEnd}:00`);
+
+      if (end <= start) {
+        newErrors.workEnd = "Work end time must be after start time";
+      }
+    }
+
+    // Grace minute validation
+    if (form.lateGraceMinute === undefined || form.lateGraceMinute === null) {
+      newErrors.lateGraceMinute = "Late grace minute is required";
+    } else if (form.lateGraceMinute < 0) {
+      newErrors.lateGraceMinute = "Late grace minute cannot be negative";
+    } else if (form.lateGraceMinute > 120) {
+      newErrors.lateGraceMinute = "Late grace minute cannot exceed 120";
     }
 
     setErrors(newErrors);
+
     return Object.keys(newErrors).length === 0;
   };
-
   // ✅ Submit
   const handleSubmit = async (e: any) => {
     e.preventDefault();
@@ -92,16 +115,18 @@ export default function AttendanceHoursForm() {
     if (!validate()) return;
 
     try {
-      await updateConfigAttendanceHours(form);
-
+      const data = await updateConfigAttendanceHours(form);
+      console.log("data", data);
       Swal.fire({
         icon: "success",
         title: "Attendance hours updated successfully",
+        ...(data?.data?.notice ? { text: data.data.notice } : {}),
       });
     } catch (err: any) {
       Swal.fire({
         icon: "error",
-        title: err?.response?.data?.message || "Failed to update",
+        title: "Failed to update",
+        text: updateError || "Something went wrong",
       });
     }
   };
@@ -111,7 +136,11 @@ export default function AttendanceHoursForm() {
     setForm({
       workStartHour: 0,
       workEndHour: 0,
+      workStartMinute: 0,
+      workEndMinute: 0,
       lateGraceMinute: 0,
+      workStart: "",
+      workEnd: "",
     });
     setErrors({});
   };
@@ -122,32 +151,33 @@ export default function AttendanceHoursForm() {
         <div className="space-y-4">
           <div className="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-2">
             <Input
-              inputName="attendance_work_start_hour"
-              label="Work Start Hour"
-              inputType="number"
-              placeholder="Enter work start hour"
-              inputValue={form.workStartHour}
+              inputName="workStart"
+              label="Work Start Time"
+              inputType="time"
+              placeholder="Enter work start time"
+              inputValue={form.workStart}
               onChange={handleChange}
-              error={errors.workStartHour}
+              error={errors.workStart}
             />
 
             <Input
-              inputName="attendance_work_end_hour"
-              label="Work End Hour"
-              inputType="number"
-              placeholder="Enter work end hour"
-              inputValue={form.workEndHour}
+              inputName="workEnd"
+              label="Work End Time"
+              inputType="time"
+              placeholder="Enter work end time"
+              inputValue={form.workEnd}
               onChange={handleChange}
-              error={errors.workEndHour}
+              error={errors.workEnd}
             />
             <Input
-              inputName="attendance_late_grace_minute"
+              inputName="lateGraceMinute"
               label="Late Grace Minute"
               inputType="number"
               placeholder="Enter late grace minute"
               inputValue={form.lateGraceMinute}
               onChange={handleChange}
               error={errors.lateGraceMinute}
+              min={0}
             />
           </div>
 
@@ -165,6 +195,9 @@ export default function AttendanceHoursForm() {
               Reset
             </Button>
           </div>
+          {data?.notice && (
+            <p className="text-sm text-yellow-600">{data.notice}</p>
+          )}
         </div>
       </form>
     </Card>

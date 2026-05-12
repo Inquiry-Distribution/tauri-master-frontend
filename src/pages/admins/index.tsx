@@ -33,9 +33,12 @@ export default function AdminsPage() {
 
   const [total, setTotal] = useState(0);
 
-  const { getAllAdmins, loading } = useGetAllAdmins();
-  const { toggleActiveStatus, loading: toggleLoading } =
-    useToggleActiveStatus();
+  const { getAllAdmins, loading, error: fetchError } = useGetAllAdmins();
+  const {
+    toggleActiveStatus,
+    loading: toggleLoading,
+    error: toggleError,
+  } = useToggleActiveStatus();
   const [togglingId, setTogglingId] = useState<string | null>(null);
 
   const {
@@ -78,7 +81,7 @@ export default function AdminsPage() {
       Swal.fire({
         icon: "error",
         title: "Failed to delete admin",
-        text: err?.response?.data?.message || "Unknown error",
+        text: deleteError || "Unknown error",
       });
     }
   };
@@ -105,6 +108,13 @@ export default function AdminsPage() {
                   : admin,
               ),
             );
+          } catch (err: any) {
+            Swal.fire({
+              icon: "error",
+              title: "Failed to update status",
+              text: toggleError || "Unknown error",
+            });
+            console.error(err);
           } finally {
             setTogglingId(null);
           }
@@ -132,6 +142,11 @@ export default function AdminsPage() {
 
         setTotal(response.data.total);
       } catch (error) {
+        Swal.fire({
+          icon: "error",
+          title: "Failed to load admins",
+          text: fetchError || "Please try again later",
+        });
         console.error(error);
       }
     };

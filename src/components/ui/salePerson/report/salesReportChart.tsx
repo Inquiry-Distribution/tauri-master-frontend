@@ -14,11 +14,12 @@ import {
 import { TrendingUp, PieChart as PieChartIcon } from "lucide-react";
 import { useGetSalesPersonReport } from "@/src/hooks/salesPerson/useGetSalesPersonReport";
 import CommonLoader from "../../loader/loader";
+import Swal from "sweetalert2";
 
 const COLORS = ["#4F7DF3", "#34D399"];
 
 export default function SalesPersonReportCharts({ id }: { id: string }) {
-  const { getSalesPersonReport, loading } = useGetSalesPersonReport();
+  const { getSalesPersonReport, loading, error } = useGetSalesPersonReport();
   const [report, setReport] = useState<any>(null);
 
   useEffect(() => {
@@ -29,6 +30,11 @@ export default function SalesPersonReportCharts({ id }: { id: string }) {
         const res = await getSalesPersonReport(id, "");
         setReport(res.data);
       } catch (err) {
+        Swal.fire({
+          icon: "error",
+          title: "Failed to load report",
+          text: error || "Please try again later",
+        });
         console.error(err);
       }
     };

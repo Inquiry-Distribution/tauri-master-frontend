@@ -11,7 +11,7 @@ import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 
 const CreateAdminForm = ({ onSuccess }: { onSuccess: (res: any) => void }) => {
-  const { createAdmin, loading } = useCreateAdmin();
+  const { createAdmin, loading, error } = useCreateAdmin();
 
   const [form, setForm] = useState<CreateAdmin>({
     name: "",
@@ -105,7 +105,7 @@ const CreateAdminForm = ({ onSuccess }: { onSuccess: (res: any) => void }) => {
       Swal.fire({
         icon: "error",
         title: "Error Creating Admin.",
-        text: err?.response?.data?.message || "An error occurred",
+        text: error || "An error occurred",
       });
     }
   };

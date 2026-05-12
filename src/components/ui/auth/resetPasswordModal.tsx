@@ -12,7 +12,7 @@ export default function ResetPasswordModal({
   onClose: () => void;
 }) {
   const { tokens } = useTheme();
-  const { resetPassword, loading } = useResetPassword();
+  const { resetPassword, loading, error: resetError } = useResetPassword();
 
   const [form, setForm] = useState({
     oldPassword: "",
@@ -54,7 +54,7 @@ export default function ResetPasswordModal({
       Swal.fire({
         icon: "error",
         title: "Reset password failed",
-        text: err?.response?.data?.message || "Please try again later",
+        text: resetError || "Please try again later",
       });
       console.error("Reset password failed", err);
     }

@@ -140,10 +140,8 @@ const InquiryForm = () => {
         });
       }
       if (salesPersonIdFromDistributor) {
-        console.log("share");
         await createShareInquiry(formData);
       } else {
-        console.log("create");
         await createInquiry(formData);
       }
       Swal.fire({
@@ -163,7 +161,7 @@ const InquiryForm = () => {
       Swal.fire({
         icon: "error",
         title: "Error Creating Inquiry.",
-        text: "Please try again later!",
+        text: inquiryError || shareError || "Please try again later!",
       });
     }
   };

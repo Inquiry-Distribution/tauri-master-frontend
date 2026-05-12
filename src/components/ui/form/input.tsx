@@ -1,6 +1,20 @@
 import { useContext, useState } from "react";
 import { ThemeContext } from "@/src/contexts/index";
-import { Calendar, Eye, EyeClosed } from "lucide-react";
+import { Calendar, Clock, Eye, EyeClosed } from "lucide-react";
+
+type InputProps = React.InputHTMLAttributes<HTMLInputElement> & {
+  label?: string;
+  subLabel?: string;
+  placeholder?: string;
+  inputName: string;
+  inputType?: string;
+  inputValue?: string | number;
+  customClassName?: string;
+  required?: boolean;
+  error?: string;
+  disabled?: boolean;
+  showLabel?: boolean;
+};
 
 const Input = ({
   label,
@@ -17,21 +31,7 @@ const Input = ({
   disabled,
   showLabel = true,
   ...props
-}: {
-  label?: string;
-  subLabel?: string;
-  placeholder: string;
-  inputName: string;
-  inputType?: string;
-  inputValue?: string | number;
-  customClassName?: string;
-  required?: boolean;
-  error?: string;
-  disabled?: boolean;
-  showLabel?: boolean;
-  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  onBlur?: (e: React.FocusEvent<HTMLInputElement>) => void;
-}) => {
+}: InputProps) => {
   const ctx = useContext(ThemeContext);
   const [showPassword, setShowPassword] = useState(false);
 
@@ -41,6 +41,7 @@ const Input = ({
 
   const isPassword = inputType === "password";
   const isDate = inputType === "date";
+  const isTime = inputType === "time";
 
   return (
     <div className="w-full">
@@ -101,6 +102,19 @@ const Input = ({
             className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500"
           >
             <Calendar size={20} />
+          </button>
+        )}
+        {/* Custom Time Icon */}
+        {isTime && (
+          <button
+            type="button"
+            onClick={() => {
+              const el = document.getElementById(inputName) as HTMLInputElement;
+              el?.showPicker?.(); // modern browsers
+            }}
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500"
+          >
+            <Clock size={20} />
           </button>
         )}
       </div>

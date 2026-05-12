@@ -124,9 +124,16 @@ export default function TrashInquiriesPage() {
   const [restoringId, setRestoringId] = useState<string | null>(null);
   const { data, loading, setData, error, getTrashInquiries } =
     useGetTrashInquiries();
-  const { permanentlyDeleteInquiry, loading: deleteLoading } =
-    usePermanentDeleteInquiry();
-  const { restoreInquiry, loading: restoreLoading } = useRestoreInquiry();
+  const {
+    permanentlyDeleteInquiry,
+    loading: deleteLoading,
+    error: deleteError,
+  } = usePermanentDeleteInquiry();
+  const {
+    restoreInquiry,
+    loading: restoreLoading,
+    error: restoreError,
+  } = useRestoreInquiry();
 
   const handleDelete = async (inquiry: Inquiry) => {
     const result = await Swal.fire({
@@ -155,6 +162,7 @@ export default function TrashInquiriesPage() {
       Swal.fire({
         icon: "error",
         title: "Failed to delete inquiry",
+        text: deleteError || "Something went wrong",
       });
     }
   };
@@ -185,6 +193,7 @@ export default function TrashInquiriesPage() {
       Swal.fire({
         icon: "error",
         title: "Failed to restore inquiry",
+        text: restoreError || "Something went wrong",
       });
     }
   };

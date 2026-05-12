@@ -233,7 +233,11 @@ export default function InquiriesPage() {
   const [editingInquiry, setEditingInquiry] = useState<Inquiry | null>(null);
   const [selectedPerson, setSelectedPerson] = useState<any>(null);
   const { data, loading, setData, error, getInquiries } = useGetInquiries();
-  const { deleteInquiry, loading: deleteLoading } = useDeleteInquiry();
+  const {
+    deleteInquiry,
+    loading: deleteLoading,
+    error: deleteError,
+  } = useDeleteInquiry();
   const {
     bulkDeleteInquiry,
     loading: bulkDeleteLoading,
@@ -298,6 +302,7 @@ export default function InquiriesPage() {
       Swal.fire({
         icon: "error",
         title: "Bulk delete failed",
+        text: bulkDeleteError || "Please try again later",
       });
     }
   };
@@ -381,6 +386,7 @@ export default function InquiriesPage() {
       Swal.fire({
         icon: "error",
         title: "Failed to delete inquiry",
+        text: deleteError || "Please try again later",
       });
     }
   };
@@ -476,9 +482,23 @@ export default function InquiriesPage() {
         return {
           ...tab,
           label: (
-            <div className="flex items-center gap-2">
-              <span>{tab.label}</span>
-
+            <div className="flex flex-col justify-start items-center gap-1">
+              {tab.key === "all" && (
+                <span
+                  className="px-2 py-0.5 text-xs rounded-full font-medium transition-all"
+                  style={{
+                    background: isActive
+                      ? tokens.accent
+                      : tokens.surfaceElevated,
+                    color: isActive ? "#fff" : tokens.textMuted,
+                    border: `1px solid ${
+                      isActive ? tokens.accent : tokens.border
+                    }`,
+                  }}
+                >
+                  {data?.total}
+                </span>
+              )}
               {statusCounts?.[tab.key] != null && (
                 <span
                   className="px-2 py-0.5 text-xs rounded-full font-medium transition-all"
@@ -495,6 +515,7 @@ export default function InquiriesPage() {
                   {statusCounts?.[tab.key] ?? 0}
                 </span>
               )}
+              <span className="text-xs">{tab.label}</span>
             </div>
           ),
         };

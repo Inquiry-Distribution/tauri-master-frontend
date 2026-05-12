@@ -203,17 +203,17 @@ export default function InquiryAnalytics() {
             showLabel={false}
           />
         </div>
-        <div className="col-span-1 flex items-end justify-end">
+        {/* <div className="col-span-1 flex items-end justify-end">
           <Button
             size="sm"
             variant="primary"
             onClick={handleSubmit}
             disabled={loading}
-          >
-            {/* {loading ? <ButtonLoader/> : <RefreshCcw/>} */}
-            <RefreshCcw className={loading ? "animate-spin" : ""} />
+          > */}
+        {/* {loading ? <ButtonLoader/> : <RefreshCcw/>} */}
+        {/* <RefreshCcw className={loading ? "animate-spin" : ""} />
           </Button>
-        </div>
+        </div> */}
       </div>
 
       {/* ───── Error ───── */}

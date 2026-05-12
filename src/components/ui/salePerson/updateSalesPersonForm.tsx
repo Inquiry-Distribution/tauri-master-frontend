@@ -58,6 +58,7 @@ const UpdateSalesPersonForm = ({
       Swal.fire({
         icon: "error",
         title: "Error Updating Sales Person.",
+        text: error || "Please try again later",
       });
     }
   };

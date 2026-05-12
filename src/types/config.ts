@@ -4,7 +4,12 @@ export type ConfigLoginLimit = {
   lockoutMinutes: number;
 };
 export type ConfigAttendanceHours = {
-  workStartHour: number;
-  workEndHour: number;
+  workStart: string;
+  workEnd: string;
+  workStartHour?: number;
+  workStartMinute?: number;
+  workEndHour?: number;
+  workEndMinute?: number;
   lateGraceMinute: number;
+  notice?: string;
 };

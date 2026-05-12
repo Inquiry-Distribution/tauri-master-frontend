@@ -737,6 +737,11 @@ export function InquiryDistributor({
         setPersons(mapped);
         // setPersons(mapToUI(res.data));
       } catch (err) {
+        Swal.fire({
+          icon: "error",
+          title: "Failed to fetch sales persons",
+          text: error || "Please try again later",
+        });
         console.error(err);
       }
     };
