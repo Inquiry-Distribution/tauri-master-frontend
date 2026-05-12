@@ -11,6 +11,7 @@ import { Button } from "../../button";
 import ButtonLoader from "../../loader/buttonLoader";
 
 import DOMPurify from "dompurify";
+import { formatDateTime } from "@/src/utils/utils";
 
 export const getInquiryColumns = (): TableColumn<Inquiry>[] => {
   return [
@@ -79,15 +80,15 @@ export const getInquiryColumns = (): TableColumn<Inquiry>[] => {
         const variant = styles[row.status as keyof typeof styles];
 
         return (
-          <span
-            className="px-2 py-1 text-xs rounded font-medium capitalize"
+          <div
+            className="px-2 py-1 text-xs text-center rounded font-medium capitalize"
             style={{
               backgroundColor: variant.bg,
               color: variant.color,
             }}
           >
             {row.status.replace("_", " ")}
-          </span>
+          </div>
         );
       },
     },
@@ -113,9 +114,10 @@ export const getInquiryColumns = (): TableColumn<Inquiry>[] => {
       key: "createdAt",
       label: "Date",
       render: (row) => (
-        <span className="text-xs text-(--textMuted)">
-          {new Date(row.createdAt).toLocaleDateString()}
-        </span>
+        <div className="text-xs w-[120px] text-(--textMuted)">
+          {/* {new Date(row.createdAt).toLocaleDateString()} */}
+          {formatDateTime(row.createdAt)}
+        </div>
       ),
     },
 

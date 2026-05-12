@@ -15,7 +15,7 @@ import {
 
 const ITEMS_PER_PAGE = 10;
 
-const RecentActivity = () => {
+const RecentActivity = ({ className }: { className?: string }) => {
   const { data, loading, getRecentActivityLogs } = useGetRecentActivityLogs();
   const { tokens } = useTheme();
 
@@ -37,7 +37,7 @@ const RecentActivity = () => {
 
   return (
     <div
-      className="p-6 rounded-2xl border"
+      className={`p-6 rounded-2xl border ${className}`}
       style={{
         backgroundColor: tokens.surface,
         borderColor: tokens.border,

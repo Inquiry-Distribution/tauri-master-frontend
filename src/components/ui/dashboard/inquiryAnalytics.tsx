@@ -177,8 +177,8 @@ export default function InquiryAnalytics() {
           </Button>
         ))}
       </div>
-      <div className="grid lg:grid-cols-10 md:grid-cols-6 sm:grid-cols-4 gap-2">
-        <div className="lg:col-span-4 md:col-span-2 sm:col-span-1">
+      <div className="grid lg:grid-cols-11 md:grid-cols-6 sm:grid-cols-4 gap-2">
+        <div className="lg:col-span-5 md:col-span-2 sm:col-span-1">
           <Input
             label="From"
             inputName="from"
@@ -192,7 +192,7 @@ export default function InquiryAnalytics() {
         <div className="text-text font-semibold text-2xl w-full flex items-center justify-center col-span-1">
           →
         </div>
-        <div className="lg:col-span-4 md:col-span-2 sm:col-span-1">
+        <div className="lg:col-span-5 md:col-span-2 sm:col-span-1">
           <Input
             label="To"
             inputName="to"

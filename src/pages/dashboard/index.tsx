@@ -289,8 +289,8 @@ export default function DashboardPage() {
         )}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card>
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+        <Card className="lg:col-span-3">
           <InquiryAnalytics />
         </Card>
         {/* <div
@@ -377,7 +377,7 @@ export default function DashboardPage() {
             </div>
           </div> */}
 
-        {isSuperUser && <RecentActivity />}
+        {isSuperUser && <RecentActivity className="lg:col-span-2" />}
         {/* {isSuperUser && <LiveLocationsCard />} */}
       </div>
       {/* Broadcast Modal */}

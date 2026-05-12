@@ -44,13 +44,26 @@ type FilterKey =
   | "7d"
   | "30d"
   | "thisMonth"
-  | "lastMonth";
+  | "lastMonth"
+  | "all";
 
 export const DATE_FILTERS: {
   key: FilterKey;
   label: string;
   getRange: () => { from: Date; to: Date };
 }[] = [
+  {
+    key: "all",
+    label: "All",
+    getRange: () => {
+      const today = new Date();
+
+      return {
+        from: today,
+        to: today,
+      };
+    },
+  },
   {
     key: "today",
     label: "Today",
@@ -420,7 +433,9 @@ export default function InquiriesPage() {
       ...(personId ? { assignedToId: personId } : {}),
       ...(debouncedSearch ? { search: debouncedSearch } : {}),
       ...(priority ? { priority } : {}),
-      ...(filterMode === "range" && from && to ? { from, to } : {}),
+      ...(filterMode === "range" && from && to && activeRange !== "all"
+        ? { from, to }
+        : {}),
     };
 
     getInquiries(new URLSearchParams(queryObj).toString());
@@ -438,6 +453,18 @@ export default function InquiriesPage() {
 
   // ─── Quick-range helper ────────────────────────────────────────────────
   const applyRange = (filterKey: FilterKey) => {
+    if (filterKey === "all") {
+      patchParams({
+        range: "all",
+        filterMode: "none",
+        from: null,
+        to: null,
+        page: "1",
+      });
+
+      return;
+    }
+
     const filter = DATE_FILTERS.find((f) => f.key === filterKey);
 
     if (!filter) return;

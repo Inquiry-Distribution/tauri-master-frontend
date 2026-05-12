@@ -38,11 +38,11 @@ const PaginationButton: React.FC<PaginationButtonProps> = ({
     type="button"
     className={cn(
       "min-w-[32px] h-8 px-2 rounded-md text-sm font-medium transition-all",
-      "focus:outline-none focus:ring-2 focus:ring-(--primary)/40",
+      "focus:outline-none focus:ring-2 focus:ring-(--accent)/40",
       "disabled:opacity-40 disabled:cursor-not-allowed",
       active
-        ? "bg-(--primary) text-white shadow-sm"
-        : "bg-(--surface) text-(--textMuted) hover:text-(--text) hover:border-(--primary)/40 border border-(--border)",
+        ? "bg-(--primary) text-text shadow-sm border border-(--accent)/60"
+        : "bg-(--surface) text-(--textMuted) hover:text-(--text) hover:border-(--accent)/40 border border-(--border)",
       className,
     )}
     {...props}

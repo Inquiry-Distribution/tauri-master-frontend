@@ -78,7 +78,7 @@ export default function Header() {
           )}
         </button>
 
-        <div className="relative w-full group hidden sm:block">
+        {/* <div className="relative w-full group hidden sm:block">
           <Search
             size={18}
             className="absolute left-3 top-1/2 -translate-y-1/2 transition-colors duration-200"
@@ -94,7 +94,7 @@ export default function Header() {
               color: tokens.text,
             }}
           />
-        </div>
+        </div> */}
       </div>
 
       <div className="flex items-center gap-2 md:gap-4">

@@ -43,13 +43,26 @@ type FilterKey =
   | "7d"
   | "30d"
   | "thisMonth"
-  | "lastMonth";
+  | "lastMonth"
+  | "all";
 
 export const DATE_FILTERS: {
   key: FilterKey;
   label: string;
   getRange: () => { from: Date; to: Date };
 }[] = [
+  {
+    key: "all",
+    label: "All",
+    getRange: () => {
+      const today = new Date();
+
+      return {
+        from: today,
+        to: today,
+      };
+    },
+  },
   {
     key: "today",
     label: "Today",
@@ -157,8 +170,8 @@ export default function InquiriesTable({ personId }: { personId: string }) {
   const oneMonthAgo = new Date();
   oneMonthAgo.setMonth(today.getMonth() - 1);
 
-  const [from, setFrom] = useState(formatDate(oneMonthAgo));
-  const [to, setTo] = useState(formatDate(today));
+  const [from, setFrom] = useState<string>(formatDate(oneMonthAgo));
+  const [to, setTo] = useState<string>(formatDate(today));
 
   const [priority, setPriority] = useState<string | null>(null);
 
@@ -227,7 +240,9 @@ export default function InquiriesTable({ personId }: { personId: string }) {
 
       ...(priority ? { priority } : {}),
 
-      ...(filterMode === "range" && from && to ? { from, to } : {}),
+      ...(filterMode === "range" && from && to && activeRange !== "all"
+        ? { from, to }
+        : {}),
     };
 
     const query = new URLSearchParams(queryObj).toString();
@@ -240,6 +255,11 @@ export default function InquiriesTable({ personId }: { personId: string }) {
   };
 
   const applyRange = (filterKey: FilterKey) => {
+    if (filterKey === "all") {
+      setFilterMode("none");
+      setActiveRange("all");
+      setPage(1);
+    }
     const filter = DATE_FILTERS.find((f) => f.key === filterKey);
 
     if (!filter) return;
@@ -508,6 +528,7 @@ export default function InquiriesTable({ personId }: { personId: string }) {
                 setPage(1);
               }}
               loading={loading}
+              striped
             />
           ),
         }))}

@@ -74,7 +74,7 @@ const Input = ({
           onChange={onChange}
           onBlur={onBlur}
           className={`w-full px-3 py-2 text-[13px] rounded-lg outline-none bg-transparent placeholder:text-gray-400 ${
-            isPassword ? "pr-10" : ""
+            isPassword || isDate || isTime ? "pr-10" : ""
           } ${customClassName}`}
           style={{ color: tokens.text }}
           {...props}

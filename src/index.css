@@ -120,15 +120,10 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 input[type="date"] {
   position: relative;
 }
-input[type="time"]::-webkit-time-picker-indicator {
-  opacity: 0;
+input[type="time"]::-webkit-calendar-picker-indicator {
   display: none;
+  -webkit-appearance: none;
 }
-
-input[type="time"] {
-  position: relative;
-}
-
 
 input[type="password"]::-ms-reveal,
 input[type="password"]::-ms-clear {
