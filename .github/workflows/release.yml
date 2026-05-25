@@ -37,7 +37,7 @@ jobs:
       - name: Install frontend dependencies
         run: npm install
 
-      - name: Verify @tauri-apps/api version matches Cargo.lock
+      - name: Verify @tauri-apps/api minor version matches Cargo.lock
         shell: pwsh
         run: |
           $lock = Get-Content "src-tauri/Cargo.lock" -Raw
@@ -47,11 +47,14 @@ jobs:
           $npmVer = (Get-Content "package.json" | ConvertFrom-Json).dependencies."@tauri-apps/api"
           Write-Output "Rust tauri crate : $rustVer"
           Write-Output "npm @tauri-apps/api : $npmVer"
-          if ($rustVer -ne $npmVer) {
-            Write-Error "Version mismatch! Update package.json '@tauri-apps/api' to exactly '$rustVer'"
+          # tauri-action checks major.minor only (npm doesn't publish every rust patch)
+          $rustMinor = ($rustVer -split '\.')[0..1] -join '.'
+          $npmMinor  = ($npmVer  -split '\.')[0..1] -join '.'
+          if ($rustMinor -ne $npmMinor) {
+            Write-Error "Minor version mismatch! rust=$rustVer npm=$npmVer — update package.json '@tauri-apps/api' to a 2.$($rustMinor.Split('.')[1]).x release"
             exit 1
           }
-          Write-Output "Versions match — OK"
+          Write-Output "Minor versions match ($rustMinor) — OK"
 
       - name: Read version from tauri.conf.json
         id: version
