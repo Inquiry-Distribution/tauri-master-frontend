@@ -2,41 +2,22 @@ name: Release
 
 on:
   push:
-    tags:
-      - 'v*'
+    branches:
+      - main
+    paths-ignore:
+      - 'latest.json'
+      - '**.md'
+  workflow_dispatch:
 
 jobs:
   release:
+    runs-on: windows-latest
     permissions:
       contents: write
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - platform: windows-latest
-            args: ''
-          - platform: macos-latest
-            args: '--target aarch64-apple-darwin'
-          - platform: macos-latest
-            args: '--target x86_64-apple-darwin'
-          - platform: ubuntu-22.04
-            args: ''
-
-    runs-on: ${{ matrix.platform }}
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
-      - name: Install Linux dependencies
-        if: matrix.platform == 'ubuntu-22.04'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            libwebkit2gtk-4.1-dev \
-            libappindicator3-dev \
-            librsvg2-dev \
-            patchelf
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -46,8 +27,6 @@ jobs:
 
       - name: Install Rust stable
         uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
 
       - name: Rust cache
         uses: swatinem/rust-cache@v2
@@ -57,18 +36,77 @@ jobs:
       - name: Install frontend dependencies
         run: npm install
 
-      - name: Build and release
+      - name: Read version from tauri.conf.json
+        id: version
+        shell: pwsh
+        run: |
+          $v = (Get-Content src-tauri/tauri.conf.json | ConvertFrom-Json).version
+          "VERSION=$v" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          Write-Output "Building version: $v"
+
+      - name: Build & publish release
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY || '' }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD || '' }}
         with:
-          tagName: ${{ github.ref_name }}
-          releaseName: 'InquiryHub v__VERSION__'
+          tagName: v${{ steps.version.outputs.VERSION }}
+          releaseName: InquiryHub v${{ steps.version.outputs.VERSION }}
           releaseBody: |
-            ## What's New
-            See the assets below to download and install the latest version.
-            Windows users: download the `.exe` installer.
+            ## InquiryHub v${{ steps.version.outputs.VERSION }}
+            Download the installer from the assets below.
           releaseDraft: false
           prerelease: false
+
+      - name: Update latest.json
+        shell: pwsh
+        run: |
+          $version = "${{ steps.version.outputs.VERSION }}"
+          $bundlePath = "src-tauri/target/release/bundle/nsis"
+
+          # Find the .sig file
+          $sigFile = Get-ChildItem -Path $bundlePath -Filter "*.nsis.zip.sig" | Select-Object -First 1
+          if (-not $sigFile) {
+            Write-Error "Signature file not found in $bundlePath"
+            exit 1
+          }
+          $signature = (Get-Content $sigFile.FullName -Raw).Trim()
+
+          # Find the .zip file (exclude .sig)
+          $zipFile = Get-ChildItem -Path $bundlePath -Filter "*.nsis.zip" |
+                     Where-Object { $_.Extension -ne ".sig" } |
+                     Select-Object -First 1
+          $downloadUrl = "https://github.com/Inquiry-Distribution/tauri-master-frontend/releases/download/v${version}/$($zipFile.Name)"
+
+          # Write latest.json
+          $json = [ordered]@{
+            version  = $version
+            notes    = "Bug fixes and improvements"
+            pub_date = (Get-Date -Format "yyyy-MM-ddTHH:mm:ssZ")
+            platforms = [ordered]@{
+              "windows-x86_64" = [ordered]@{
+                signature = $signature
+                url       = $downloadUrl
+              }
+            }
+          } | ConvertTo-Json -Depth 5
+
+          Set-Content -Path "latest.json" -Value $json -Encoding UTF8
+          Write-Output "latest.json updated to v$version"
+          Get-Content "latest.json"
+
+      - name: Commit latest.json back to main
+        shell: pwsh
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add latest.json
+          $changes = git diff --staged --name-only
+          if ($changes) {
+            git commit -m "chore: update latest.json for v${{ steps.version.outputs.VERSION }} [skip ci]"
+            git push
+            Write-Output "latest.json committed and pushed"
+          } else {
+            Write-Output "latest.json unchanged, nothing to commit"
+          }
