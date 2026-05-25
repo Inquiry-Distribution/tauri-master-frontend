@@ -16,7 +16,7 @@
     "shell:allow-open",
     "updater:allow-check",
     "updater:allow-download-and-install",
-    "process:allow-relaunch",
+    "process:allow-restart",
     "fs:allow-write-file",
     "fs:allow-app-write",
     "fs:allow-home-write",
