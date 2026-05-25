@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useTheme } from "../../contexts";
-import { Filter, Calendar1, Download } from "lucide-react";
+import { Filter, Calendar1, Download, Calendar } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
 import { useGetAllAttendance } from "@/src/hooks/attendance/useGetAllAttendance";
 import DynamicTable from "@/src/components/ui/table/dynamicTable";
@@ -278,14 +278,24 @@ export default function AttendancePage() {
         {/* Top controls */}
         <div className="flex flex-col md:flex-row gap-4">
           <div className="relative flex-1">
-            <Calendar1
-              size={18}
-              className="absolute left-3 top-1/2 -translate-y-1/2"
-              style={{ color: tokens.textMuted }}
-            />
+            {/* LEFT ICON */}
+            <button
+              type="button"
+              onClick={() => {
+                const el = document.getElementById("date") as HTMLInputElement;
+                el?.showPicker?.();
+                el?.focus();
+              }}
+              className="absolute left-3 top-1/2 -translate-y-1/2 z-10 text-gray-500"
+            >
+              <Calendar1 size={18} style={{ color: tokens.textMuted }} />
+            </button>
+
+            {/* INPUT */}
             <input
+              id="date"
               type="date"
-              className="w-full pl-10 pr-4 py-2.5 rounded-xl border outline-none transition-all"
+              className="w-full pl-10 pr-10 py-2.5 rounded-xl border outline-none transition-all"
               style={{
                 backgroundColor: tokens.surface,
                 borderColor: tokens.border,
@@ -303,6 +313,19 @@ export default function AttendancePage() {
                 })
               }
             />
+
+            {/* RIGHT ICON */}
+            <button
+              type="button"
+              onClick={() => {
+                const el = document.getElementById("date") as HTMLInputElement;
+                el?.showPicker?.();
+                el?.focus();
+              }}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
+            >
+              <Calendar size={20} />
+            </button>
           </div>
 
           <PersonSelector

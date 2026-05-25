@@ -49,7 +49,7 @@ export const getInquiryColumns = ({
       label: "Inquiry",
       render: (row) => (
         <Link
-          className="max-w-[260px] cursor-pointer"
+          className="lg:max-w-[200px] md:max-w-[150px] max-w-[120px] cursor-pointer"
           to={`/inquiries/${row.id}`}
         >
           <p
@@ -119,24 +119,27 @@ export const getInquiryColumns = ({
         row.assignedTo ? (
           <button
             title="Send Notification to Assignee"
-            className="flex items-center gap-2 cursor-pointer"
+            className="flex items-center gap-2 cursor-pointer text-center"
             onClick={() => setSelectedUserId(row.assignedTo!.id)}
           >
             <Avatar name={row.assignedTo.name} size="sm" variant="solid" />
           </button>
         ) : (
-          <span className="text-xs text-(--textMuted)">Unassigned</span>
+          <div className=" w-full text-xs text-center text-(--textMuted)">
+            Unassigned
+          </div>
         ),
     },
 
     {
       key: "createdAt",
       label: "Date & Time",
+      width: "200px",
       render: (row) => (
-        <span className="text-xs text-(--textMuted)">
+        <div className=" w-[120px] text-xs text-(--textMuted)">
           {/* {new Date(row.createdAt).toLocaleDateString()} */}
           {formatDateTime(row.createdAt)}
-        </span>
+        </div>
       ),
     },
 

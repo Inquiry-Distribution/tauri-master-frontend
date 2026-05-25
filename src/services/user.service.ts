@@ -1,8 +1,13 @@
 import { api } from "@/src/api/axios";
-import { CreateUser, ResetPassword, UpdateUser } from "../types/users";
+import {
+  CreateAdmin,
+  CreateUser,
+  ResetPassword,
+  UpdateUser,
+} from "../types/users";
 
 export const UserService = {
-  createUser: async (payload: CreateUser) => {
+  createUser: async (payload: CreateUser | CreateAdmin) => {
     const { data } = await api.post("/users", payload);
     return data;
   },
@@ -48,6 +53,10 @@ export const UserService = {
 
   syncUsers: async () => {
     const { data } = await api.post("/users/sync");
+    return data;
+  },
+  deleteUser: async (id: string) => {
+    const { data } = await api.delete(`/users/${id}`);
     return data;
   },
 };

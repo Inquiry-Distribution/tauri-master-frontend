@@ -60,7 +60,7 @@ export default function ChangePasswordModal({
       Swal.fire({
         icon: "error",
         title: "Reset password failed",
-        text: err?.response?.data?.message || "Please try again later",
+        text: error || "Please try again later",
       });
       console.error("Reset password failed", err);
     }

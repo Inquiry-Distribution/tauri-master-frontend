@@ -13,7 +13,11 @@ import Swal from "sweetalert2";
 type ToggleStatus = "idle" | "loading" | "success";
 export default function LoginLimitForm() {
   const { data, getConfigLoginLimit } = useGetConfigLoginLimit();
-  const { updateConfigLoginLimit, loading } = useUpdateConfigLoginLimit();
+  const {
+    updateConfigLoginLimit,
+    loading,
+    error: updateError,
+  } = useUpdateConfigLoginLimit();
   const [toggleStatus, setToggleStatus] = useState<
     "idle" | "loading" | "success"
   >("idle");
@@ -96,7 +100,8 @@ export default function LoginLimitForm() {
     } catch (err: any) {
       Swal.fire({
         icon: "error",
-        title: err?.response?.data?.message || "Failed to update",
+        title: "Failed to update",
+        text: updateError || "Something went wrong",
       });
     }
   };
@@ -150,7 +155,8 @@ export default function LoginLimitForm() {
 
                   Swal.fire({
                     icon: "error",
-                    title: err?.response?.data?.message || "Failed to update",
+                    title: "Failed to update",
+                    text: updateError || "Something went wrong",
                   });
                 }
               }}

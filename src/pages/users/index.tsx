@@ -125,8 +125,7 @@ export default function SalesPersonsPage() {
       Swal.fire({
         icon: "error",
         title: "Sync Failed",
-        text:
-          err?.response?.data?.message || "An error occurred while syncing.",
+        text: syncUsersError || "An error occurred while syncing.",
       });
     }
   };

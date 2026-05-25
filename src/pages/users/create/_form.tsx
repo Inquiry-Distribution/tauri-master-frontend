@@ -10,7 +10,7 @@ import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 
 const CreateUserForm = ({ onSuccess }: { onSuccess: (res: any) => void }) => {
-  const { createUser, loading } = useCreateSalesPerson();
+  const { createUser, loading, error } = useCreateSalesPerson();
 
   const [form, setForm] = useState<CreateUser>({
     name: "",
@@ -104,7 +104,7 @@ const CreateUserForm = ({ onSuccess }: { onSuccess: (res: any) => void }) => {
       Swal.fire({
         icon: "error",
         title: "Error Creating Sales Person.",
-        text: err instanceof Error ? err.message : "An error occurred",
+        text: error || "An error occurred",
       });
     }
   };

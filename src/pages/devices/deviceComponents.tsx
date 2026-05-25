@@ -77,9 +77,17 @@ export function DeviceToggleButton({
 }) {
   const isActive = !device.isBlocked;
 
-  const { blockDevice, loading: blocking } = useBlockDevice();
+  const {
+    blockDevice,
+    loading: blocking,
+    error: blockError,
+  } = useBlockDevice();
 
-  const { unblockDevice, loading: unblocking } = useUnblockDevice();
+  const {
+    unblockDevice,
+    loading: unblocking,
+    error: unblockError,
+  } = useUnblockDevice();
 
   const loading = blocking || unblocking;
 
@@ -92,7 +100,7 @@ export function DeviceToggleButton({
         } catch (err) {
           Swal.fire({
             title: "Error",
-            text: "Failed to block device.",
+            text: blockError || "Failed to block device.",
             icon: "error",
           });
           console.error("Error", err);
@@ -104,7 +112,7 @@ export function DeviceToggleButton({
         } catch (err) {
           Swal.fire({
             title: "Error",
-            text: "Failed to unblock device.",
+            text: unblockError || "Failed to unblock device.",
             icon: "error",
           });
           console.error("Error", err);

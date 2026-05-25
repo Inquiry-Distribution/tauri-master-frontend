@@ -2,9 +2,10 @@ import { useEffect, useState } from "react";
 import { Mail, Phone, Calendar, MapPin } from "lucide-react";
 import { useGetSalesPersonById } from "@/src/hooks/salesPerson/useGetSalesPerson";
 import CommonLoader from "../../loader/loader";
+import Swal from "sweetalert2";
 
 export default function SalesPersonProfileCard({ id }: { id: string }) {
-  const { getSalesPersonById, loading } = useGetSalesPersonById();
+  const { getSalesPersonById, loading, error } = useGetSalesPersonById();
   const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
@@ -15,6 +16,11 @@ export default function SalesPersonProfileCard({ id }: { id: string }) {
         const res = await getSalesPersonById(id);
         setUser(res.data);
       } catch (err) {
+        Swal.fire({
+          icon: "error",
+          title: "Failed to load user",
+          text: error || "Please try again later",
+        });
         console.error(err);
       }
     };

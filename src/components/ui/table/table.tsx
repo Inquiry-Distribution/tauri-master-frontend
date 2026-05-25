@@ -5,7 +5,7 @@ export type TableProps = React.TableHTMLAttributes<HTMLTableElement>;
 
 export const Table = React.forwardRef<HTMLTableElement, TableProps>(
   ({ className, ...props }, ref) => (
-    <div className="w-full overflow-auto">
+    <div className="w-full overflow-auto custom-tabs-scroll">
       <table
         ref={ref}
         className={cn("w-full text-sm text-left", className)}

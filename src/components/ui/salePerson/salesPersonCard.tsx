@@ -162,7 +162,11 @@ export default function SalesPersonCard({
 
   const { toggleActiveStatus, loading: toggleLoading } =
     useToggleActiveStatus();
-  const { resetDevice, loading: resetLoading } = useResetDeviceBySalesPerson();
+  const {
+    resetDevice,
+    loading: resetLoading,
+    error: resetDeviceError,
+  } = useResetDeviceBySalesPerson();
 
   const inq = person.inquiries;
   const att = person.attendance;
@@ -197,7 +201,7 @@ export default function SalesPersonCard({
       Swal.fire({
         icon: "error",
         title: "Failed to reset device",
-        text: error?.response?.data?.message ?? "Something went wrong",
+        text: resetDeviceError || "Something went wrong",
       });
     }
   };

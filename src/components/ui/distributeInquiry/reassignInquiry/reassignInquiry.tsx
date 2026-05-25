@@ -18,7 +18,7 @@ export default function ReassignInquiryModal({
   onClose,
   onSuccess,
 }: Props) {
-  const { reassignInquiry, loading } = useReassignInquiry();
+  const { reassignInquiry, loading, error } = useReassignInquiry();
 
   const handleConfirm = async (salesPersonId: string) => {
     try {
@@ -37,6 +37,7 @@ export default function ReassignInquiryModal({
       Swal.fire({
         icon: "error",
         title: "Failed to update inquiry",
+        text: error || "Please try again later",
       });
     }
   };

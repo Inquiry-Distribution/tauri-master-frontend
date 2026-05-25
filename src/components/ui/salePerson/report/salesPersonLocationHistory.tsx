@@ -254,8 +254,8 @@ export function SalespersonLocationHistory({ salespersonId }: Props) {
         ))}
 
         {/* Custom Range */}
-        <div className="lg:w-full md:w-full w-full grid lg:grid-cols-10 md:grid-cols-6 grid-cols-4 gap-2">
-          <div className="lg:col-span-4 md:col-span-2 sm:col-span-1">
+        <div className="grow lg:w-full md:w-full w-full grid lg:grid-cols-11 md:grid-cols-6 grid-cols-4 gap-2">
+          <div className="lg:col-span-5 md:col-span-2 sm:col-span-1">
             <Input
               placeholder="From"
               label="From"
@@ -274,7 +274,7 @@ export function SalespersonLocationHistory({ salespersonId }: Props) {
           <div className="text-text font-semibold text-2xl flex items-center justify-center col-span-1">
             →
           </div>
-          <div className="lg:col-span-4 md:col-span-2 sm:col-span-1">
+          <div className="lg:col-span-5 md:col-span-2 sm:col-span-1">
             <Input
               placeholder="To"
               label="To"

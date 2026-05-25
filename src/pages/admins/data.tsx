@@ -1,14 +1,27 @@
 // data.tsx
 
 import { Button } from "@/src/components/ui/button";
+import ButtonLoader from "@/src/components/ui/loader/buttonLoader";
 import { TableColumn } from "@/src/components/ui/table/types";
+import { Trash } from "lucide-react";
+import Swal from "sweetalert2";
 
 export type AdminColumnDeps = {
   onChangePasswordModal: (user: any) => void;
+  onStatusChange?: (updatedUser: any) => void;
+  togglingId?: string | null;
+  onDelete: (id: string) => void;
+  deleteLoading: boolean;
+  deleteId?: string | null;
 };
 
 export const getAdminColumns = ({
   onChangePasswordModal,
+  onStatusChange,
+  togglingId,
+  onDelete,
+  deleteLoading,
+  deleteId,
 }: AdminColumnDeps): TableColumn<any>[] => {
   return [
     {
@@ -46,17 +59,45 @@ export const getAdminColumns = ({
       key: "status",
       label: "Status",
       align: "center",
-      render: (row) => (
-        <span
-          className={`px-2 py-1 text-xs rounded-md font-medium ${
-            row.isActive
-              ? "bg-(--successLight) text-(--success)"
-              : "bg-(--dangerLight) text-(--danger)"
-          }`}
-        >
-          {row.isActive ? "Active" : "Inactive"}
-        </span>
-      ),
+
+      render: (row) => {
+        const handleToggleStatus = async () => {
+          try {
+            await onStatusChange?.({
+              ...row,
+              isActive: !row.isActive,
+            });
+          } catch {
+            Swal.fire({
+              icon: "error",
+              title: "Failed to toggle status",
+            });
+          }
+        };
+
+        return (
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={handleToggleStatus}
+            style={{
+              background: row.isActive
+                ? "var(--successLight)"
+                : "var(--dangerLight)",
+
+              color: row.isActive ? "var(--success)" : "var(--danger)",
+            }}
+          >
+            {togglingId === row.id ? (
+              <ButtonLoader />
+            ) : row.isActive ? (
+              "Active"
+            ) : (
+              "Inactive"
+            )}
+          </Button>
+        );
+      },
     },
 
     {
@@ -84,6 +125,15 @@ export const getAdminColumns = ({
               variant="secondary"
             >
               Change Password
+            </Button>
+            <Button
+              onClick={() => {
+                onDelete(row.id);
+              }}
+              variant="danger"
+              disabled={deleteId === row.id}
+            >
+              <Trash size={18} />
             </Button>
           </div>
         );

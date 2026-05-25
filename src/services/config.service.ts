@@ -1,5 +1,5 @@
 import { api } from "../api/axios";
-import { ConfigLoginLimit } from "../types/config";
+import { ConfigAttendanceHours, ConfigLoginLimit } from "../types/config";
 
 export const ConfigService = {
   getConfigLoginLimit: async () => {
@@ -8,6 +8,17 @@ export const ConfigService = {
   },
   updateConfigLoginLimit: async (payload: ConfigLoginLimit) => {
     const { data } = await api.patch("/system-config/login-limit", payload);
+    return data;
+  },
+  getAttendanceHours: async () => {
+    const { data } = await api.get("/system-config/attendance-hours");
+    return data;
+  },
+  updateAttendanceHours: async (payload: ConfigAttendanceHours) => {
+    const { data } = await api.patch(
+      "/system-config/attendance-hours",
+      payload,
+    );
     return data;
   },
 };

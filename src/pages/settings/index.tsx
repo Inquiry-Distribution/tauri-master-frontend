@@ -3,6 +3,7 @@ import { useTheme } from "../../contexts";
 import { SalesPerson } from "@/src/types/users";
 
 import LoginLimitForm from "./_form";
+import AttendanceHoursForm from "./_formAttendanceHours";
 
 export default function SettingsPage() {
   const { tokens } = useTheme();
@@ -50,6 +51,7 @@ export default function SettingsPage() {
       </div>
 
       <LoginLimitForm />
+      <AttendanceHoursForm />
     </div>
   );
 }

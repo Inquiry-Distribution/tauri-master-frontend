@@ -39,7 +39,7 @@ export default function SalesPersonCard({
   onToggleStatus,
   onUpdated,
 }: Props) {
-  const { tokens } = useTheme();
+  const { tokens, isDark } = useTheme();
   const [updateUserModal, setUpdateUserModal] = useState<boolean>(false);
   const [setResetPinModal, setSetResetPinModal] = useState<boolean>(false);
   const [status, setStatus] = useState(person.isActive ? "active" : "inactive");
@@ -62,6 +62,7 @@ export default function SalesPersonCard({
       Swal.fire({
         icon: "error",
         title: "Failed to toggle status",
+        text: toggleError || "Please try again later",
       });
       console.error(error);
     }
@@ -92,7 +93,7 @@ export default function SalesPersonCard({
       Swal.fire({
         icon: "error",
         title: "Failed to reset device",
-        text: String(error.response?.data?.message) || "Something went wrong",
+        text: resetError || "Something went wrong",
       });
     }
   };
@@ -392,8 +393,8 @@ export default function SalesPersonCard({
           type="button"
           variant="ghost"
           style={{
-            background: statusUserBg(!toggleLoading ? status : ""),
-            color: statusUserColor(!toggleLoading ? status : ""),
+            background: statusUserBg(!toggleLoading ? status : "", isDark),
+            color: statusUserColor(!toggleLoading ? status : "", isDark),
           }}
         >
           {toggleLoading ? (

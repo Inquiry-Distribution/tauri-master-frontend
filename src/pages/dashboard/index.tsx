@@ -9,6 +9,7 @@ import {
   MapPin,
   Contact2,
   Smartphone,
+  NotepadText,
 } from "lucide-react";
 import {
   BarChart,
@@ -152,6 +153,14 @@ export default function DashboardPage() {
             trend: "-1.2%",
             link: "/devices",
           },
+          {
+            label: "Today's Inquiries",
+            value: data.todayInquiries,
+            icon: NotepadText,
+            color: "bg-cyan-500",
+            trend: "+12.5%",
+            link: "/inquiries?showFilters=true&range=today&filterMode=range&page=1",
+          },
         ]
       : [
           // fallback dummy data
@@ -210,6 +219,14 @@ export default function DashboardPage() {
             color: "bg-red-500",
             trend: "-",
             link: "/devices",
+          },
+          {
+            label: "Today's Inquiries",
+            value: "-",
+            icon: NotepadText,
+            color: "bg-cyan-500",
+            trend: "-",
+            link: "/inquiries?showFilters=true&range=today&filterMode=range&page=1",
           },
         ]
   ).map((item, index) => ({
@@ -272,8 +289,8 @@ export default function DashboardPage() {
         )}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card>
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+        <Card className="lg:col-span-3">
           <InquiryAnalytics />
         </Card>
         {/* <div
@@ -360,7 +377,7 @@ export default function DashboardPage() {
             </div>
           </div> */}
 
-        {isSuperUser && <RecentActivity />}
+        {isSuperUser && <RecentActivity className="lg:col-span-2" />}
         {/* {isSuperUser && <LiveLocationsCard />} */}
       </div>
       {/* Broadcast Modal */}

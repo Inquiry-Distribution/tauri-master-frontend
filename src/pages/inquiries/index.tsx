@@ -44,13 +44,26 @@ type FilterKey =
   | "7d"
   | "30d"
   | "thisMonth"
-  | "lastMonth";
+  | "lastMonth"
+  | "all";
 
 export const DATE_FILTERS: {
   key: FilterKey;
   label: string;
   getRange: () => { from: Date; to: Date };
 }[] = [
+  {
+    key: "all",
+    label: "All",
+    getRange: () => {
+      const today = new Date();
+
+      return {
+        from: today,
+        to: today,
+      };
+    },
+  },
   {
     key: "today",
     label: "Today",
@@ -193,11 +206,22 @@ export default function InquiriesPage() {
   const limit = Number(searchParams.get("limit")) || 10;
   const searchTerm = searchParams.get("search") ?? "";
   const priority = searchParams.get("priority") ?? null;
-  const from = searchParams.get("from") ?? defaultFrom;
-  const to = searchParams.get("to") ?? defaultTo;
+  const rangeParam = searchParams.get("range") as FilterKey | null;
+
+  const rangeFilter = DATE_FILTERS.find((f) => f.key === rangeParam);
+
+  const computedRange = rangeFilter?.getRange();
+
+  const from =
+    searchParams.get("from") ??
+    (computedRange ? formatDate(computedRange.from) : defaultFrom);
+
+  const to =
+    searchParams.get("to") ??
+    (computedRange ? formatDate(computedRange.to) : defaultTo);
   const filterMode =
     (searchParams.get("filterMode") as "range" | "none") ?? "none";
-  const activeRange = searchParams.get("range") ?? "30d";
+  const activeRange = searchParams.get("range") ?? "today";
   const personId = searchParams.get("assignedToId") ?? null;
   const showFilters = searchParams.get("showFilters") === "true";
 
@@ -222,7 +246,11 @@ export default function InquiriesPage() {
   const [editingInquiry, setEditingInquiry] = useState<Inquiry | null>(null);
   const [selectedPerson, setSelectedPerson] = useState<any>(null);
   const { data, loading, setData, error, getInquiries } = useGetInquiries();
-  const { deleteInquiry, loading: deleteLoading } = useDeleteInquiry();
+  const {
+    deleteInquiry,
+    loading: deleteLoading,
+    error: deleteError,
+  } = useDeleteInquiry();
   const {
     bulkDeleteInquiry,
     loading: bulkDeleteLoading,
@@ -287,6 +315,7 @@ export default function InquiriesPage() {
       Swal.fire({
         icon: "error",
         title: "Bulk delete failed",
+        text: bulkDeleteError || "Please try again later",
       });
     }
   };
@@ -370,6 +399,7 @@ export default function InquiriesPage() {
       Swal.fire({
         icon: "error",
         title: "Failed to delete inquiry",
+        text: deleteError || "Please try again later",
       });
     }
   };
@@ -403,7 +433,9 @@ export default function InquiriesPage() {
       ...(personId ? { assignedToId: personId } : {}),
       ...(debouncedSearch ? { search: debouncedSearch } : {}),
       ...(priority ? { priority } : {}),
-      ...(filterMode === "range" && from && to ? { from, to } : {}),
+      ...(filterMode === "range" && from && to && activeRange !== "all"
+        ? { from, to }
+        : {}),
     };
 
     getInquiries(new URLSearchParams(queryObj).toString());
@@ -421,6 +453,18 @@ export default function InquiriesPage() {
 
   // ─── Quick-range helper ────────────────────────────────────────────────
   const applyRange = (filterKey: FilterKey) => {
+    if (filterKey === "all") {
+      patchParams({
+        range: "all",
+        filterMode: "none",
+        from: null,
+        to: null,
+        page: "1",
+      });
+
+      return;
+    }
+
     const filter = DATE_FILTERS.find((f) => f.key === filterKey);
 
     if (!filter) return;
@@ -465,9 +509,23 @@ export default function InquiriesPage() {
         return {
           ...tab,
           label: (
-            <div className="flex items-center gap-2">
-              <span>{tab.label}</span>
-
+            <div className="flex flex-col justify-start items-center gap-1">
+              {tab.key === "all" && (
+                <span
+                  className="px-2 py-0.5 text-xs rounded-full font-medium transition-all"
+                  style={{
+                    background: isActive
+                      ? tokens.accent
+                      : tokens.surfaceElevated,
+                    color: isActive ? "#fff" : tokens.textMuted,
+                    border: `1px solid ${
+                      isActive ? tokens.accent : tokens.border
+                    }`,
+                  }}
+                >
+                  {data?.total}
+                </span>
+              )}
               {statusCounts?.[tab.key] != null && (
                 <span
                   className="px-2 py-0.5 text-xs rounded-full font-medium transition-all"
@@ -484,6 +542,7 @@ export default function InquiriesPage() {
                   {statusCounts?.[tab.key] ?? 0}
                 </span>
               )}
+              <span className="text-xs">{tab.label}</span>
             </div>
           ),
         };

@@ -15,6 +15,8 @@ export type TableColumn<T> = {
   className?: string;
   /** Align cell content. Defaults to "left". */
   align?: "left" | "center" | "right";
+  /** Tailwind width class OR css width value */
+  width?: string;
 };
 
 export interface DynamicTableProps<T> {

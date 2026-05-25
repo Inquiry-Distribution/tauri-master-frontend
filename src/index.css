@@ -110,3 +110,58 @@
 .animate-fadeIn {
   animation: fadeIn 0.15s ease;
 }
+
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+  opacity: 0;
+  display: none;
+}
+
+input[type="date"] {
+  position: relative;
+}
+input[type="time"]::-webkit-calendar-picker-indicator {
+  display: none;
+  -webkit-appearance: none;
+}
+
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+  display: none;
+}
+
+
+
+
+
+.custom-tabs-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+
+  /* smooth scrolling */
+  scroll-behavior: smooth;
+}
+
+/* Chrome, Edge, Safari */
+.custom-tabs-scroll::-webkit-scrollbar {
+  height: 6px;
+}
+
+.custom-tabs-scroll::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 999px;
+}
+
+.custom-tabs-scroll::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 999px;
+  transition: background 0.2s ease;
+}
+
+.custom-tabs-scroll::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+.custom-tabs-scroll::-webkit-scrollbar-corner {
+  background: transparent;
+}

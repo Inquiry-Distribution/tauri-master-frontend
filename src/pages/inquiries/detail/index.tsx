@@ -165,7 +165,17 @@ export default function InquiryDetailPage() {
       cancelButtonText: "No",
     }).then(async (result) => {
       if (result.isConfirmed) {
-        await unassignInquiry(id!);
+        try {
+          await unassignInquiry(id!);
+          setInquiry({ ...inquiry, status: "unassigned", assignedTo: null });
+        } catch (err) {
+          Swal.fire({
+            icon: "error",
+            title: "Failed to unassign inquiry",
+            text: unassignError || "Please try again later",
+          });
+          console.error(err);
+        }
         setInquiry({ ...inquiry, status: "unassigned", assignedTo: null });
       }
     });
@@ -205,6 +215,11 @@ export default function InquiryDetailPage() {
         };
       });
     } catch (err) {
+      Swal.fire({
+        icon: "error",
+        title: "Failed to delete file",
+        text: deleteError || "Please try again later",
+      });
       console.error(err);
 
       // // ❌ Rollback if API fails

@@ -25,6 +25,34 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
+  const [errors, setErrors] = useState<{
+    email?: string;
+    password?: string;
+    general?: string;
+  }>({});
+
+  const validateForm = () => {
+    const newErrors: typeof errors = {};
+
+    // Email validation
+    if (!email.trim()) {
+      newErrors.email = "Email is required";
+    } else if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(email)) {
+      newErrors.email = "Invalid email address";
+    }
+
+    // Password validation
+    if (!password.trim()) {
+      newErrors.password = "Password is required";
+    } else if (password.length < 6) {
+      newErrors.password = "Password must be at least 6 characters";
+    }
+
+    setErrors(newErrors);
+
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleLogin = async () => {
     try {
       const res = await api.post("/auth/login", {
@@ -39,35 +67,33 @@ export default function LoginPage() {
         refresh_token: refreshToken,
         user,
       });
+
       navigate("/");
     } catch (err: any) {
-      let title = "Login failed";
-      let text = "Something went wrong";
-      let icon: "error" | "warning" = "error";
+      const message = err.response?.data?.message || "Something went wrong";
 
-      if (err.response) {
-        const status = err.response.status;
-        const message = err.response.data?.message;
-
-        if (status === 401) {
-          title = "Invalid Credentials";
-          text = message || "Email or password is incorrect.";
-          icon = "warning";
-        } else if (status === 403) {
-          title = "Access Denied";
-          text = message || "You are not allowed to login here.";
-        } else {
-          text = message || text;
-        }
-      } else if (err.request) {
-        title = "Network Error";
-        text = "Unable to reach server. Check your connection.";
+      // Dynamic backend errors
+      if (message.toLowerCase().includes("email")) {
+        setErrors((prev) => ({
+          ...prev,
+          email: message,
+        }));
+      } else if (message.toLowerCase().includes("password")) {
+        setErrors((prev) => ({
+          ...prev,
+          password: message,
+        }));
+      } else {
+        setErrors((prev) => ({
+          ...prev,
+          general: message,
+        }));
       }
 
       Swal.fire({
-        icon,
-        title,
-        text,
+        icon: "error",
+        title: "Login Failed",
+        text: message,
       });
 
       console.error("Login failed", err);
@@ -76,10 +102,13 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!validateForm()) return;
+
     setIsLoading(true);
 
     try {
-      await handleLogin(); // ✅ wait
+      await handleLogin();
     } finally {
       setIsLoading(false);
     }
@@ -159,12 +188,27 @@ export default function LoginPage() {
                   className="w-full pl-12 pr-4 py-3 rounded-xl border outline-none transition-all focus:ring-2 focus:ring-blue-500/20"
                   style={{
                     backgroundColor: tokens.bg,
-                    borderColor: tokens.border,
+                    borderColor: errors.email ? "#ef4444" : tokens.border,
                     color: tokens.text,
                   }}
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+
+                    // Clear error while typing
+                    setErrors((prev) => ({
+                      ...prev,
+                      email: "",
+                      general: "",
+                    }));
+                  }}
                 />
+
+                {errors.email && (
+                  <p className="text-red-500 text-xs px-1 mt-1">
+                    {errors.email}
+                  </p>
+                )}
               </div>
             </div>
 
@@ -196,14 +240,28 @@ export default function LoginPage() {
                   required
                   placeholder="••••••••"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+
+                    setErrors((prev) => ({
+                      ...prev,
+                      password: "",
+                      general: "",
+                    }));
+                  }}
                   className="w-full pl-12 pr-12 py-3 rounded-xl border outline-none transition-all focus:ring-2 focus:ring-blue-500/20"
                   style={{
                     backgroundColor: tokens.bg,
-                    borderColor: tokens.border,
+                    borderColor: errors.password ? "#ef4444" : tokens.border,
                     color: tokens.text,
                   }}
                 />
+
+                {errors.password && (
+                  <p className="text-red-500 text-xs px-1 mt-1">
+                    {errors.password}
+                  </p>
+                )}
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
@@ -244,6 +302,11 @@ export default function LoginPage() {
                 </>
               )}
             </button>
+            {errors.general && (
+              <p className="text-red-500 text-sm text-center">
+                {errors.general}
+              </p>
+            )}
           </form>
 
           {/* <div

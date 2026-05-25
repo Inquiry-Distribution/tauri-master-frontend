@@ -103,13 +103,14 @@ const FILTERS = [
 export default function InquiryAnalytics() {
   const { data, loading, error, getInquiryReportByStatus } =
     useGetInquiryReportByStatus();
-  const [activeFilter, setActiveFilter] = useState("30d");
+  const [activeFilter, setActiveFilter] = useState("today");
   // ✅ default dates
   const today = new Date();
   const oneMonthAgo = new Date();
   oneMonthAgo.setMonth(today.getMonth() - 1);
 
-  const [from, setFrom] = useState(formatDate(oneMonthAgo));
+  const [from, setFrom] = useState(formatDate(today));
+  // const [from, setFrom] = useState(formatDate(oneMonthAgo));
   const [to, setTo] = useState(formatDate(today));
 
   // ✅ initial API call
@@ -176,8 +177,8 @@ export default function InquiryAnalytics() {
           </Button>
         ))}
       </div>
-      <div className="grid lg:grid-cols-10 md:grid-cols-6 sm:grid-cols-4 gap-2">
-        <div className="lg:col-span-4 md:col-span-2 sm:col-span-1">
+      <div className="grid lg:grid-cols-11 md:grid-cols-6 sm:grid-cols-4 gap-2">
+        <div className="lg:col-span-5 md:col-span-2 sm:col-span-1">
           <Input
             label="From"
             inputName="from"
@@ -191,7 +192,7 @@ export default function InquiryAnalytics() {
         <div className="text-text font-semibold text-2xl w-full flex items-center justify-center col-span-1">
           →
         </div>
-        <div className="lg:col-span-4 md:col-span-2 sm:col-span-1">
+        <div className="lg:col-span-5 md:col-span-2 sm:col-span-1">
           <Input
             label="To"
             inputName="to"
@@ -202,17 +203,17 @@ export default function InquiryAnalytics() {
             showLabel={false}
           />
         </div>
-        <div className="col-span-1 flex items-end justify-end">
+        {/* <div className="col-span-1 flex items-end justify-end">
           <Button
             size="sm"
             variant="primary"
             onClick={handleSubmit}
             disabled={loading}
-          >
-            {/* {loading ? <ButtonLoader/> : <RefreshCcw/>} */}
-            <RefreshCcw className={loading ? "animate-spin" : ""} />
+          > */}
+        {/* {loading ? <ButtonLoader/> : <RefreshCcw/>} */}
+        {/* <RefreshCcw className={loading ? "animate-spin" : ""} />
           </Button>
-        </div>
+        </div> */}
       </div>
 
       {/* ───── Error ───── */}

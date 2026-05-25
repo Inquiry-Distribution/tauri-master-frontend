@@ -201,9 +201,10 @@ export default function SalesPersonReportPage() {
   const oneMonthAgo = new Date();
   oneMonthAgo.setMonth(today.getMonth() - 1);
 
-  const [from, setFrom] = useState(formatDate(oneMonthAgo));
+  const [from, setFrom] = useState(formatDate(today));
+  // const [from, setFrom] = useState(formatDate(oneMonthAgo));
   const [to, setTo] = useState(formatDate(today));
-  const [activeRange, setActiveRange] = useState<string>("30d");
+  const [activeRange, setActiveRange] = useState<string>("7d");
   const [hasFetched, setHasFetched] = useState(false);
 
   useEffect(() => {
@@ -691,7 +692,7 @@ export default function SalesPersonReportPage() {
         <div className="lg:col-span-2 space-y-6">
           <div className="p-4 rounded-xl border border-border bg-surface space-y-4">
             {/* Preset Filters */}
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex w-full flex-wrap items-center gap-2">
               <div
                 className="text-sm font-medium"
                 style={{ color: tokens.textMuted }}
@@ -710,7 +711,7 @@ export default function SalesPersonReportPage() {
                 </Button>
               ))}
               {/* Custom Range */}
-              <div className="lg:w-1/3 md:w-1/2 w-full grid lg:grid-cols-10 md:grid-cols-6 grid-cols-4 gap-2">
+              <div className="lg:w-1/3 md:w-full w-full md:grow grow grid lg:grid-cols-10 md:grid-cols-6 grid-cols-4 gap-2">
                 <div className="lg:col-span-4 md:col-span-2 sm:col-span-1">
                   <Input
                     placeholder="From"

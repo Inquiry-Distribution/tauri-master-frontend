@@ -43,13 +43,26 @@ type FilterKey =
   | "7d"
   | "30d"
   | "thisMonth"
-  | "lastMonth";
+  | "lastMonth"
+  | "all";
 
 export const DATE_FILTERS: {
   key: FilterKey;
   label: string;
   getRange: () => { from: Date; to: Date };
 }[] = [
+  {
+    key: "all",
+    label: "All",
+    getRange: () => {
+      const today = new Date();
+
+      return {
+        from: today,
+        to: today,
+      };
+    },
+  },
   {
     key: "today",
     label: "Today",
@@ -149,7 +162,7 @@ export default function InquiriesTable({ personId }: { personId: string }) {
 
   const [showFilters, setShowFilters] = useState(false);
   const [filterMode, setFilterMode] = useState<"range" | "none">("none");
-  const [activeRange, setActiveRange] = useState<string>("30d");
+  const [activeRange, setActiveRange] = useState<string>("today");
 
   const [selectedPerson, setSelectedPerson] = useState<any>(null);
 
@@ -157,15 +170,19 @@ export default function InquiriesTable({ personId }: { personId: string }) {
   const oneMonthAgo = new Date();
   oneMonthAgo.setMonth(today.getMonth() - 1);
 
-  const [from, setFrom] = useState(formatDate(oneMonthAgo));
-  const [to, setTo] = useState(formatDate(today));
+  const [from, setFrom] = useState<string>(formatDate(oneMonthAgo));
+  const [to, setTo] = useState<string>(formatDate(today));
 
   const [priority, setPriority] = useState<string | null>(null);
 
   const [selectedInquiry, setSelectedInquiry] = useState<any | null>(null);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const { data, loading, setData, error, getInquiries } = useGetInquiries();
-  const { deleteInquiry, loading: deleteLoading } = useDeleteInquiry();
+  const {
+    deleteInquiry,
+    loading: deleteLoading,
+    error: deleteError,
+  } = useDeleteInquiry();
   const [editingInquiry, setEditingInquiry] = useState<Inquiry | null>(null);
   const handleDelete = async (id: string) => {
     const result = await Swal.fire({
@@ -194,6 +211,7 @@ export default function InquiriesTable({ personId }: { personId: string }) {
       Swal.fire({
         icon: "error",
         title: "Failed to delete inquiry",
+        text: deleteError || "Please try again later",
       });
     }
   };
@@ -222,7 +240,9 @@ export default function InquiriesTable({ personId }: { personId: string }) {
 
       ...(priority ? { priority } : {}),
 
-      ...(filterMode === "range" && from && to ? { from, to } : {}),
+      ...(filterMode === "range" && from && to && activeRange !== "all"
+        ? { from, to }
+        : {}),
     };
 
     const query = new URLSearchParams(queryObj).toString();
@@ -235,6 +255,11 @@ export default function InquiriesTable({ personId }: { personId: string }) {
   };
 
   const applyRange = (filterKey: FilterKey) => {
+    if (filterKey === "all") {
+      setFilterMode("none");
+      setActiveRange("all");
+      setPage(1);
+    }
     const filter = DATE_FILTERS.find((f) => f.key === filterKey);
 
     if (!filter) return;
@@ -268,9 +293,23 @@ export default function InquiriesTable({ personId }: { personId: string }) {
         return {
           ...tab,
           label: (
-            <div className="flex items-center gap-2 text-xs">
-              <span>{tab.label}</span>
-
+            <div className="flex flex-col justify-start items-center gap-1">
+              {tab.key === "all" && (
+                <span
+                  className="px-2 py-0.5 text-xs rounded-full font-medium transition-all"
+                  style={{
+                    background: isActive
+                      ? tokens.accent
+                      : tokens.surfaceElevated,
+                    color: isActive ? "#fff" : tokens.textMuted,
+                    border: `1px solid ${
+                      isActive ? tokens.accent : tokens.border
+                    }`,
+                  }}
+                >
+                  {data?.total}
+                </span>
+              )}
               {statusCounts?.[tab.key] != null && (
                 <span
                   className="px-2 py-0.5 text-xs rounded-full font-medium transition-all"
@@ -287,6 +326,7 @@ export default function InquiriesTable({ personId }: { personId: string }) {
                   {statusCounts?.[tab.key] ?? 0}
                 </span>
               )}
+              <span className="text-xs">{tab.label}</span>
             </div>
           ),
         };
@@ -488,6 +528,7 @@ export default function InquiriesTable({ personId }: { personId: string }) {
                 setPage(1);
               }}
               loading={loading}
+              striped
             />
           ),
         }))}

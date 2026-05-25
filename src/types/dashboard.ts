@@ -6,6 +6,7 @@ export type DashboardSummaryStat = {
   totalSales: number;
   totalDevices: number;
   blockedDevices: number;
+  todayInquiries: number;
 };
 
 export type InquiryReportByStatus = {

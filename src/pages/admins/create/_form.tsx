@@ -2,24 +2,24 @@ import { Button } from "@/src/components/ui/button";
 import Input from "@/src/components/ui/form/input";
 import Select from "@/src/components/ui/form/select";
 import ButtonLoader from "@/src/components/ui/loader/buttonLoader";
+import { useCreateAdmin } from "@/src/hooks/admin/useCreateAdmin";
 import { useGetCompanies } from "@/src/hooks/company/useGetCompanies";
 import { useCreateSalesPerson } from "@/src/hooks/salesPerson/useCreateSalesPerson";
-import { CreateUser } from "@/src/types/users";
+import { CreateAdmin, CreateUser } from "@/src/types/users";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 
 const CreateAdminForm = ({ onSuccess }: { onSuccess: (res: any) => void }) => {
-  const { createUser, loading } = useCreateSalesPerson();
+  const { createAdmin, loading, error } = useCreateAdmin();
 
-  const [form, setForm] = useState<CreateUser>({
+  const [form, setForm] = useState<CreateAdmin>({
     name: "",
     email: "",
     password: "",
     role: "admin",
-    employeeId: "",
-    pin: "",
-    company: "",
+    // pin: "",
+    // company: "",
   });
 
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -92,7 +92,7 @@ const CreateAdminForm = ({ onSuccess }: { onSuccess: (res: any) => void }) => {
     if (!validate()) return;
 
     try {
-      const res = await createUser(form);
+      const res = await createAdmin(form);
       onSuccess?.(res.data);
 
       Swal.fire({
@@ -101,11 +101,11 @@ const CreateAdminForm = ({ onSuccess }: { onSuccess: (res: any) => void }) => {
       });
 
       handleReset();
-    } catch (err) {
+    } catch (err: any) {
       Swal.fire({
         icon: "error",
         title: "Error Creating Admin.",
-        text: err instanceof Error ? err.message : "An error occurred",
+        text: error || "An error occurred",
       });
     }
   };
@@ -116,9 +116,8 @@ const CreateAdminForm = ({ onSuccess }: { onSuccess: (res: any) => void }) => {
       email: "",
       password: "",
       role: "admin",
-      employeeId: "",
-      pin: "",
-      company: "",
+      // pin: "",
+      // company: "",
     });
     setConfirmPassword("");
     setConfirmPin("");

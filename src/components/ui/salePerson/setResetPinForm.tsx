@@ -20,7 +20,7 @@ const SetResetPinForm = ({
   salesPersonId: string;
   onClose: () => void;
 }) => {
-  const { resetPin, loading } = useSetResetPin();
+  const { resetPin, loading, error: resetPinError } = useSetResetPin();
 
   const [form, setForm] = useState({
     pin: "",
@@ -81,6 +81,7 @@ const SetResetPinForm = ({
       Swal.fire({
         icon: "error",
         title: "Error Resetting Pin.",
+        text: resetPinError || "Please try again later",
       });
     }
   };
