@@ -1,6 +1,7 @@
 // src/types/inquiry.ts
 
 export type CreateInquiryPayload = {
+  title?: string;
   description: string;
   mobile: string;
   inquiryTime: string;
@@ -9,6 +10,7 @@ export type CreateInquiryPayload = {
   images: File;
 };
 export type EditInquiryPayload = {
+  title?: string;
   description: string;
   mobile: string;
   inquiryTime: string;

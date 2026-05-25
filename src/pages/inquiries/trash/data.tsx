@@ -57,12 +57,18 @@ export const getInquiryColumns = ({
       label: "Inquiry",
       render: (row) => (
         <>
-          <p
-            className="text-sm font-medium text-(--text) line-clamp-1"
-            dangerouslySetInnerHTML={{
-              __html: DOMPurify.sanitize(row.description || "—"),
-            }}
-          ></p>
+          {row.title ? (
+            <p className="text-sm font-medium text-(--text) line-clamp-1">
+              {row.title}
+            </p>
+          ) : (
+            <p
+              className="text-sm font-medium text-(--text) line-clamp-1"
+              dangerouslySetInnerHTML={{
+                __html: DOMPurify.sanitize(row.description || "—"),
+              }}
+            ></p>
+          )}
           <p className="text-xs text-(--textMuted)">
             {row.mobile || "No contact"}
           </p>

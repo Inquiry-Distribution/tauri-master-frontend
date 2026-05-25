@@ -4,6 +4,7 @@ import Sidebar from "./Sidebar";
 import Header from "./Header";
 import { useTheme } from "@/src/contexts/index";
 import { LayoutProvider, useLayout } from "@/src/hooks/useLayout";
+import { UpdateBanner } from "@/src/components/ui/UpdateBanner";
 
 function LayoutContent() {
   const { tokens } = useTheme();
@@ -25,6 +26,7 @@ function LayoutContent() {
       <Sidebar />
 
       <div className="flex flex-col flex-1 overflow-hidden relative">
+        <UpdateBanner />
         <Header />
         <main className="flex-1 overflow-y-auto p-4 md:p-6">
           <Outlet />

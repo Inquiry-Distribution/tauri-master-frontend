@@ -39,6 +39,7 @@ const InquiryForm = () => {
 
   const navigate = useNavigate();
   const [form, setForm] = useState<{
+    title: string;
     description: string;
     mobile: string;
     inquiryTime: string;
@@ -46,46 +47,31 @@ const InquiryForm = () => {
     // salesPersonId: string;
     images: File[];
   }>({
+    title: "",
     description: "",
     mobile: "",
     inquiryTime: getCurrentTime(),
-    source: "",
+    source: "Other",
     // salesPersonId: "",
     images: [],
   });
 
   const [errors, setErrors] = useState<{
-    description?: string;
+    title?: string;
+    mobile?: string;
     source?: string;
-    images?: string;
   }>({});
 
   const validateForm = () => {
     const newErrors: typeof errors = {};
 
-    const hasImages = form.images && form.images.length > 0;
-    const hasDescription =
-      form.description &&
-      form.description.replace(/<(.|\n)*?>/g, "").trim().length > 0;
-
-    // ONLY if both are missing
-    if (!hasImages && !hasDescription) {
-      newErrors.images =
-        "Please upload at least one image or enter a description.";
-      newErrors.description =
-        "Please upload at least one image or enter a description.";
-    }
-
-    // Optional: validate description only if provided
-    if (
-      hasDescription &&
-      form.description.replace(/<(.|\n)*?>/g, "").trim().length < 10
-    ) {
-      newErrors.description = "Minimum 10 characters required.";
-    }
-
     if (!form.source) {
       newErrors.source = "Please select a source.";
+    }
+
+    if (!form.title?.trim() && !form.mobile?.trim()) {
+      newErrors.title = "At least one of Title or Mobile is required.";
+      newErrors.mobile = "At least one of Title or Mobile is required.";
     }
 
     setErrors(newErrors);
@@ -95,15 +81,18 @@ const InquiryForm = () => {
 
   const handleChange = (e: any) => {
     const { name, value } = e.target;
-    setForm((prev) => ({
-      ...prev,
-      [e.target.name]: e.target.value,
-    }));
-
-    setErrors((prev) => ({
-      ...prev,
-      [name]: "",
-    }));
+    setForm((prev) => {
+      const updated = { ...prev, [name]: value };
+      // clear both cross-field errors once either title or mobile is filled
+      if (name === "title" || name === "mobile") {
+        if (updated.title?.trim() || updated.mobile?.trim()) {
+          setErrors((prev) => ({ ...prev, title: "", mobile: "" }));
+        }
+      } else {
+        setErrors((prev) => ({ ...prev, [name]: "" }));
+      }
+      return updated;
+    });
   };
 
   // const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -125,6 +114,7 @@ const InquiryForm = () => {
     try {
       const formData = new FormData();
 
+      if (form.title) formData.append("title", form.title);
       formData.append("description", form.description);
       formData.append("mobile", form.mobile);
       formData.append("inquiryTime", form.inquiryTime);
@@ -150,6 +140,7 @@ const InquiryForm = () => {
         text: "Your inquiry has been created and shared successfully!",
       });
       setForm({
+        title: "",
         description: "",
         mobile: "",
         inquiryTime: "",
@@ -175,6 +166,14 @@ const InquiryForm = () => {
   return (
     <form encType="multipart/form-data">
       <div className="space-y-4 ">
+        <Input
+          label="Title"
+          inputName="title"
+          placeholder="Enter inquiry title"
+          inputValue={form.title}
+          onChange={handleChange}
+          error={errors.title}
+        />
         <FileInput
           maxSizeMB={25}
           limit={10}
@@ -182,7 +181,6 @@ const InquiryForm = () => {
           label="Upload Inquiry"
           inputName="images"
           onChange={(files) => setForm((prev) => ({ ...prev, images: files }))}
-          error={errors.images}
         />
         {/* <TextArea
           label="Inquiry Description"
@@ -202,14 +200,7 @@ const InquiryForm = () => {
               ...prev,
               description: content,
             }));
-
-            setErrors((prev) => ({
-              ...prev,
-              description: "",
-            }));
           }}
-          error={errors.description}
-          required
           height={220}
         />
         <div className="grid grid-cols-3  gap-4">
@@ -219,6 +210,7 @@ const InquiryForm = () => {
             placeholder="9876543210"
             inputValue={form.mobile}
             onChange={handleChange}
+            error={errors.mobile}
           />
           {/* <Input
             label="Source"

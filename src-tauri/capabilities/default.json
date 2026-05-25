@@ -14,6 +14,9 @@
     "fs:scope-desktop",
 
     "shell:allow-open",
+    "updater:allow-check",
+    "updater:allow-download-and-install",
+    "process:allow-relaunch",
     "fs:allow-write-file",
     "fs:allow-app-write",
     "fs:allow-home-write",
