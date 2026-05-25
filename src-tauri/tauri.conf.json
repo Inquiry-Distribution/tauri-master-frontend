@@ -1,7 +1,7 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "inquiryHub",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "identifier": "com.inquiryHub",
   "build": {
     "frontendDist": "../dist",
@@ -9,6 +9,7 @@
     "beforeDevCommand": "npm run dev",
     "beforeBuildCommand": "npm run build"
   },
+
 
   "plugins": {
     "fs": {
