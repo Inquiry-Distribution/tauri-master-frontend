@@ -22,8 +22,11 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: lts/*
+          node-version: '22'
           cache: npm
+
+      - name: Upgrade npm to match local toolchain
+        run: npm install -g npm@11
 
       - name: Install Rust stable
         uses: dtolnay/rust-toolchain@stable
@@ -35,7 +38,7 @@ jobs:
           cache-on-failure: false
 
       - name: Install frontend dependencies
-        run: npm install
+        run: npm ci
 
       - name: Verify @tauri-apps/api minor version matches Cargo.lock
         shell: pwsh
