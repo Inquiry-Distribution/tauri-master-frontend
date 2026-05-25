@@ -31,6 +31,7 @@ const EditInquiryForm = ({ initialData, onClose, onSuccess }: Props) => {
   } = useAddImagesInquiry();
   const navigate = useNavigate();
   const [form, setForm] = useState<{
+    title: string;
     description: string;
     mobile: string;
     inquiryTime: string;
@@ -38,6 +39,7 @@ const EditInquiryForm = ({ initialData, onClose, onSuccess }: Props) => {
     // salesPersonId: string;
     images: File[];
   }>({
+    title: "",
     description: "",
     mobile: "",
     inquiryTime: "",
@@ -50,28 +52,55 @@ const EditInquiryForm = ({ initialData, onClose, onSuccess }: Props) => {
   useEffect(() => {
     if (initialData) {
       setForm({
+        title: initialData.title || "",
         description: initialData.description || "",
         mobile: initialData.mobile || "",
         inquiryTime: initialData.inquiryTime || "",
-        source: initialData.source || "",
+        source: initialData.source || "Other",
         images: [], // existing images are URLs, not File objects
       });
     }
   }, [initialData]);
 
+  const [errors, setErrors] = useState<{
+    title?: string;
+    mobile?: string;
+  }>({});
+
   const handleChange = (e: any) => {
-    setForm((prev) => ({
-      ...prev,
-      [e.target.name]: e.target.value,
-    }));
+    const { name, value } = e.target;
+    setForm((prev) => {
+      const updated = { ...prev, [name]: value };
+      // clear both cross-field errors once either title or mobile is filled
+      if (name === "title" || name === "mobile") {
+        if (updated.title?.trim() || updated.mobile?.trim()) {
+          setErrors((prev) => ({ ...prev, title: "", mobile: "" }));
+        }
+      } else {
+        setErrors((prev) => ({ ...prev, [name]: "" }));
+      }
+      return updated;
+    });
+  };
+
+  const validateForm = () => {
+    const newErrors: typeof errors = {};
+    if (!form.title?.trim() && !form.mobile?.trim()) {
+      newErrors.title = "At least one of Title or Mobile is required.";
+      newErrors.mobile = "At least one of Title or Mobile is required.";
+    }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async () => {
+    if (!validateForm()) return;
     // e.preventDefault();
     try {
       const imagesFormData = new FormData();
 
       const payload: EditInquiryPayload = {
+        title: form.title || undefined,
         description: form.description,
         mobile: form.mobile,
         inquiryTime: form.inquiryTime,
@@ -93,6 +122,7 @@ const EditInquiryForm = ({ initialData, onClose, onSuccess }: Props) => {
       if (onSuccess && initialData) {
         onSuccess({
           ...(initialData as Inquiry),
+          title: form.title || null,
           description: form.description,
           mobile: form.mobile,
           inquiryTime: form.inquiryTime,
@@ -107,6 +137,7 @@ const EditInquiryForm = ({ initialData, onClose, onSuccess }: Props) => {
         text: "Your inquiry has been updated successfully!",
       });
       setForm({
+        title: "",
         description: "",
         mobile: "",
         inquiryTime: "",
@@ -125,6 +156,14 @@ const EditInquiryForm = ({ initialData, onClose, onSuccess }: Props) => {
   return (
     <form encType="multipart/form-data">
       <div className="space-y-4 ">
+        <Input
+          label="Title"
+          inputName="title"
+          placeholder="Enter inquiry title"
+          inputValue={form.title}
+          onChange={handleChange}
+          error={errors.title}
+        />
         <FileInput
           maxSizeMB={25}
           limit={10}
@@ -144,7 +183,6 @@ const EditInquiryForm = ({ initialData, onClose, onSuccess }: Props) => {
               description: content,
             }));
           }}
-          required
           height={220}
         />
         <div className="grid grid-cols-3  gap-4">
@@ -154,6 +192,7 @@ const EditInquiryForm = ({ initialData, onClose, onSuccess }: Props) => {
             placeholder="9876543210"
             inputValue={form.mobile}
             onChange={handleChange}
+            error={errors.mobile}
           />
           <Select
             label="Source"

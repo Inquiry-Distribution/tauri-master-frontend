@@ -52,12 +52,18 @@ export const getInquiryColumns = ({
           className="lg:max-w-[200px] md:max-w-[150px] max-w-[120px] cursor-pointer"
           to={`/inquiries/${row.id}`}
         >
-          <p
-            className="text-sm font-medium text-(--text) line-clamp-1"
-            dangerouslySetInnerHTML={{
-              __html: DOMPurify.sanitize(row.description || "—"),
-            }}
-          />
+          {row.title ? (
+            <p className="text-sm font-medium text-(--text) line-clamp-1">
+              {row.title}
+            </p>
+          ) : (
+            <p
+              className="text-sm font-medium text-(--text) line-clamp-1"
+              dangerouslySetInnerHTML={{
+                __html: DOMPurify.sanitize(row.description || "—"),
+              }}
+            />
+          )}
           <p className="text-xs text-(--textMuted)">
             {row.mobile || "No contact"}
           </p>

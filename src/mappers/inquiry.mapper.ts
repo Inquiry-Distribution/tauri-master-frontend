@@ -4,6 +4,7 @@ import { Inquiry } from "../types/inquiry";
 
 export const mapInquiryFormToPayload = (formValues: FormData) => {
   return {
+    title: formValues.get("title"),
     description: formValues.get("description"),
     mobile: formValues.get("mobile"),
     inquiryTime: formValues.get("inquiryTime"),
@@ -16,7 +17,7 @@ export const formatInquiryForExport = (data: Inquiry[]) => {
   return data.map((row) => ({
     "INQ ID": row.id.slice(0, 8).toUpperCase(),
 
-    Inquiry: row.description || "",
+    Inquiry: row.title || row.description || "",
 
     Mobile: row.mobile || "",
 
