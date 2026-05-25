@@ -91,8 +91,8 @@ jobs:
           # Find the .sig file
           $sigFile = Get-ChildItem -Path $bundlePath -Filter "*.nsis.zip.sig" | Select-Object -First 1
           if (-not $sigFile) {
-            Write-Error "Signature file not found in $bundlePath"
-            exit 1
+            Write-Warning "No .nsis.zip.sig found — TAURI_SIGNING_PRIVATE_KEY secret is probably not set. Skipping latest.json update."
+            exit 0
           }
           $signature = (Get-Content $sigFile.FullName -Raw).Trim()
 
