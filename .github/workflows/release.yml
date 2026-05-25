@@ -32,9 +32,14 @@ jobs:
         uses: swatinem/rust-cache@v2
         with:
           workspaces: './src-tauri -> target'
+          cache-on-failure: false
 
       - name: Install frontend dependencies
         run: npm install
+
+      - name: Sync tauri Rust crates with npm versions
+        run: cargo update -p tauri -p tauri-build
+        working-directory: src-tauri
 
       - name: Read version from tauri.conf.json
         id: version
