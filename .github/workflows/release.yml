@@ -37,15 +37,21 @@ jobs:
       - name: Install frontend dependencies
         run: npm install
 
-      - name: Sync @tauri-apps/api version with Cargo.lock
+      - name: Verify @tauri-apps/api version matches Cargo.lock
         shell: pwsh
         run: |
           $lock = Get-Content "src-tauri/Cargo.lock" -Raw
           $match = [regex]::Match($lock, '(?m)^name = "tauri"\r?\nversion = "([^"]+)"')
           if (-not $match.Success) { Write-Error "tauri not found in Cargo.lock"; exit 1 }
-          $ver = $match.Groups[1].Value
-          Write-Output "Tauri Rust crate: $ver — pinning @tauri-apps/api to same version"
-          npm install "@tauri-apps/api@$ver" --save-exact --no-save
+          $rustVer = $match.Groups[1].Value
+          $npmVer = (Get-Content "package.json" | ConvertFrom-Json).dependencies."@tauri-apps/api"
+          Write-Output "Rust tauri crate : $rustVer"
+          Write-Output "npm @tauri-apps/api : $npmVer"
+          if ($rustVer -ne $npmVer) {
+            Write-Error "Version mismatch! Update package.json '@tauri-apps/api' to exactly '$rustVer'"
+            exit 1
+          }
+          Write-Output "Versions match — OK"
 
       - name: Read version from tauri.conf.json
         id: version
