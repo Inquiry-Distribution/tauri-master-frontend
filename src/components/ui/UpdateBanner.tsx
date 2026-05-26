@@ -1,10 +1,10 @@
 import React from "react";
 import { Download, X, RefreshCw } from "lucide-react";
-import { useUpdater } from "@/src/hooks/useUpdater";
+import { useUpdaterContext } from "@/src/contexts/updaterContext";
 
 export function UpdateBanner() {
   const { updateAvailable, downloading, progress, error, downloadAndInstall, dismiss } =
-    useUpdater();
+    useUpdaterContext();
 
   if (!updateAvailable) return null;
 

@@ -5,6 +5,7 @@ import Header from "./Header";
 import { useTheme } from "@/src/contexts/index";
 import { LayoutProvider, useLayout } from "@/src/hooks/useLayout";
 import { UpdateBanner } from "@/src/components/ui/UpdateBanner";
+import { UpdaterProvider } from "@/src/contexts/updaterContext";
 
 function LayoutContent() {
   const { tokens } = useTheme();
@@ -38,8 +39,10 @@ function LayoutContent() {
 
 export default function Layout() {
   return (
-    <LayoutProvider>
-      <LayoutContent />
-    </LayoutProvider>
+    <UpdaterProvider>
+      <LayoutProvider>
+        <LayoutContent />
+      </LayoutProvider>
+    </UpdaterProvider>
   );
 }
