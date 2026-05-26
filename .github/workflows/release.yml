@@ -90,17 +90,20 @@ jobs:
           $version = "${{ steps.version.outputs.VERSION }}"
           $bundlePath = "src-tauri/target/release/bundle/nsis"
 
-          # Find the .sig file
-          $sigFile = Get-ChildItem -Path $bundlePath -Filter "*.nsis.zip.sig" | Select-Object -First 1
+          # Find the .sig file (use Where-Object — Win32 -Filter breaks on multiple dots)
+          $sigFile = Get-ChildItem -Path $bundlePath |
+                     Where-Object { $_.Name -like "*.nsis.zip.sig" } |
+                     Select-Object -First 1
           if (-not $sigFile) {
             Write-Warning "No .nsis.zip.sig found — TAURI_SIGNING_PRIVATE_KEY secret is probably not set. Skipping latest.json update."
             exit 0
           }
+          Write-Output "Found sig file: $($sigFile.Name)"
           $signature = (Get-Content $sigFile.FullName -Raw).Trim()
 
-          # Find the .zip file (exclude .sig)
-          $zipFile = Get-ChildItem -Path $bundlePath -Filter "*.nsis.zip" |
-                     Where-Object { $_.Extension -ne ".sig" } |
+          # Find the .zip file (exclude .sig, use Where-Object for same reason)
+          $zipFile = Get-ChildItem -Path $bundlePath |
+                     Where-Object { $_.Name -like "*.nsis.zip" -and $_.Name -notlike "*.sig" } |
                      Select-Object -First 1
           $downloadUrl = "https://github.com/Inquiry-Distribution/tauri-master-frontend/releases/download/v${version}/$($zipFile.Name)"
 
