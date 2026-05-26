@@ -12,6 +12,9 @@ import {
   PanelLeftOpen,
   TextAlignStart,
   ChevronLeft,
+  RefreshCw,
+  CheckCircle2,
+  AlertCircle,
 } from "lucide-react";
 import { useTheme } from "@/src/contexts/index";
 import { useLayout } from "@/src/hooks/useLayout";
@@ -20,6 +23,7 @@ import { useAuth } from "@/src/contexts/authContext";
 import ClickMenu from "../ui/contextMenu";
 import ResetPasswordModal from "../ui/auth/resetPasswordModal";
 import ContextMenu from "../ui/contextMenu2";
+import { useUpdaterContext } from "@/src/contexts/updaterContext";
 
 export default function Header() {
   const { tokens, isDark, toggleTheme } = useTheme();
@@ -31,6 +35,7 @@ export default function Header() {
   const notificationRef = useRef<HTMLDivElement>(null);
 
   const { user } = useAuth();
+  const { checking, noUpdateFound, updateAvailable, error: updateError, checkForUpdates } = useUpdaterContext();
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -98,6 +103,73 @@ export default function Header() {
       </div>
 
       <div className="flex items-center gap-2 md:gap-4">
+        {/* Check for update button — only shown in Tauri env */}
+        {typeof window !== "undefined" && "__TAURI_INTERNALS__" in window && (
+          <div className="relative">
+            <button
+              title={
+                updateError
+                  ? updateError
+                  : updateAvailable
+                  ? `v${updateAvailable.version} available — click banner to install`
+                  : noUpdateFound
+                  ? "Up to date"
+                  : checking
+                  ? "Checking for updates..."
+                  : "Check for updates"
+              }
+              onClick={() => checkForUpdates(true)}
+              disabled={checking}
+              className="p-2 rounded-lg transition-colors duration-200 hover:bg-opacity-10 disabled:opacity-50"
+              style={{
+                color: updateError
+                  ? "#ef4444"
+                  : noUpdateFound
+                  ? "#22c55e"
+                  : tokens.textSec,
+                backgroundColor: updateError
+                  ? "rgba(239,68,68,0.1)"
+                  : tokens.borderLight,
+              }}
+            >
+              {updateError ? (
+                <AlertCircle size={20} />
+              ) : noUpdateFound ? (
+                <CheckCircle2 size={20} />
+              ) : (
+                <RefreshCw size={20} className={checking ? "animate-spin" : ""} />
+              )}
+            </button>
+
+            {/* Blue dot — update waiting to install */}
+            {updateAvailable && !checking && !updateError && (
+              <span
+                className="absolute top-1.5 right-1.5 w-2 h-2 bg-blue-500 rounded-full border-2"
+                style={{ borderColor: tokens.surface }}
+              />
+            )}
+
+            {/* Error popover */}
+            {updateError && (
+              <div
+                className="absolute right-0 top-full mt-2 z-50 w-64 rounded-xl px-3 py-2.5 text-xs shadow-xl border"
+                style={{
+                  background: tokens.surface,
+                  borderColor: "#ef4444",
+                  color: tokens.text,
+                }}
+              >
+                <p className="font-semibold text-red-500 mb-0.5 flex items-center gap-1.5">
+                  <AlertCircle size={13} /> Update check failed
+                </p>
+                <p className="text-[11px] leading-relaxed" style={{ color: tokens.textMuted }}>
+                  {updateError}
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+
         <button
           onClick={toggleTheme}
           className="p-2 rounded-lg transition-colors duration-200 hover:bg-opacity-10"
