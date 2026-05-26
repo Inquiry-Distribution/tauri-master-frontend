@@ -15,7 +15,7 @@
       "requireLiteralLeadingDot": false 
     },
     "updater": {
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDg4NkMyRDJFOEU1NUNGNzgKUldSNHoxV09MaTFzaURnQTlOb3NMTmRqRHFvbGtiTzVTSDZQem1WN3pxc0prZnhkU3pCaldjYisK",
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDdENThFQjdGRjc2QTY0NgpSV1JHcG5iL3Q0N1ZCNVZXZEpyUGRETUl6WlUwa2dkTDdOVHZydnFtbGVWWEJKRXBoZEhPWlhGbwo=",
       "endpoints": [
         "https://raw.githubusercontent.com/Inquiry-Distribution/tauri-master-frontend/main/latest.json"
       ]

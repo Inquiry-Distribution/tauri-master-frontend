@@ -74,17 +74,35 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         run: |
           if ([string]::IsNullOrWhiteSpace($env:TAURI_SIGNING_PRIVATE_KEY)) {
-            Write-Error "TAURI_SIGNING_PRIVATE_KEY secret is EMPTY or not set — updater bundle will not be signed."
+            Write-Error "TAURI_SIGNING_PRIVATE_KEY secret is EMPTY — go to Settings → Secrets → Actions and set it."
             exit 1
           }
-          $keyLen = $env:TAURI_SIGNING_PRIVATE_KEY.Trim().Length
-          Write-Output "TAURI_SIGNING_PRIVATE_KEY is set (trimmed length: $keyLen chars)"
-          if ($keyLen -lt 100) {
-            Write-Error "Key looks too short ($keyLen chars) — it may be truncated or incorrect."
+          $key = $env:TAURI_SIGNING_PRIVATE_KEY.Trim()
+          Write-Output "Key length: $($key.Length) chars"
+
+          # Detect if the value is base64-encoded file content or raw text
+          $keyText = $key
+          try {
+            $decoded = [System.Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($key))
+            $keyText = $decoded
+            Write-Output "Key encoding: base64-encoded file content"
+          } catch {
+            Write-Output "Key encoding: raw text"
+          }
+
+          # Most common mistake: putting the PUBLIC key in this secret instead of PRIVATE key
+          if ($keyText -match "public key") {
+            Write-Error "WRONG KEY: TAURI_SIGNING_PRIVATE_KEY contains a PUBLIC key. You need the PRIVATE key (content of the .key file, NOT .key.pub)."
             exit 1
           }
+          if ($keyText -match "secret key") {
+            Write-Output "Key type: PRIVATE KEY — OK"
+          } else {
+            Write-Warning "Key type unrecognized (first 30 chars raw): $($key.Substring(0, [Math]::Min(30,$key.Length)))"
+          }
+
           $hasPassword = -not [string]::IsNullOrWhiteSpace($env:TAURI_SIGNING_PRIVATE_KEY_PASSWORD)
-          Write-Output "TAURI_SIGNING_PRIVATE_KEY_PASSWORD is $( if ($hasPassword) { 'SET' } else { 'empty (unencrypted key expected)' } )"
+          Write-Output "Password: $( if ($hasPassword) { 'SET' } else { 'not set — key must be unencrypted' } )"
 
       - name: Build & publish release
         uses: tauri-apps/tauri-action@v0
