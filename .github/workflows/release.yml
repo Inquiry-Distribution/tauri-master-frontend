@@ -88,7 +88,28 @@ jobs:
         shell: pwsh
         run: |
           $version = "${{ steps.version.outputs.VERSION }}"
-          $bundlePath = "src-tauri/target/release/bundle/nsis"
+
+          # ── DEBUG: show where we are and what exists ──────────────────────
+          Write-Output "CWD: $(Get-Location)"
+          $bundlePath = Join-Path (Get-Location) "src-tauri/target/release/bundle/nsis"
+          Write-Output "Bundle path: $bundlePath"
+          Write-Output "Bundle path exists: $(Test-Path $bundlePath)"
+          if (Test-Path $bundlePath) {
+            Write-Output "=== All files in bundle/nsis ==="
+            Get-ChildItem -Path $bundlePath | ForEach-Object { Write-Output "  $($_.Name)" }
+            Write-Output "================================="
+          } else {
+            # Try to find any nsis folder anywhere under target
+            Write-Output "=== Searching for nsis folder under src-tauri/target ==="
+            Get-ChildItem -Path "src-tauri/target" -Recurse -Directory -Filter "nsis" -ErrorAction SilentlyContinue |
+              ForEach-Object { Write-Output "  Found: $($_.FullName)" }
+          }
+          # ─────────────────────────────────────────────────────────────────
+
+          if (-not (Test-Path $bundlePath)) {
+            Write-Warning "Bundle/nsis directory not found at '$bundlePath'. Skipping latest.json update."
+            exit 0
+          }
 
           # Find the .sig file (use Where-Object — Win32 -Filter breaks on multiple dots)
           $sigFile = Get-ChildItem -Path $bundlePath |
