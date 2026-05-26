@@ -48,9 +48,21 @@ export function RichTextEditor({
       branding: false,
       statusbar: false,
 
+      plugins: ["lists", "table", "fullscreen"],
+
       toolbar:
         "undo redo | bold italic underline | forecolor backcolor | " +
-        "alignleft aligncenter alignright | bullist numlist | removeformat",
+        "alignleft aligncenter alignright | bullist numlist | " +
+        "table | fullscreen | removeformat",
+
+      table_toolbar:
+        "tableprops tabledelete | tableinsertrowbefore tableinsertrowafter tabledeleterow | " +
+        "tableinsertcolbefore tableinsertcolafter tabledeletecol",
+
+      table_default_styles: {
+        "border-collapse": "collapse",
+        width: "100%",
+      },
 
       // ✅ CRITICAL FIX: force correct light/dark rendering
       content_style: `
@@ -65,6 +77,30 @@ export function RichTextEditor({
 
         a { color: ${tokens.accent}; }
         p { margin: 0 0 10px; }
+
+        table {
+          border-collapse: collapse;
+          width: 100%;
+          margin: 10px 0;
+        }
+        th, td {
+          border: 1px solid ${tokens.border ?? "#d1d5db"};
+          padding: 8px 12px;
+          text-align: left;
+          vertical-align: top;
+          color: ${tokens.text};
+        }
+        th {
+          background: ${tokens.surfaceElevated ?? tokens.surface};
+          font-weight: 600;
+          font-size: 12px;
+          text-transform: uppercase;
+          letter-spacing: 0.04em;
+          color: ${tokens.textMuted ?? tokens.text};
+        }
+        tr:nth-child(even) td {
+          background: ${tokens.surfaceElevated ?? tokens.surface};
+        }
       `,
     }),
     [isDark, tokens, height, placeholder],

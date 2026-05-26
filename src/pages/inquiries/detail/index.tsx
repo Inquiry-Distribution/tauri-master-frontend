@@ -321,18 +321,18 @@ export default function InquiryDetailPage() {
           {/* Description */}
           <Card>
             <SectionHeading>Description</SectionHeading>
-            <p
-              className="text-sm text-(--text) leading-relaxed whitespace-pre-wrap"
-              dangerouslySetInnerHTML={{
-                __html: DOMPurify.sanitize(
-                  inquiry?.description || (
-                    <span className="text-(--textMuted) italic">
-                      No description provided.
-                    </span>
-                  ),
-                ),
-              }}
-            ></p>
+            {inquiry?.description ? (
+              <div
+                className="text-sm text-(--text) leading-relaxed inquiry-description"
+                dangerouslySetInnerHTML={{
+                  __html: DOMPurify.sanitize(inquiry.description),
+                }}
+              />
+            ) : (
+              <span className="text-(--textMuted) italic text-sm">
+                No description provided.
+              </span>
+            )}
           </Card>
 
           {/* Attached images */}

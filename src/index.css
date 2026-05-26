@@ -165,3 +165,52 @@ input[type="password"]::-ms-clear {
 .custom-tabs-scroll::-webkit-scrollbar-corner {
   background: transparent;
 }
+
+/* ── Inquiry description rich-text output ─────────────────────────── */
+.inquiry-description table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 12px 0;
+  font-size: 0.875rem;
+}
+
+.inquiry-description th,
+.inquiry-description td {
+  border: 1px solid var(--border);
+  padding: 8px 12px;
+  text-align: left;
+  vertical-align: top;
+  color: var(--text);
+}
+
+.inquiry-description th {
+  background: var(--surfaceElevated);
+  font-weight: 600;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--textMuted);
+}
+
+.inquiry-description tr:nth-child(even) td {
+  background: var(--surfaceElevated);
+}
+
+.inquiry-description p {
+  margin: 0 0 8px;
+}
+
+.inquiry-description p:last-child {
+  margin-bottom: 0;
+}
+
+.inquiry-description ul,
+.inquiry-description ol {
+  padding-left: 1.4rem;
+  margin: 6px 0;
+}
+
+.inquiry-description a {
+  color: var(--accent);
+  text-decoration: underline;
+}
