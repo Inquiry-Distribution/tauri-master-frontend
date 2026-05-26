@@ -67,6 +67,25 @@ jobs:
           "VERSION=$v" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
           Write-Output "Building version: $v"
 
+      - name: Verify signing key is set
+        shell: pwsh
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:TAURI_SIGNING_PRIVATE_KEY)) {
+            Write-Error "TAURI_SIGNING_PRIVATE_KEY secret is EMPTY or not set — updater bundle will not be signed."
+            exit 1
+          }
+          $keyLen = $env:TAURI_SIGNING_PRIVATE_KEY.Trim().Length
+          Write-Output "TAURI_SIGNING_PRIVATE_KEY is set (trimmed length: $keyLen chars)"
+          if ($keyLen -lt 100) {
+            Write-Error "Key looks too short ($keyLen chars) — it may be truncated or incorrect."
+            exit 1
+          }
+          $hasPassword = -not [string]::IsNullOrWhiteSpace($env:TAURI_SIGNING_PRIVATE_KEY_PASSWORD)
+          Write-Output "TAURI_SIGNING_PRIVATE_KEY_PASSWORD is $( if ($hasPassword) { 'SET' } else { 'empty (unencrypted key expected)' } )"
+
       - name: Build & publish release
         uses: tauri-apps/tauri-action@v0
         env:
