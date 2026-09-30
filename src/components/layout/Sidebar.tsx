@@ -13,6 +13,7 @@ import {
   Bell,
   Users2,
   MessageSquareWarning,
+  CalendarDays,
 } from "lucide-react";
 import { useTheme } from "@/src/contexts";
 import { useLayout } from "@/src/hooks/useLayout";
@@ -42,6 +43,12 @@ const menuItems = [
     icon: Calendar,
     label: "Attendance",
     path: "/attendance",
+    roles: ["admin", "superuser"],
+  },
+  {
+    icon: CalendarDays,
+    label: "Holidays",
+    path: "/holidays",
     roles: ["admin", "superuser"],
   },
   {
