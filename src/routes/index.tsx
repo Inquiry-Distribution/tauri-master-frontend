@@ -21,6 +21,7 @@ import SettingsPage from "../pages/settings";
 import TrashInquiriesPage from "../pages/inquiries/trash";
 import AdminsPage from "../pages/admins";
 import ComplaintsPage from "../pages/complaints";
+import HolidaysPage from "../pages/holidays";
 
 export default function AppRoutes() {
   return useRoutes([
@@ -52,6 +53,7 @@ export default function AppRoutes() {
             { path: "sales-persons", element: <SalesPersonsPage /> },
             { path: "admins", element: <AdminsPage /> },
             { path: "complaints", element: <ComplaintsPage /> },
+            { path: "holidays", element: <HolidaysPage /> },
             { path: "sales-persons/:id", element: <SalesPersonReportPage /> },
             { path: "devices", element: <DevicesPage /> },
             { path: "notifications", element: <NotificationsPage /> },
