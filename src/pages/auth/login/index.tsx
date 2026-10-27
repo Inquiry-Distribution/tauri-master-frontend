@@ -28,7 +28,7 @@ export default function LoginPage() {
   const saved = getRememberedLogin();
   const [email, setEmail] = useState(saved.email);
   const [password, setPassword] = useState(saved.password);
-  const [rememberMe, setRememberMe] = useState(Boolean(saved.email));
+  const [rememberMe, setRememberMe] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
