@@ -14,14 +14,21 @@ import {
 import { motion } from "motion/react";
 import { api } from "@/src/api/axios";
 import Swal from "sweetalert2";
+import {
+  clearRememberedLogin,
+  getRememberedLogin,
+  setRememberedLogin,
+} from "@/src/utils/rememberLogin";
 // import { cn } from '../../lib/utils.ts'  ;
 
 export default function LoginPage() {
   const { tokens } = useTheme();
   const { login } = useAuth();
   const navigate = useNavigate();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const saved = getRememberedLogin();
+  const [email, setEmail] = useState(saved.email);
+  const [password, setPassword] = useState(saved.password);
+  const [rememberMe, setRememberMe] = useState(Boolean(saved.email));
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -67,6 +74,9 @@ export default function LoginPage() {
         refresh_token: refreshToken,
         user,
       });
+
+      if (rememberMe) setRememberedLogin(email, password);
+      else clearRememberedLogin();
 
       navigate("/");
     } catch (err: any) {
@@ -273,10 +283,12 @@ export default function LoginPage() {
               </div>
             </div>
 
-            {/* <div className="flex items-center gap-2 px-1">
+            <div className="flex items-center gap-2 px-1">
               <input
                 type="checkbox"
                 id="remember"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
                 className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
               />
               <label
@@ -284,9 +296,9 @@ export default function LoginPage() {
                 className="text-xs font-medium"
                 style={{ color: tokens.textSec }}
               >
-                Remember me for 30 days
+                Remember me
               </label>
-            </div> */}
+            </div>
 
             <button
               type="submit"

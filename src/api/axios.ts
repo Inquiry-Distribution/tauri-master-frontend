@@ -2,6 +2,7 @@
 
 import axios from "axios";
 import { navigateTo } from "./navigate";
+import { clearAuthStorage } from "../utils/rememberLogin";
 // import { useNavigate } from "react-router-dom";
 
 // const BASE_URL = process.env.VITE_PUBLIC_API_URL || "http://127.0.0.1:3000";
@@ -91,7 +92,7 @@ api.interceptors.response.use(
         return api(originalRequest);
       } catch (err) {
         processQueue(err, null);
-        localStorage.clear();
+        clearAuthStorage();
         // navigate("/login");
         window.location.href = "/#/login";
         // navigateTo("/login");

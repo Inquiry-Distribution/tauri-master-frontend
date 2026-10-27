@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { AuthService } from "../services/auth.service";
+import { clearAuthStorage } from "../utils/rememberLogin";
 import Swal from "sweetalert2";
 
 type User = {
@@ -109,7 +110,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const logout = async () => {
     try {
       await AuthService.logout();
-      localStorage.clear();
+      clearAuthStorage();
       setUser(null);
       // window.location.href = "/login";
     } catch (err) {
