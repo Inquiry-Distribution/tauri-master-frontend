@@ -1,18 +1,18 @@
 {
   "version": "0.1.5",
   "notes": "## InquiryHub v0.1.5\nDownload the installer from the assets below.",
-  "pub_date": "2026-10-27T10:02:20.192Z",
+  "pub_date": "2026-10-27T10:30:28.217Z",
   "platforms": {
     "windows-x86_64": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVSR3BuYi90NDdWQjNUeWNKWkJlazNWVDJUVkZ1MkZ5WnZiNGQ2dy9Yb3RXQmU3VGtDSHlpWkIwWXF4VGtyMWhPSzhsQUxoZkRRTkJBSnArUHJPR081RU9MdXcvWGNXT0FVPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkzMDk1MzM1CWZpbGU6aW5xdWlyeUh1Yl8wLjEuNV94NjRfZW4tVVMubXNpCjRqZTdRUnIzYnpRWVdqSjhpNTh2WDRtcE10dEpnckpYbHhPaTg3cTFUK3BOSTF5SnVCQy9hdTlzcnc3VEd0amJVRWgxOFZBT3dxZXl6WE0rM0hhNUNnPT0K",
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVSR3BuYi90NDdWQjJlcGpGdjdPK0lBSVdQR3BFV3dhTVg4ZXB4VGtvelRqNGVsNUFRc09jOXlkeTlWWnpoU2x2ZHdscUQ0MGJaYlFDL016bXpQNTdabVMxdkpIRHdyZFFNPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkzMDk3MDIyCWZpbGU6aW5xdWlyeUh1Yl8wLjEuNV94NjRfZW4tVVMubXNpCkswUTVuTDhnZXdwTnNUazByQ3YyYUJ1aGFncmtuNWVTNm1McFVmQTRzZ2ErcVdwTXhNNTZZWk94TDRvbEFzWmJzL3NGVWhMc3lPSTZxcDRXZzVtNURBPT0K",
       "url": "https://github.com/Inquiry-Distribution/tauri-master-frontend/releases/download/v0.1.5/inquiryHub_0.1.5_x64_en-US.msi"
     },
     "windows-x86_64-msi": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVSR3BuYi90NDdWQjNUeWNKWkJlazNWVDJUVkZ1MkZ5WnZiNGQ2dy9Yb3RXQmU3VGtDSHlpWkIwWXF4VGtyMWhPSzhsQUxoZkRRTkJBSnArUHJPR081RU9MdXcvWGNXT0FVPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkzMDk1MzM1CWZpbGU6aW5xdWlyeUh1Yl8wLjEuNV94NjRfZW4tVVMubXNpCjRqZTdRUnIzYnpRWVdqSjhpNTh2WDRtcE10dEpnckpYbHhPaTg3cTFUK3BOSTF5SnVCQy9hdTlzcnc3VEd0amJVRWgxOFZBT3dxZXl6WE0rM0hhNUNnPT0K",
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVSR3BuYi90NDdWQjJlcGpGdjdPK0lBSVdQR3BFV3dhTVg4ZXB4VGtvelRqNGVsNUFRc09jOXlkeTlWWnpoU2x2ZHdscUQ0MGJaYlFDL016bXpQNTdabVMxdkpIRHdyZFFNPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkzMDk3MDIyCWZpbGU6aW5xdWlyeUh1Yl8wLjEuNV94NjRfZW4tVVMubXNpCkswUTVuTDhnZXdwTnNUazByQ3YyYUJ1aGFncmtuNWVTNm1McFVmQTRzZ2ErcVdwTXhNNTZZWk94TDRvbEFzWmJzL3NGVWhMc3lPSTZxcDRXZzVtNURBPT0K",
       "url": "https://github.com/Inquiry-Distribution/tauri-master-frontend/releases/download/v0.1.5/inquiryHub_0.1.5_x64_en-US.msi"
     },
     "windows-x86_64-nsis": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVSR3BuYi90NDdWQjlqMEl5RDA5cnR0aGJRTmlINTNNRW1GSWRuc1hFT2xhQTUrejI0WjgyY2RMbWY2SmdHM21VMTc1QnpXdnFCVXBKT2pDUktWZlA4T0pxU3c2eS9wcFFRPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkzMDk1MzM1CWZpbGU6aW5xdWlyeUh1Yl8wLjEuNV94NjQtc2V0dXAuZXhlCmpnaW5KeVQ5dG9nU3dhbUdXRUFKOElVaEtnZkJBQTVoTFpJcUUvL1RRYmxRdTVzZlJhalhnZTVSNThQSU4yeko2VnBzYTNxZmdqZUhnSzVNUzJpSUNnPT0K",
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVSR3BuYi90NDdWQndNUTBNQlQvc2xCUVNWTXRaNHg3RnZEUzR4RVFzTTE1K0VmQVQxZ3RpdXZ3cytheHpPQnJ6aTdDZUpRUCtQUTdWZTNKdUxTbDRzSHZiMnRqblRsNEFzPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkzMDk3MDIyCWZpbGU6aW5xdWlyeUh1Yl8wLjEuNV94NjQtc2V0dXAuZXhlCjhuUXg5TGR4TFNhNnA5ZWs4N3VrRFVBT1RvYUpkaDdzUi9kdDRrdEdOZWNkV2FHK1drQ2YrUWlMU3hoVHRRaWhpZ1VBMUU1YiswM2hjQzJtMzBsWEF3PT0K",
       "url": "https://github.com/Inquiry-Distribution/tauri-master-frontend/releases/download/v0.1.5/inquiryHub_0.1.5_x64-setup.exe"
     }
   }
