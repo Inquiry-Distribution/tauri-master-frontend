@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -91,6 +91,15 @@ export default function Sidebar() {
   const navigate = useNavigate();
   const userData = JSON.parse(localStorage.getItem("userData") || "{}");
   const role = userData?.role;
+  const [appVersion, setAppVersion] = useState("");
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !("__TAURI_INTERNALS__" in window)) return;
+    import("@tauri-apps/api/app")
+      .then(({ getVersion }) => getVersion())
+      .then(setAppVersion)
+      .catch(() => setAppVersion(""));
+  }, []);
 
   const filteredItems = menuItems.filter((item) => item.roles.includes(role));
   const handleLogout = async () => {
@@ -122,15 +131,27 @@ export default function Sidebar() {
           <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-lg shadow-blue-500/20 shrink-0">
             <BarChart3 size={24} />
           </div>
-          <span
+          <div
             className={cn(
-              "text-xl font-bold tracking-tight transition-opacity duration-300 whitespace-nowrap",
+              "min-w-0 transition-opacity duration-300",
               !sidebarOpen && "lg:opacity-0",
             )}
-            style={{ color: tokens.text }}
           >
-            InquiryHub
-          </span>
+            <span
+              className="block text-xl font-bold tracking-tight whitespace-nowrap"
+              style={{ color: tokens.text }}
+            >
+              InquiryHub
+            </span>
+            {appVersion ? (
+              <span
+                className="block text-xs font-medium whitespace-nowrap"
+                style={{ color: tokens.textSec }}
+              >
+                v{appVersion}
+              </span>
+            ) : null}
+          </div>
         </div>
         {isMobile && sidebarOpen && (
           <button
